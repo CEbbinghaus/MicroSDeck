@@ -512,7 +512,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "decky_poc"
+name = "decky_plugin"
 version = "0.1.0"
 dependencies = [
  "futures",

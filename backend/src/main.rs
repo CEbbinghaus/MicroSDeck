@@ -5,7 +5,8 @@ mod err;
 use dbo::MicroSDCard;
 use futures::{executor, stream::*};
 use serde::Deserialize;
-use std::{collections::HashMap, fs, time::Duration};
+use surrealdb::{Session, Datastore};
+use std::{collections::HashMap, fs, time::Duration, sync::Arc, borrow::BorrowMut};
 use tokio_udev::*;
 
 use crate::db::*;
@@ -49,6 +50,7 @@ const PORT: u16 = 54321; // TODO replace with something unique
 
 const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 #[tokio::main]
 async fn runServer() -> Result<(), ()> {
@@ -67,8 +69,7 @@ async fn runServer() -> Result<(), ()> {
     )
     .unwrap();
 
-    log::info!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
-    println!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
+    println!("Starting backend...");
 
     Instance::new(PORT)
         .register("hello", |_: Vec<Primitive>| {
@@ -126,8 +127,28 @@ async fn runMonitor() -> Result<(), ()> {
     }
 }
 
+#[tokio::main]
+async fn get_db() -> DBConnection{
+    // let ds = Datastore::new("/var/etc/Database.file").await?;
+    match Datastore::new("memory").await {
+        Err(_) => panic!("Unable to construct Database"),
+        Ok(ds) => {
+            let ses = Session::for_db("","");
+            DBConnection {
+                datastore: Arc::from(ds),
+                session: Arc::from(ses)
+            }
+        }
+    }
+}
+
 pub fn main() {
-    println!("Starting Program.");
+    println!("{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS);
+    println!("Starting Program...");
+
+    let db = get_db();
+
+    println!("Database Started...");
 
     let handle1 = std::thread::spawn(move || runServer());
 

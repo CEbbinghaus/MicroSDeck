@@ -1,4 +1,4 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use crate::err::Error;
@@ -7,12 +7,12 @@ use surrealdb::{Datastore, Session, Response};
 use surrealdb::sql::{parse, Value, Thing, Id};
 use crate::dbo::*;
 
-pub struct DBConnection <'a> {
-    datastore: &'a Datastore,
-    session: &'a Session,
+pub struct DBConnection {
+    pub datastore: Arc<Datastore>,
+    pub session: Arc<Session>,
 }
 
-impl DBConnection<'_> {
+impl DBConnection {
     pub async fn add_game(self: &Self, game: &Game) -> Result<(), surrealdb::Error>{
         let ast = parse("CREATE $id SET uid=$uid, name=$name, size=$size, card=$card").expect("Query to compile");
     
@@ -125,8 +125,8 @@ pub async fn test_database() -> Result<(), Box<dyn std::error::Error>> {
     let ses = Session::for_db("","");
     
     let connection = DBConnection {
-        datastore: &ds,
-        session: &ses
+        datastore: Arc::from(ds),
+        session: Arc::from(ses)
     };
 
 

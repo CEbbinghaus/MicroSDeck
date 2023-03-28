@@ -3,9 +3,9 @@ mod dbo;
 mod err;
 
 use dbo::MicroSDCard;
-use futures::stream::*;
+use futures::{executor, stream::*};
 use serde::Deserialize;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, time::Duration};
 use tokio_udev::*;
 
 use crate::db::*;
@@ -41,85 +41,122 @@ struct Depot {
     dlcappid: Option<u64>,
 }
 
-// use simplelog::{WriteLogger, LevelFilter};
-//
-// use usdpl_back::Instance;
-// use usdpl_back::core::serdes::Primitive;
-//
-// const PORT: u16 = 54321; // TODO replace with something unique
-//
-// const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
-// const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-//
-// fn main() -> Result<(), ()> {
-//     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
-//     WriteLogger::init(
-//         #[cfg(debug_assertions)]{LevelFilter::Debug},
-//         #[cfg(not(debug_assertions))]{LevelFilter::Info},
-//         Default::default(),
-//         std::fs::File::create(&log_filepath).unwrap()
-//     ).unwrap();
-//
-//     log::info!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
-//     println!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
-//     Instance::new(PORT)
-//         .register("hello", |_: Vec<Primitive>| vec![format!("Hello {}", PACKAGE_NAME).into()])
-//         .run_blocking()
-// }
+use simplelog::{LevelFilter, WriteLogger};
 
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+use usdpl_back::{core::serdes::Primitive, Instance};
 
-//     test_database().await?;
+const PORT: u16 = 54321; // TODO replace with something unique
 
-//     println!("Starting Program.");
+const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
+const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-//     let  monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
+#[tokio::main]
+async fn runServer() -> Result<(), ()> {
+    let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
+    WriteLogger::init(
+        #[cfg(debug_assertions)]
+        {
+            LevelFilter::Debug
+        },
+        #[cfg(not(debug_assertions))]
+        {
+            LevelFilter::Info
+        },
+        Default::default(),
+        std::fs::File::create(&log_filepath).unwrap(),
+    )
+    .unwrap();
 
-//     let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
+    log::info!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
+    println!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
 
-//     println!("Now listening for Device Events...");
+    Instance::new(PORT)
+        .register("hello", |_: Vec<Primitive>| {
+            vec![format!("Hello {}", PACKAGE_NAME).into()]
+        })
+        .run()
+        .await
+}
 
-//     while let Some(Ok(event)) = socket.next().await {
+async fn runMonitorInternal() -> Result<(), Box<dyn std::error::Error>> {
+    let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
-//         if event.event_type() != EventType::Bind {
-//             continue;
-//         }
+    let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
 
-//         println!("Device {} was Bound", event.devpath().to_str().unwrap_or("UNKNOWN"));
-
-//         if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
-//             println!("Steam MicroSD card detected.");
-
-//             let result: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
-
-//             println!("contentid: {}", result.contentid);
-
-//             let mut files = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?.into_iter()
-//                 .filter_map(Result::ok)
-//                 .filter(|f| f.path().extension().unwrap_or_default().eq("acf"));
-
-//             while let Some(file) = files.next() {
-//                 let appstr = fs::read_to_string(file.path())?;
-//                 let manifest: AppState = keyvalues_serde::from_str(appstr.as_str())?;
-
-//                 println!("Found App \"{}\"", manifest.name);
-//             }
-//         }
-//     }
-
-//     Ok(())
-// }
-
-pub fn main() {
-    let json = r#"
-    [{ name: "Test", uid: 1234 }]
-    "#;
-    match serde_json::from_str::<Vec<MicroSDCard>>(json) {
-        Err(err) => println!("Unable to deserialize JSON\n{}", err),
-        Ok(val) => {
-            println!("Deserialized Properly");
+    println!("Now listening for Device Events...");
+    while let Some(Ok(event)) = socket.next().await {
+        if event.event_type() != EventType::Bind {
+            continue;
         }
+
+        println!(
+            "Device {} was Bound",
+            event.devpath().to_str().unwrap_or("UNKNOWN")
+        );
+
+        if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
+            println!("Steam MicroSD card detected.");
+
+            let result: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
+
+            println!("contentid: {}", result.contentid);
+
+            let mut files = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|f| f.path().extension().unwrap_or_default().eq("acf"));
+
+            while let Some(file) = files.next() {
+                let appstr = fs::read_to_string(file.path())?;
+                let manifest: AppState = keyvalues_serde::from_str(appstr.as_str())?;
+
+                println!("Found App \"{}\"", manifest.name);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn runMonitor() -> Result<(), ()> {
+    match runMonitorInternal().await {
+        Err(_) => Err(()),
+        Ok(_) => Ok(())
     }
 }
 
+pub fn main() {
+    println!("Starting Program.");
+
+    let handle1 = std::thread::spawn(move || runServer());
+
+    let handle2 = std::thread::spawn(move || runMonitor());
+
+    while !handle1.is_finished() && !handle2.is_finished() {
+        std::thread::sleep(Duration::from_millis(1));
+    }
+
+    println!("Exiting...");
+}
+
+// pub fn main() {
+//     match executor::block_on(test_database())
+//     {
+//         Err(err) => {
+//             eprintln!("There was an error during execution: {}", err);
+//         }
+//         Ok(_) => {
+//             println!("Done.");
+//         }
+// }
+//     let json = r#"
+//    [{ "name": "Test", "uid": 1234 }]
+//    "#;
+//     match serde_json::from_str::<Vec<MicroSDCard>>(json) {
+//         Err(err) => println!("Unable to deserialize JSON\n{}", err),
+//         Ok(val) => {
+//             println!("Deserialized Properly");
+//         }
+//     }
+// }

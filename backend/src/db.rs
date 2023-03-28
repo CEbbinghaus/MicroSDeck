@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::err::Error;
 
 use surrealdb::{Datastore, Session, Response};
-use surrealdb::sql::{parse, Value, Thing};
+use surrealdb::sql::{parse, Value, Thing, Id};
 use crate::dbo::*;
 
 pub struct DBConnection <'a> {
@@ -14,7 +14,7 @@ pub struct DBConnection <'a> {
 
 impl DBConnection<'_> {
     pub async fn add_game(self: &Self, game: &Game) -> Result<(), surrealdb::Error>{
-        let ast = parse("CREATE $uid SET uid=$uid, name=$name, size=$size, card=$card").expect("Query to compile");
+        let ast = parse("CREATE $id SET uid=$uid, name=$name, size=$size, card=$card").expect("Query to compile");
     
         let vars = Some(BTreeMap::from([
             ("id".into(), Value::Thing(Thing { tb: "game".into(), id: game.uid.into()})),
@@ -50,21 +50,23 @@ impl DBConnection<'_> {
     }
     
     pub async fn get_sd_card_for_game(self: &Self, game_id: u64)-> Result<MicroSDCard, Box<dyn std::error::Error>> {
-        let ast = parse("SELECT card.* FROM game:$id;").expect("Query to compile");
+        let ast = parse("SELECT * FROM $id;").expect("Query to compile");
     
         let vars: Option<BTreeMap<String, Value>> = Some(BTreeMap::from([
-            ("id".into(), game_id.into())
+            ("id".into(), Value::Thing(Thing{tb: "game".into(), id: Id::Number(game_id.try_into().unwrap())}))
         ]));
     
         let result = self.datastore.process(ast, &self.session, vars, false).await?;
-    
+
         if let Response { result: Ok(value), ..} = &result[0] {
-            let str = value.to_string();
+            let str = serde_json::to_string(value)?;
     
             // This is stupid since we are serializing it as JSON & deserializing that back into the struct.
             // Ideal solution would be to deserialize the Value tree directly to struct
             if let Some(v) = serde_json::from_str::<Vec<MicroSDCard>>(str.as_str())?.into_iter().next() {
                 return Ok(v);
+            } else {
+                return Err(Box::new(Error::Error(format!("Unable to deserialize Card \n{}", str))));
             }
         }
     
@@ -72,15 +74,13 @@ impl DBConnection<'_> {
     }
     
     pub async fn list_games(self: &Self)-> Result<Vec<Game>, Box<dyn std::error::Error>> {
-        let ast = parse("SELECT card.*, uid, name, size FROM game").expect("Query to compile");
+        let ast = parse("SELECT card.*, * FROM game").expect("Query to compile");
     
         let result = self.datastore.process(ast, &self.session, None, false).await?;
     
-
-        //TODO: Fix this shit
         if let Response { result: Ok(value), ..} = &result[0] {
             let str = serde_json::to_string(value)?;
-    
+
             // This is stupid since we are serializing it as JSON & deserializing that back into the struct.
             // Ideal solution would be to deserialize the Value tree directly to struct
             if let Ok(v) = serde_json::from_str::<Vec<Game>>(str.as_str()){
@@ -99,7 +99,7 @@ impl DBConnection<'_> {
         let result = self.datastore.process(ast, &self.session, None, false).await?;
     
         if let Response { result: Ok(value), ..} = &result[0] {
-            let str = value.to_string();
+            let str = serde_json::to_string(value)?;
 
             // This is stupid since we are serializing it as JSON & deserializing that back into the struct.
             // Ideal solution would be to deserialize the Value tree directly to struct
@@ -153,7 +153,7 @@ pub async fn test_database() -> Result<(), Box<dyn std::error::Error>> {
         println!("Recieved {:?}", response);
     }
 
-    println!("{:?}", connection.get_sd_card_for_game(game.uid).await?);
+    println!("Found Card for game {} {:?}", game.uid, connection.get_sd_card_for_game(game.uid).await?);
 
     // let ast = parse("CREATE person:B SET name=$Name, friend = person:A")?;
 

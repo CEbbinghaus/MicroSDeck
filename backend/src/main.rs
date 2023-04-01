@@ -1,3 +1,5 @@
+#![feature(async_closure)]
+
 mod db;
 mod dbo;
 mod err;
@@ -53,7 +55,7 @@ const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 #[tokio::main]
-async fn runServer() -> Result<(), ()> {
+async fn runServer(connection: &DBConnection) -> Result<(), ()> {
     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     WriteLogger::init(
         #[cfg(debug_assertions)]
@@ -75,6 +77,20 @@ async fn runServer() -> Result<(), ()> {
         .register("hello", |_: Vec<Primitive>| {
             vec![format!("Hello {}", PACKAGE_NAME).into()]
         })
+        .register("ping", |_: Vec<Primitive>| {
+            vec!["pong".into()]
+        })
+        .register_async("list_all_games", unsafe {
+            async |_: Vec<Primitive>| {
+            match connection.list_games().await {
+                Err(_) => {
+                    vec![]
+                }
+                Ok(res) => {
+                    res.iter().map(|v| serde_json::to_string(v)).filter_map(|v| v.ok()).map(|v| Primitive::Json(v)).collect()
+                }
+            }
+        }})
         .run()
         .await
 }
@@ -134,10 +150,14 @@ async fn get_db() -> DBConnection{
         Err(_) => panic!("Unable to construct Database"),
         Ok(ds) => {
             let ses = Session::for_db("","");
-            DBConnection {
+            let connection = DBConnection {
                 datastore: Arc::from(ds),
                 session: Arc::from(ses)
-            }
+            };
+
+            setup_test_data(&connection).await;
+
+            return connection;
         }
     }
 }
@@ -150,7 +170,7 @@ pub fn main() {
 
     println!("Database Started...");
 
-    let handle1 = std::thread::spawn(move || runServer());
+    let handle1 = std::thread::spawn(move || runServer(&db));
 
     let handle2 = std::thread::spawn(move || runMonitor());
 

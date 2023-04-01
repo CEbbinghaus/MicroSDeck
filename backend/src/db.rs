@@ -115,19 +115,19 @@ impl DBConnection {
 }
 
 
-pub async fn test_database() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn setup_test_data(connection: &DBConnection) -> Result<(), Box<dyn std::error::Error>> {
 
-    let ds = Datastore::new("memory").await?;
-    // let ds = Datastore::new("/var/etc/Database.file").await?;
+    // let ds = Datastore::new("memory").await?;
+    // // let ds = Datastore::new("/var/etc/Database.file").await?;
     
-    println!("Constructed Database.");
+    // println!("Constructed Database.");
     
-    let ses = Session::for_db("","");
+    // let ses = Session::for_db("","");
     
-    let connection = DBConnection {
-        datastore: Arc::from(ds),
-        session: Arc::from(ses)
-    };
+    // let connection = DBConnection {
+    //     datastore: Arc::from(ds),
+    //     session: Arc::from(ses)
+    // };
 
 
     let card = Arc::new(MicroSDCard {

@@ -1,5 +1,6 @@
 {
   "name": "usdpl-front",
+  "type": "module",
   "collaborators": [
     "NGnius (Graham) <ngniusness@gmail.com>"
   ],
@@ -17,5 +18,7 @@
   ],
   "module": "usdpl_front.js",
   "types": "usdpl_front.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./snippets/*"
+  ]
 }

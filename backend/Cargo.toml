@@ -22,6 +22,7 @@ steam-acf = "0.1.0"
 keyvalues-serde = "0.1.0"
 serde = { version = "1.0.0", features = ["derive", "rc"] }
 surrealdb = { version = "^1.0.0-beta.8", default-features = false, features = ["kv-mem", "kv-rocksdb"]}
+async-trait = "0.1.68"
 
 [features]
 default = []

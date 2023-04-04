@@ -1,14 +1,13 @@
-#![feature(async_closure)]
-
 mod db;
 mod dbo;
 mod err;
+mod api;
 
 use dbo::MicroSDCard;
 use futures::{executor, stream::*};
 use serde::Deserialize;
 use surrealdb::{Session, Datastore};
-use std::{collections::HashMap, fs, time::Duration, sync::Arc, borrow::BorrowMut};
+use std::{collections::HashMap, fs, time::Duration, sync::{Arc, Mutex}, borrow::BorrowMut};
 use tokio_udev::*;
 
 use crate::db::*;
@@ -46,7 +45,7 @@ struct Depot {
 
 use simplelog::{LevelFilter, WriteLogger};
 
-use usdpl_back::{core::serdes::Primitive, Instance};
+use usdpl_back::{core::serdes::Primitive, Instance, AsyncCallable};
 
 const PORT: u16 = 54321; // TODO replace with something unique
 
@@ -55,7 +54,7 @@ const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 #[tokio::main]
-async fn runServer(connection: &DBConnection) -> Result<(), ()> {
+async fn runServer(datbase: &DBConnection) -> Result<(), ()> {
     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     WriteLogger::init(
         #[cfg(debug_assertions)]
@@ -80,17 +79,7 @@ async fn runServer(connection: &DBConnection) -> Result<(), ()> {
         .register("ping", |_: Vec<Primitive>| {
             vec!["pong".into()]
         })
-        .register_async("list_all_games", unsafe {
-            async |_: Vec<Primitive>| {
-            match connection.list_games().await {
-                Err(_) => {
-                    vec![]
-                }
-                Ok(res) => {
-                    res.iter().map(|v| serde_json::to_string(v)).filter_map(|v| v.ok()).map(|v| Primitive::Json(v)).collect()
-                }
-            }
-        }})
+        .register_async("list_all_games", crate::api::get_games::GetGames::new(datbase))
         .run()
         .await
 }
@@ -136,7 +125,7 @@ async fn runMonitorInternal() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::main]
-async fn runMonitor() -> Result<(), ()> {
+async fn runMonitor(dbMutex: &DBConnection) -> Result<(), ()> {
     match runMonitorInternal().await {
         Err(_) => Err(()),
         Ok(_) => Ok(())
@@ -166,13 +155,13 @@ pub fn main() {
     println!("{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS);
     println!("Starting Program...");
 
-    let db = get_db();
+    let database = &get_db();
 
     println!("Database Started...");
 
-    let handle1 = std::thread::spawn(move || runServer(&db));
+    let handle1 = std::thread::spawn(move || runServer(database));
 
-    let handle2 = std::thread::spawn(move || runMonitor());
+    let handle2 = std::thread::spawn(move || runMonitor(database));
 
     while !handle1.is_finished() && !handle2.is_finished() {
         std::thread::sleep(Duration::from_millis(1));

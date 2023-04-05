@@ -1,57 +1,31 @@
-use std::sync::Mutex;
-
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
-use crate::db::DBConnection;
-
-pub struct GetGames<'a> {
-    database: Mutex<&'a DBConnection>,
+pub struct GetGames{
 }
 
-impl GetGames<'_> {
-    pub fn new(db: &DBConnection) -> Self {
-        Self {
-            database: Mutex::new(db),
-        }
+impl GetGames {
+    pub fn new() -> Self {
+        return GetGames {  }
     }
 }
 
-async fn test(db: &DBConnection) -> Vec<usdpl_back::core::serdes::Primitive> {
-		match db.list_games().await {
-		Err(_) => {
-			vec![]
-		}
-		Ok(res) => res
-			.iter()
-			.map(|v| serde_json::to_string(v))
-			.filter_map(|v| v.ok())
-			.map(|v| Primitive::Json(v))
-			.collect(),
-	}
-}
-
 #[async_trait::async_trait]
-impl AsyncCallable for GetGames<'_> {
+impl AsyncCallable for GetGames {
     async fn call(
         &self,
         params: Vec<usdpl_back::core::serdes::Primitive>,
     ) -> Vec<usdpl_back::core::serdes::Primitive> {
-
-        let lockedConnection = *self.database.lock().unwrap();
-
-		return test(lockedConnection).await;
-
-        // match lockedConnection.list_games().await {
-        //     Err(_) => {
-        //         vec![]
-        //     }
-        //     Ok(res) => res
-        //         .iter()
-        //         .map(|v| serde_json::to_string(v))
-        //         .filter_map(|v| v.ok())
-        //         .map(|v| Primitive::Json(v))
-        //         .collect(),
-        // }
+        match crate::db::list_games().await {
+            Err(_) => {
+                vec![usdpl_back::core::serdes::Primitive::String("None".to_string())]
+            }
+            Ok(res) => res
+                .iter()
+                .map(|v| serde_json::to_string(v))
+                .filter_map(|v| v.ok())
+                .map(|v| Primitive::Json(v))
+                .collect(),
+        }
     }
 }

@@ -6,11 +6,16 @@ mod api;
 use dbo::MicroSDCard;
 use futures::{executor, stream::*};
 use serde::Deserialize;
-use surrealdb::{Session, Datastore};
+use surrealdb::engine::local::{Db,Mem,File};
+use surrealdb::Surreal;
+use std::env;
 use std::{collections::HashMap, fs, time::Duration, sync::{Arc, Mutex}, borrow::BorrowMut};
 use tokio_udev::*;
 
 use crate::db::*;
+
+// Creates a new static instance of the client
+static DB: Surreal<Db> = Surreal::init();
 
 #[derive(Deserialize, Debug)]
 struct LibraryFolder {
@@ -54,7 +59,7 @@ const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 #[tokio::main]
-async fn runServer(datbase: &DBConnection) -> Result<(), ()> {
+async fn runServer() -> Result<(), ()> {
     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     WriteLogger::init(
         #[cfg(debug_assertions)]
@@ -79,7 +84,7 @@ async fn runServer(datbase: &DBConnection) -> Result<(), ()> {
         .register("ping", |_: Vec<Primitive>| {
             vec!["pong".into()]
         })
-        .register_async("list_all_games", crate::api::get_games::GetGames::new(datbase))
+        .register_async("list_all_games", crate::api::get_games::GetGames::new())
         .run()
         .await
 }
@@ -125,7 +130,7 @@ async fn runMonitorInternal() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::main]
-async fn runMonitor(dbMutex: &DBConnection) -> Result<(), ()> {
+async fn runMonitor() -> Result<(), ()> {
     match runMonitorInternal().await {
         Err(_) => Err(()),
         Ok(_) => Ok(())
@@ -133,35 +138,30 @@ async fn runMonitor(dbMutex: &DBConnection) -> Result<(), ()> {
 }
 
 #[tokio::main]
-async fn get_db() -> DBConnection{
+async fn setup_db() {
     // let ds = Datastore::new("/var/etc/Database.file").await?;
-    match Datastore::new("memory").await {
+
+    match DB.connect::<Mem>(()).await {
         Err(_) => panic!("Unable to construct Database"),
-        Ok(ds) => {
-            let ses = Session::for_db("","");
-            let connection = DBConnection {
-                datastore: Arc::from(ds),
-                session: Arc::from(ses)
-            };
-
-            setup_test_data(&connection).await;
-
-            return connection;
+        Ok(_) => {
+            DB.use_ns("").use_db("").await.expect("Unable to select Namespace and Database");
+            db::setup_test_data().await.expect("Test data to be set up");
         }
     }
 }
 
 pub fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     println!("{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS);
     println!("Starting Program...");
 
-    let database = &get_db();
+    setup_db();
 
     println!("Database Started...");
 
-    let handle1 = std::thread::spawn(move || runServer(database));
+    let handle1 = std::thread::spawn(move || runServer());
 
-    let handle2 = std::thread::spawn(move || runMonitor(database));
+    let handle2 = std::thread::spawn(move || runMonitor());
 
     while !handle1.is_finished() && !handle2.is_finished() {
         std::thread::sleep(Duration::from_millis(1));

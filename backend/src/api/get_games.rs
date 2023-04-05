@@ -14,7 +14,7 @@ impl GetGames {
 impl AsyncCallable for GetGames {
     async fn call(
         &self,
-        params: Vec<usdpl_back::core::serdes::Primitive>,
+        _: Vec<usdpl_back::core::serdes::Primitive>,
     ) -> Vec<usdpl_back::core::serdes::Primitive> {
         match crate::db::list_games().await {
             Err(_) => {

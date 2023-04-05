@@ -1,56 +1,25 @@
+#![allow(unused_imports)]
+
 mod db;
 mod dbo;
 mod err;
 mod api;
+mod steam;
 
-use dbo::MicroSDCard;
-use futures::{executor, stream::*};
-use serde::Deserialize;
+use futures::StreamExt;
 use surrealdb::engine::local::{Db,Mem,File};
 use surrealdb::Surreal;
 use std::env;
-use std::{collections::HashMap, fs, time::Duration, sync::{Arc, Mutex}, borrow::BorrowMut};
+use std::{fs, time::Duration};
 use tokio_udev::*;
-
-use crate::db::*;
+use steam::*;
 
 // Creates a new static instance of the client
 static DB: Surreal<Db> = Surreal::init();
 
-#[derive(Deserialize, Debug)]
-struct LibraryFolder {
-    contentid: u64,
-    label: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct AppState {
-    appid: String,
-    universe: i32,
-    name: String,
-    stateflags: Option<i32>,
-    installdir: String,
-    LastUpdated: u64,
-    SizeOnDisk: u64,
-    StagingSize: u64,
-    buildid: u64,
-    LastOwner: u64,
-    AutoUpdateBehavior: u64,
-    AllowOtherDownloadsWhileRunning: u64,
-    ScheduledAutoUpdate: u64,
-    InstalledDepots: HashMap<String, Depot>,
-}
-
-#[derive(Deserialize, Debug)]
-struct Depot {
-    manifest: String,
-    size: u64,
-    dlcappid: Option<u64>,
-}
-
 use simplelog::{LevelFilter, WriteLogger};
 
-use usdpl_back::{core::serdes::Primitive, Instance, AsyncCallable};
+use usdpl_back::{core::serdes::Primitive, Instance};
 
 const PORT: u16 = 54321; // TODO replace with something unique
 
@@ -59,7 +28,7 @@ const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 #[tokio::main]
-async fn runServer() -> Result<(), ()> {
+async fn run_server() -> Result<(), ()> {
     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     WriteLogger::init(
         #[cfg(debug_assertions)]
@@ -89,7 +58,9 @@ async fn runServer() -> Result<(), ()> {
         .await
 }
 
-async fn runMonitorInternal() -> Result<(), Box<dyn std::error::Error>> {
+
+#[tokio::main]
+async fn run_monitor() -> Result<(), Box<dyn Send+Sync+std::error::Error>> {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
     let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
@@ -125,16 +96,7 @@ async fn runMonitorInternal() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-
     Ok(())
-}
-
-#[tokio::main]
-async fn runMonitor() -> Result<(), ()> {
-    match runMonitorInternal().await {
-        Err(_) => Err(()),
-        Ok(_) => Ok(())
-    }
 }
 
 #[tokio::main]
@@ -159,9 +121,9 @@ pub fn main() {
 
     println!("Database Started...");
 
-    let handle1 = std::thread::spawn(move || runServer());
+    let handle1 = std::thread::spawn(move || run_server());
 
-    let handle2 = std::thread::spawn(move || runMonitor());
+    let handle2 = std::thread::spawn(move || run_monitor());
 
     while !handle1.is_finished() && !handle2.is_finished() {
         std::thread::sleep(Duration::from_millis(1));
@@ -169,24 +131,3 @@ pub fn main() {
 
     println!("Exiting...");
 }
-
-// pub fn main() {
-//     match executor::block_on(test_database())
-//     {
-//         Err(err) => {
-//             eprintln!("There was an error during execution: {}", err);
-//         }
-//         Ok(_) => {
-//             println!("Done.");
-//         }
-// }
-//     let json = r#"
-//    [{ "name": "Test", "uid": 1234 }]
-//    "#;
-//     match serde_json::from_str::<Vec<MicroSDCard>>(json) {
-//         Err(err) => println!("Unable to deserialize JSON\n{}", err),
-//         Ok(val) => {
-//             println!("Deserialized Properly");
-//         }
-//     }
-// }

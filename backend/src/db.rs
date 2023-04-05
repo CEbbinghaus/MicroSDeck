@@ -16,11 +16,11 @@ pub async fn get_sd_card_for_game(game_id: u64)-> Result<MicroSDCard, Box<dyn st
 }
 
 pub async fn list_games()-> Result<Vec<Game>, Box<dyn std::error::Error>> {
-    Ok(crate::DB.select(("game")).await?)
+    Ok(crate::DB.select("game").await?)
 }
 
 pub async fn list_sd_cards()-> Result<Vec<MicroSDCard>, Box<dyn std::error::Error>> {
-    Ok(crate::DB.select(("card")).await?)
+    Ok(crate::DB.select("card").await?)
 }
 
 pub async fn setup_test_data() -> Result<(), Box<dyn std::error::Error>> {

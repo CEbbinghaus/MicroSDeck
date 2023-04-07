@@ -1,20 +1,20 @@
 #![allow(unused_imports)]
 
+mod api;
 mod db;
 mod dbo;
 mod err;
-mod api;
 mod steam;
 
-use futures::StreamExt;
 use futures::executor::block_on;
 use futures::future::join;
-use surrealdb::engine::local::{Db,Mem,File};
-use surrealdb::Surreal;
+use futures::{Future, StreamExt};
 use std::env;
 use std::{fs, time::Duration};
-use tokio_udev::*;
 use steam::*;
+use surrealdb::engine::local::{Db, File, Mem};
+use surrealdb::Surreal;
+use tokio_udev::*;
 
 // Creates a new static instance of the client
 static DB: Surreal<Db> = Surreal::init();
@@ -22,6 +22,8 @@ static DB: Surreal<Db> = Surreal::init();
 use simplelog::{LevelFilter, WriteLogger};
 
 use usdpl_back::{core::serdes::Primitive, Instance};
+
+use crate::dbo::{Game, MicroSDCard};
 
 const PORT: u16 = 54321; // TODO replace with something unique
 
@@ -52,21 +54,27 @@ async fn run_server() -> Result<(), ()> {
         .register("hello", |_: Vec<Primitive>| {
             vec![format!("Hello {}", PACKAGE_NAME).into()]
         })
-        .register("ping", |_: Vec<Primitive>| {
-            vec!["pong".into()]
-        })
+        .register("ping", |_: Vec<Primitive>| vec!["pong".into()])
         .register_async("list_games", crate::api::list_games::ListGames::new())
         .register_async("list_cards", crate::api::list_cards::ListCards::new())
-        .register_async("list_games_on_card", crate::api::list_games_on_card::ListGamesOnCard::new())
-        .register_async("get_card_for_game", crate::api::get_card_for_game::GetCardForGame::new())
-        .register_async("set_name_for_card", crate::api::set_name_for_card::SetNameForCard::new())
+        .register_async(
+            "list_games_on_card",
+            crate::api::list_games_on_card::ListGamesOnCard::new(),
+        )
+        .register_async(
+            "get_card_for_game",
+            crate::api::get_card_for_game::GetCardForGame::new(),
+        )
+        .register_async(
+            "set_name_for_card",
+            crate::api::set_name_for_card::SetNameForCard::new(),
+        )
         .run()
         .await
 }
 
-
 // #[tokio::main]
-async fn run_monitor() -> Result<(), Box<dyn Send+Sync+std::error::Error>> {
+async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
     let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
@@ -85,20 +93,43 @@ async fn run_monitor() -> Result<(), Box<dyn Send+Sync+std::error::Error>> {
         if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
             println!("Steam MicroSD card detected.");
 
-            let result: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
+            let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
 
-            println!("contentid: {}", result.contentid);
+            println!("contentid: {}", library.contentid);
 
-            let mut files = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
+            let files = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
                 .into_iter()
                 .filter_map(Result::ok)
                 .filter(|f| f.path().extension().unwrap_or_default().eq("acf"));
 
-            while let Some(file) = files.next() {
-                let appstr = fs::read_to_string(file.path())?;
-                let manifest: AppState = keyvalues_serde::from_str(appstr.as_str())?;
+            let games: Vec<AppState> = files
+                .filter_map(|f| fs::read_to_string(f.path()).ok())
+                .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
+                .collect();
 
-                println!("Found App \"{}\"", manifest.name);
+            for game in games.iter() {
+                println!("Found App \"{}\"", game.name);
+            }
+
+            if let Ok(None) = db::get_card(library.contentid).await {
+                db::add_sd_card(&MicroSDCard {
+                    uid: library.contentid,
+                    name: library.label,
+                    games: games.iter().map(|v| db::get_id("game", v.appid)).collect(),
+                })
+                .await?;
+            }
+
+            for game in games.iter() {
+                if let Ok(None) = db::get_game(game.appid).await {
+                    db::add_game(&Game {
+                        uid: game.appid,
+                        name: game.name.clone(),
+                        size: game.size_on_disk,
+                        card: db::get_id("card", library.contentid),
+                    })
+                    .await?
+                }
             }
         }
     }
@@ -110,8 +141,11 @@ async fn setup_db() {
 
     match DB.connect::<Mem>(()).await {
         Err(_) => panic!("Unable to construct Database"),
-        Ok(_) => {          
-            DB.use_ns("").use_db("").await.expect("Namespace and Database to be avaliable");
+        Ok(_) => {
+            DB.use_ns("")
+                .use_db("")
+                .await
+                .expect("Namespace and Database to be avaliable");
         }
     }
 }
@@ -119,8 +153,11 @@ async fn setup_db() {
 #[tokio::main]
 async fn main() {
     env::set_var("RUST_BACKTRACE", "1");
-    
-    println!("{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS);
+
+    println!(
+        "{}@{} by {}",
+        PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
+    );
     println!("Starting Program...");
 
     setup_db().await;
@@ -134,7 +171,7 @@ async fn main() {
     let server_future = run_server();
 
     let monitor_future = run_monitor();
-    
+
     // let web_server = ;
 
     join(server_future, monitor_future).await;

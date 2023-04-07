@@ -10,7 +10,7 @@ pub struct LibraryFolder {
 
 #[derive(Deserialize, Debug)]
 pub struct AppState {
-    pub appid: String,
+    pub appid: u64,
     pub universe: i32,
     pub name: String,
     pub stateflags: Option<i32>,

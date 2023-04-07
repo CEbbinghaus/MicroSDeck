@@ -4,7 +4,7 @@ use surrealdb::sql::{Id, Thing};
 
 use crate::dbo::*;
 
-fn get_id(table: &str, id: u64) -> Thing {
+pub fn get_id(table: &str, id: u64) -> Thing {
     Thing::from((table.to_string(), Id::Number(id as i64)))
 }
 
@@ -33,6 +33,14 @@ pub async fn get_sd_card_for_game(
         .await?
         .take("card")?;
     Ok(result)
+}
+
+pub async fn get_game(id: u64) -> Result<Option<Game>, Box<dyn std::error::Error>> {
+    Ok(crate::DB.select(("game", id)).await?)
+}
+
+pub async fn get_card(id: u64) -> Result<Option<MicroSDCard>, Box<dyn std::error::Error>> {
+    Ok(crate::DB.select(("card", id)).await?)
 }
 
 pub async fn list_games() -> Result<Vec<Game>, Box<dyn std::error::Error>> {

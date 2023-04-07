@@ -7,6 +7,8 @@ mod api;
 mod steam;
 
 use futures::StreamExt;
+use futures::executor::block_on;
+use futures::future::join;
 use surrealdb::engine::local::{Db,Mem,File};
 use surrealdb::Surreal;
 use std::env;
@@ -27,7 +29,7 @@ const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
-#[tokio::main]
+// #[tokio::main]
 async fn run_server() -> Result<(), ()> {
     let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     WriteLogger::init(
@@ -53,13 +55,17 @@ async fn run_server() -> Result<(), ()> {
         .register("ping", |_: Vec<Primitive>| {
             vec!["pong".into()]
         })
-        .register_async("list_all_games", crate::api::get_games::GetGames::new())
+        .register_async("list_games", crate::api::list_games::ListGames::new())
+        .register_async("list_cards", crate::api::list_cards::ListCards::new())
+        .register_async("list_games_on_card", crate::api::list_games_on_card::ListGamesOnCard::new())
+        .register_async("get_card_for_game", crate::api::get_card_for_game::GetCardForGame::new())
+        .register_async("set_name_for_card", crate::api::set_name_for_card::SetNameForCard::new())
         .run()
         .await
 }
 
 
-#[tokio::main]
+// #[tokio::main]
 async fn run_monitor() -> Result<(), Box<dyn Send+Sync+std::error::Error>> {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
@@ -99,35 +105,42 @@ async fn run_monitor() -> Result<(), Box<dyn Send+Sync+std::error::Error>> {
     Ok(())
 }
 
-#[tokio::main]
 async fn setup_db() {
     // let ds = Datastore::new("/var/etc/Database.file").await?;
 
     match DB.connect::<Mem>(()).await {
         Err(_) => panic!("Unable to construct Database"),
-        Ok(_) => {
-            DB.use_ns("").use_db("").await.expect("Unable to select Namespace and Database");
-            db::setup_test_data().await.expect("Test data to be set up");
+        Ok(_) => {          
+            DB.use_ns("").use_db("").await.expect("Namespace and Database to be avaliable");
         }
     }
 }
 
-pub fn main() {
+#[tokio::main]
+async fn main() {
     env::set_var("RUST_BACKTRACE", "1");
+    
     println!("{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS);
     println!("Starting Program...");
 
-    setup_db();
+    setup_db().await;
+
+    db::setup_test_data().await.expect("Test data to be set up");
+
+    println!("{:?}", db::list_games().await);
 
     println!("Database Started...");
 
-    let handle1 = std::thread::spawn(move || run_server());
+    let server_future = run_server();
 
-    let handle2 = std::thread::spawn(move || run_monitor());
+    let monitor_future = run_monitor();
+    
+    // let web_server = ;
 
-    while !handle1.is_finished() && !handle2.is_finished() {
-        std::thread::sleep(Duration::from_millis(1));
-    }
+    join(server_future, monitor_future).await;
+    // while !handle1.is_finished() && !handle2.is_finished() {
+    //     std::thread::sleep(Duration::from_millis(1));
+    // }
 
     println!("Exiting...");
 }

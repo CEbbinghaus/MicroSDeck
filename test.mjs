@@ -9,6 +9,8 @@ console.log("Hello, World!");
 	await init_embedded();
 	init_usdpl(USDPL_PORT);
 	console.log("USDPL started for framework: " + target_usdpl());
-	let res = await call_backend("ping", []);
+
+	window.query = call_backend;
+	let res = await call_backend("list_games", []);
 	console.log(res);
 })();

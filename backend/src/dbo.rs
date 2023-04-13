@@ -24,14 +24,14 @@ impl From<String> for Name {
 
 #[derive(Serialize, Deserialize,Debug,Clone)]
 pub struct MicroSDCard {
-    pub uid: u64,
+    pub uid: String,
     pub name: String,
     pub games: Vec<Thing>
 }
 
 #[derive(Serialize, Deserialize,Debug,Clone)]
 pub struct Game {
-    pub uid: u64,
+    pub uid: String,
     pub name: String,
     pub size: u64,
     pub card: Thing

@@ -33,20 +33,20 @@ const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 // #[tokio::main]
 async fn run_server() -> Result<(), ()> {
-    let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
-    WriteLogger::init(
-        #[cfg(debug_assertions)]
-        {
-            LevelFilter::Debug
-        },
-        #[cfg(not(debug_assertions))]
-        {
-            LevelFilter::Info
-        },
-        Default::default(),
-        std::fs::File::create(&log_filepath).unwrap(),
-    )
-    .unwrap();
+    // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
+    // WriteLogger::init(
+    //     #[cfg(debug_assertions)]
+    //     {
+    //         LevelFilter::Debug
+    //     },
+    //     #[cfg(not(debug_assertions))]
+    //     {
+    //         LevelFilter::Info
+    //     },
+    //     Default::default(),
+    //     std::fs::File::create(&log_filepath).unwrap(),
+    // )
+    // .unwrap();
 
     println!("Starting backend...");
 
@@ -68,6 +68,10 @@ async fn run_server() -> Result<(), ()> {
         .register_async(
             "set_name_for_card",
             crate::api::set_name_for_card::SetNameForCard::new(),
+        )
+        .register_async(
+            "list_cards_with_games",
+            crate::api::list_cards_with_games::ListCardsWithGames::new(),
         )
         .run()
         .await
@@ -97,36 +101,42 @@ async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
 
             println!("contentid: {}", library.contentid);
 
-            let files = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
+            let files: Vec<_> = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
                 .into_iter()
                 .filter_map(Result::ok)
-                .filter(|f| f.path().extension().unwrap_or_default().eq("acf"));
+                .filter(|f| f.path().extension().unwrap_or_default().eq("acf"))
+                .collect();
+
+            println!("Found {} Files", files.len());
 
             let games: Vec<AppState> = files
+                .iter()
                 .filter_map(|f| fs::read_to_string(f.path()).ok())
                 .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
                 .collect();
+
+            println!("Retrieved {} Games", games.len());
 
             for game in games.iter() {
                 println!("Found App \"{}\"", game.name);
             }
 
-            if let Ok(None) = db::get_card(library.contentid).await {
+            if let Ok(None) = db::get_card(library.contentid.clone()).await {
                 db::add_sd_card(&MicroSDCard {
-                    uid: library.contentid,
+                    uid: library.contentid.clone(),
                     name: library.label,
-                    games: games.iter().map(|v| db::get_id("game", v.appid)).collect(),
+                    games: games.iter().map(|v| db::get_id("game", v.appid.clone())).collect(),
                 })
                 .await?;
             }
 
             for game in games.iter() {
-                if let Ok(None) = db::get_game(game.appid).await {
+                if let Ok(None) = db::get_game(game.appid.clone()).await {
                     db::add_game(&Game {
-                        uid: game.appid,
+                        uid: game.appid.clone(),
                         name: game.name.clone(),
                         size: game.size_on_disk,
-                        card: db::get_id("card", library.contentid),
+                        card: db::get_id("card", library.contentid.clone()),
                     })
                     .await?
                 }
@@ -138,8 +148,8 @@ async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
 
 async fn setup_db() {
     // let ds = Datastore::new("/var/etc/Database.file").await?;
-
-    match DB.connect::<Mem>(()).await {
+    // match DB.connect::<Mem>(()).await {
+    match DB.connect::<File>("/tmp/dbDebug.tmp").await {
         Err(_) => panic!("Unable to construct Database"),
         Ok(_) => {
             DB.use_ns("")
@@ -162,7 +172,7 @@ async fn main() {
 
     setup_db().await;
 
-    db::setup_test_data().await.expect("Test data to be set up");
+    // db::setup_test_data().await.expect("Test data to be set up"); 
 
     println!("{:?}", db::list_games().await);
 
@@ -174,7 +184,11 @@ async fn main() {
 
     // let web_server = ;
 
-    join(server_future, monitor_future).await;
+    let (server_res, monitor_ress) = join(server_future, monitor_future).await;
+
+    if server_res.is_err() || monitor_ress.is_err() {
+        println!("There was an error.");
+    }
     // while !handle1.is_finished() && !handle2.is_finished() {
     //     std::thread::sleep(Duration::from_millis(1));
     // }

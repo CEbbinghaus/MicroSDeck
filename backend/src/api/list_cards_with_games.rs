@@ -1,24 +1,20 @@
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
-pub struct ListGames{
-}
+pub struct ListCardsWithGames {}
 
-impl ListGames {
+impl ListCardsWithGames {
     pub fn new() -> Self {
-        return ListGames {  }
+        return ListCardsWithGames {};
     }
 }
 
 #[async_trait::async_trait]
-impl AsyncCallable for ListGames {
-    async fn call(
-        &self,
-        _: Vec<Primitive>,
-    ) -> Vec<Primitive> {
-        match crate::db::list_games().await {
+impl AsyncCallable for ListCardsWithGames {
+    async fn call(&self, _: Vec<Primitive>) -> Vec<Primitive> {
+        match crate::db::list_cards_with_games().await {
             Err(err) => {
-                vec![Primitive::String(format!("{err}"))]
+                vec![format!("{err}").into()]
             }
             Ok(res) => vec![Primitive::Json(serde_json::to_string(&res).unwrap_or("ERROR SERIALIZING JSON".into()))],
         }

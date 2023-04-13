@@ -8,6 +8,12 @@ pub enum Error  {
     Error(String),
 }
 
+impl Error {
+    pub fn new_boxed<T>(value: &str) -> Result<T, Box<dyn std::error::Error>> {
+        Err::<T, Box<dyn std::error::Error>>(Box::new(Error::Error(value.to_string())))
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

@@ -48,3 +48,6 @@ yalc.lock
 
 # packaged teasers
 *.zip
+
+#ignore output directory
+/build

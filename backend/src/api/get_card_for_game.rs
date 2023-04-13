@@ -14,20 +14,20 @@ impl GetCardForGame {
 impl AsyncCallable for GetCardForGame {
     async fn call(
         &self,
-        args: Vec<usdpl_back::core::serdes::Primitive>,
-    ) -> Vec<usdpl_back::core::serdes::Primitive> {
+        args: Vec<Primitive>,
+    ) -> Vec<Primitive> {
 		let Some(id_prim) = args.first() else {
 			return vec![Primitive::String("No value provided for argument ID".into())];
 		};
 
-		let id: u64 = match id_prim {
-			Primitive::F64(v) => v.round() as u64,
-			_ => return vec![Primitive::String("Value for Argument ID was not a number".into())],
+		let id = match id_prim {
+			Primitive::String(v) => v.to_owned(),
+			_ => return vec![Primitive::String("Value for Argument ID was not a string".into())],
 		};
 
         match crate::db::get_sd_card_for_game(id).await {
             Err(err) => {
-                vec![usdpl_back::core::serdes::Primitive::String(format!("{err}"))]
+                vec![Primitive::String(format!("{err}"))]
             }
             Ok(res) => {
 				match res {

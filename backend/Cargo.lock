@@ -215,6 +215,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "keyvalues-serde",
+ "log",
+ "serde",
+ "serde_json",
+ "simplelog",
+ "steam-acf",
+ "surrealdb",
+ "tokio",
+ "tokio-udev",
+ "usdpl-back",
+]
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -564,24 +582,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.13",
-]
-
-[[package]]
-name = "decky_plugin"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "keyvalues-serde",
- "log",
- "serde",
- "serde_json",
- "simplelog",
- "steam-acf",
- "surrealdb",
- "tokio",
- "tokio-udev",
- "usdpl-back",
 ]
 
 [[package]]

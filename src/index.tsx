@@ -11,6 +11,7 @@ import {
   SideMenu,
   sleep,
   staticClasses,
+  TextField,
 } from "decky-frontend-lib";
 import { VFC } from "react";
 import { FaSdCard } from "react-icons/fa";
@@ -18,7 +19,7 @@ import { FaSdCard } from "react-icons/fa";
 import logo from "../assets/logo.png";
 
 import { init_usdpl, target_usdpl, init_embedded, call_backend } from "usdpl-front";
-import { CardsAndGames, GetCardsAndGames } from "./hooks/backend";
+import { CardsAndGames, GetCardsAndGames, SetNameForMicroSDCard } from "./hooks/backend";
 
 const USDPL_PORT: number = 54321;
 
@@ -43,10 +44,16 @@ function TestCarousel({ data }: { data: CardsAndGames }) {
   //   </Carousel>
   // </div>);
   return <div>
-    {data.map(([card, games]) => <PanelSectionRow>
-      <h1>{card.name}</h1>
-      {games.map(game => <p>{game.name}</p>)}
-    </PanelSectionRow>)}
+    {
+      data.map(([card, games]) => (
+        <PanelSectionRow>
+
+          <h6 style={{margin: 0, padding: 0}}>ID: {card.uid}</h6>
+          <TextField placeholder="Name" value={card.name} onBlur={(v) => SetNameForMicroSDCard(card.uid, v.target.value)}/>
+          {games.map(game => <p style={{fontSize: "12px", margin: 0, padding: 0}}>{game.name}</p>)}
+        </PanelSectionRow>
+      ))
+    }
   </div>
 }
 
@@ -56,38 +63,12 @@ function TestCarousel({ data }: { data: CardsAndGames }) {
 // }
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
-  const { value, refresh } = GetCardsAndGames();
-
-  // const [result, setResult] = useState<number | undefined>();
-
-  // const onClick = async () => {
-  //   const result = await serverAPI.callPluginMethod<AddMethodArgs, number>(
-  //     "add",
-  //     {
-  //       left: 2,
-  //       right: 2,
-  //     }
-  //   );
-  //   if (result.success) {
-  //     setResult(result.result);
-  //   }
-  // };
-
-  // call hello callback on backend
-  // const {value, refresh} = getValue("1234");
 
   return (
     <div>
       <PanelSection title="DeckyPlugin">
         <PanelSectionRow>
           <h1>Hello, World!</h1>
-          <p>
-            Response: {
-              value ?
-                <h1>{value}</h1>
-                : "Pending..."
-            }
-          </p>
           <ButtonItem
             onClick={() => {
               Router.Navigate("/decky-plugin-test");
@@ -95,20 +76,22 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             }}
           >Open Test Page</ButtonItem>
         </PanelSectionRow>
-        {value ? <TestCarousel data={value} /> : "Pending..."}
+        
       </PanelSection>
     </div>
   );
 };
 
 const DeckyPluginRouterTest: VFC = () => {
+  const { value, refresh } = GetCardsAndGames();
+
   return (
     <div style={{ marginTop: "50px", color: "white" }}>
       Hello World!
       <ButtonItem
         onClick={async () => {
           //@ts-ignore
-          window.DeckyPluginLoader.importPlugin("DeckyPlugin", null);
+          window.DeckyPluginLoader.importPlugin("MicroSDeck", null);
         }}
       >Reload Plugin</ButtonItem>
       <ButtonItem
@@ -116,6 +99,8 @@ const DeckyPluginRouterTest: VFC = () => {
           Navigation.OpenSideMenu(SideMenu.QuickAccess);
         }}
       >Back</ButtonItem>
+
+      {value ? <TestCarousel data={value} /> : "Pending..."}
     </div>
   );
 };

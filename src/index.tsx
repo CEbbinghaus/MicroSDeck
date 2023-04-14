@@ -43,13 +43,15 @@ function TestCarousel({ data }: { data: CardsAndGames }) {
   //     </div>
   //   </Carousel>
   // </div>);
-  return <div>
+  return <div style={{overflow: "scroll"}}>
     {
       data.map(([card, games]) => (
-        <div style={{width: "calc(30% - 5px)", margin: "2.5px", display: "inline-block"}}>
+        <div style={{width: "calc(30% - 5px)", height: "300px", overflow: "hidden", margin: "2.5px", display: "inline-block", verticalAlign: "top"}}>
           <h6 style={{margin: 0, padding: 0}}>ID: {card.uid}</h6>
           <TextField placeholder="Name" value={card.name} onBlur={(v) => SetNameForMicroSDCard(card.uid, v.target.value)}/>
-          {games.map(game => <p style={{fontSize: "12px", margin: 0, padding: 0}}>{game.name}</p>)}
+          <p style={{fontSize: "12px", margin: 0, padding: 0, textOverflow: "ellipsis"}}>
+          {games.map(game => (<div>{game.name}</div>))}
+          </p>
         </div>
       ))
     }

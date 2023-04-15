@@ -13,7 +13,7 @@ import {
   staticClasses,
   TextField,
 } from "decky-frontend-lib";
-import { VFC } from "react";
+import { Fragment, useRef, VFC } from "react";
 import { FaSdCard } from "react-icons/fa";
 
 import logo from "../assets/logo.png";
@@ -25,8 +25,11 @@ const USDPL_PORT: number = 54321;
 
 import Carousel from 're-carousel'
 import Buttons from "./Buttons";
+import Card from "./components/Card";
+import PatchPlayButton from "./patch/PatchAppScreen";
 
 function TestCarousel({ data }: { data: CardsAndGames }) {
+
   // return (<div style={{height: "100px", padding: "0px"}}>
   //   <Carousel widgets={[Buttons]}>
   //     <div style={{height: '100%'}}>
@@ -43,16 +46,12 @@ function TestCarousel({ data }: { data: CardsAndGames }) {
   //     </div>
   //   </Carousel>
   // </div>);
-  return <div style={{overflow: "scroll"}}>
+
+
+  return <div style={{ overflow: "scroll" }}>
     {
       data.map(([card, games]) => (
-        <div style={{width: "calc(30% - 5px)", height: "300px", overflow: "hidden", margin: "2.5px", display: "inline-block", verticalAlign: "top"}}>
-          <h6 style={{margin: 0, padding: 0}}>ID: {card.uid}</h6>
-          <TextField placeholder="Name" value={card.name} onBlur={(v) => SetNameForMicroSDCard(card.uid, v.target.value)}/>
-          <p style={{fontSize: "12px", margin: 0, padding: 0, textOverflow: "ellipsis"}}>
-          {games.map(game => (<div>{game.name}</div>))}
-          </p>
-        </div>
+        <Card card={card} games={games}/>
       ))
     }
   </div>
@@ -77,7 +76,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             }}
           >Open Test Page</ButtonItem>
         </PanelSectionRow>
-        
+
       </PanelSection>
     </div>
   );
@@ -111,6 +110,8 @@ export default definePlugin((serverApi: ServerAPI) => {
     exact: true,
   });
 
+  const patch = PatchPlayButton(serverApi);
+
   // init USDPL WASM frontend
   // this is required to interface with the backend
   (async () => {
@@ -126,6 +127,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     icon: <FaSdCard />,
     onDismount() {
       serverApi.routerHook.removeRoute("/decky-plugin-test");
+      serverApi.routerHook.removePatch('/library/app/:appid', patch)
     },
   };
 });

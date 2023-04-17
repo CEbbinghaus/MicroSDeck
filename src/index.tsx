@@ -110,7 +110,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     exact: true,
   });
 
-  const patch = PatchPlayButton(serverApi);
+  const patch = false && PatchPlayButton(serverApi);
 
   // init USDPL WASM frontend
   // this is required to interface with the backend
@@ -127,7 +127,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     icon: <FaSdCard />,
     onDismount() {
       serverApi.routerHook.removeRoute("/decky-plugin-test");
-      serverApi.routerHook.removePatch('/library/app/:appid', patch)
+      patch && serverApi.routerHook.removePatch('/library/app/:appid', patch)
     },
   };
 });

@@ -11,6 +11,14 @@
 			"program": "${workspaceFolder}/backend/target/debug/decky_plugin",
 			"args": [],
 			"cwd": "${workspaceFolder}/backend/target/debug"
+		},
+		{
+			"name": "Attach to Chrome",
+			"port": 8000,
+			"request": "attach",
+			"type": "chrome",
+			"webRoot": "${workspaceFolder}/src",
+			"address": "http://192.168.0.240:8000/devtools/inspector.html?ws=192.168.0.240:8000/devtools/page/D5B9C8DB44CA9D3FB7247BFE941ED3C4"
 		}
 	]
 }

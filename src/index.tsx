@@ -21,12 +21,12 @@ import logo from "../assets/logo.png";
 import { init_usdpl, target_usdpl, init_embedded, call_backend } from "usdpl-front";
 import { CardsAndGames, GetCardsAndGames, SetNameForMicroSDCard } from "./hooks/backend";
 
-const USDPL_PORT: number = 54321;
+const USDPL_PORT: number = 55555;
 
 import Carousel from 're-carousel'
 import Buttons from "./Buttons";
 import Card from "./components/Card";
-import PatchPlayButton from "./patch/PatchAppScreen";
+import PatchAppScreen from "./patch/PatchAppScreen";
 
 function TestCarousel({ data }: { data: CardsAndGames }) {
 
@@ -110,7 +110,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     exact: true,
   });
 
-  const patch = false && PatchPlayButton(serverApi);
+  const patch = PatchAppScreen(serverApi);
 
   // init USDPL WASM frontend
   // this is required to interface with the backend
@@ -127,7 +127,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     icon: <FaSdCard />,
     onDismount() {
       serverApi.routerHook.removeRoute("/decky-plugin-test");
-      patch && serverApi.routerHook.removePatch('/library/app/:appid', patch)
+      patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
     },
   };
 });

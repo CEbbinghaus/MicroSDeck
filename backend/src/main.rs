@@ -9,7 +9,9 @@ mod steam;
 use futures::executor::block_on;
 use futures::future::join;
 use futures::{Future, StreamExt};
+use std::borrow::Borrow;
 use std::env;
+use std::path::Path;
 use std::{fs, time::Duration};
 use steam::*;
 use surrealdb::engine::local::{Db, File, Mem};
@@ -25,7 +27,7 @@ use usdpl_back::{core::serdes::Primitive, Instance};
 
 use crate::dbo::{Game, MicroSDCard};
 
-const PORT: u16 = 54321; // TODO replace with something unique
+const PORT: u16 = 55555; // TODO replace with something unique
 
 const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -149,7 +151,17 @@ async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
 async fn setup_db() {
     // let ds = Datastore::new("/var/etc/Database.file").await?;
     // match DB.connect::<Mem>(()).await {
-    match DB.connect::<File>("/tmp/dbDebug.tmp").await {
+
+    let file = match std::env::var("DECKY_PLUGIN_RUNTIME_DIR") {
+        Err(_) => if cfg!(debug_assertions) {
+            Path::new("/tmp").join("MicroSDeck").join("data.db")
+        } else {
+            panic!("Unable to proceed");
+        },
+        Ok(loc) => Path::new(loc.as_str()).join("data.db")
+    };
+        
+    match DB.connect::<File>(file.to_string_lossy().as_ref()).await {
         Err(_) => panic!("Unable to construct Database"),
         Ok(_) => {
             DB.use_ns("")

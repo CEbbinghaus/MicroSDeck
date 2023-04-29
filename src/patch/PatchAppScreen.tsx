@@ -3,13 +3,12 @@ import {
     ServerAPI,
     wrapReactType,
     findInReactTree,
-    appDetailsClasses,
-    playSectionClasses,
-    wrapReactClass
+    appDetailsClasses
 } from 'decky-frontend-lib'
 import { ReactElement } from 'react'
+import LibraryModal from '../components/LibraryModal';
 
-function PatchPlayButton(serverAPI: ServerAPI) {
+function PatchAppScreen(serverAPI: ServerAPI) {
     
     const path = '/library/app/:appid';
     console.log(`Patching ${path}`)
@@ -47,13 +46,34 @@ function PatchRootElement(root: any): any {
         (_2: Record<string, unknown>[], element?: ReactElement) => {
             // window.rootEl = element;
 
-            const container = findInReactTree(element, v => v.type?.prototype?.onGameInfoToggle); 
+            // const container = findInReactTree(element, v => v.type?.prototype?.onGameInfoToggle); 
         
-            if (typeof container !== 'object') {
-                return element
-            }
+            // if (typeof container !== 'object') {
+            //     return element
+            // }
             
-            PatchPanelElement(container);
+            // PatchPanelElement(container);
+
+            const container = findInReactTree(
+                element,
+                (x: ReactElement) =>
+                  Array.isArray(x?.props?.children) &&
+                  x?.props?.className?.includes(
+                    appDetailsClasses.InnerContainer
+                  )
+              )
+
+              if (typeof container !== 'object') {
+                return element
+              }
+
+              console.log("Found Appropriate location to patch.")
+
+              container.props.children.splice(
+                1,
+                0,
+                <LibraryModal />
+              )
 
             return element;
         }
@@ -62,131 +82,131 @@ function PatchRootElement(root: any): any {
     return root;
 }
 
-function PatchPanelElement(panel: any): any {
+// function PatchPanelElement(panel: any): any {
     
-    console.log("Found Container", panel);
+//     console.log("Found Container", panel);
     
-    //     debugger;
-    // window.panel = panel;
+//     //     debugger;
+//     // window.panel = panel;
     
-    wrapReactClass(panel)
+//     wrapReactClass(panel)
 
-    afterPatch(
-        panel.type.prototype,
-        'render',
-        (_2: Record<string, unknown>[], element?: ReactElement) => {
+//     afterPatch(
+//         panel.type.prototype,
+//         'render',
+//         (_2: Record<string, unknown>[], element?: ReactElement) => {
 
-            const container = findInReactTree(element, v => v?.props?.setSections); 
+//             const container = findInReactTree(element, v => v?.props?.setSections); 
         
-            if (typeof container !== 'object') {
-                return element
-            }
+//             if (typeof container !== 'object') {
+//                 return element
+//             }
 
-            PatchAppDetailsOverview(container);
+//             PatchAppDetailsOverview(container);
 
-            return element;
-        }
-    )
-    return panel;
-}
+//             return element;
+//         }
+//     )
+//     return panel;
+// }
 
-function PatchAppDetailsOverview(panel: any): any {
+// function PatchAppDetailsOverview(panel: any): any {
     
-    console.log("Found AppDetails", panel);
+//     console.log("Found AppDetails", panel);
     
-    //     debugger;
-    // window.appDetailsOverview = panel;
+//     //     debugger;
+//     // window.appDetailsOverview = panel;
     
-    // wrapReactType(panel)
+//     // wrapReactType(panel)
 
-    afterPatch(
-        panel,
-        'type',
-        (_2: Record<string, unknown>[], tmpEl?: ReactElement) => {
+//     afterPatch(
+//         panel,
+//         'type',
+//         (_2: Record<string, unknown>[], tmpEl?: ReactElement) => {
 
-            let cache: ReactElement;
+//             let cache: ReactElement;
 
-            afterPatch(
-                tmpEl,
-                'type',
-                (_2: Record<string, unknown>[], element?: ReactElement) => {
-                    if(cache)
-                        return cache;
+//             afterPatch(
+//                 tmpEl,
+//                 'type',
+//                 (_2: Record<string, unknown>[], element?: ReactElement) => {
+//                     if(cache)
+//                         return cache;
 
-                    const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
+//                     const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
         
-                    if (typeof container !== 'object') {
-                        return element
-                    }
+//                     if (typeof container !== 'object') {
+//                         return element
+//                     }
         
-                    PatchPlaySection(container);
+//                     PatchPlaySection(container);
         
-                    return (cache = element);
-                }
-            )
-            return tmpEl;
-        }
-    )
-    return panel;
-}
+//                     return (cache = element);
+//                 }
+//             )
+//             return tmpEl;
+//         }
+//     )
+//     return panel;
+// }
 
-function PatchPlaySection(panel: any): any {
+// function PatchPlaySection(panel: any): any {
     
-    console.log("Found AppDetails Section", panel);
+//     console.log("Found AppDetails Section", panel);
     
-    //     debugger;
-    // window.appDetailsSection = panel;
+//     //     debugger;
+//     // window.appDetailsSection = panel;
     
-    wrapReactType(panel)
+//     wrapReactType(panel)
 
-    afterPatch(
-        panel.type,
-        'render',
-        (_2: Record<string, unknown>[], element?: ReactElement) => {
-            const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
+//     afterPatch(
+//         panel.type,
+//         'render',
+//         (_2: Record<string, unknown>[], element?: ReactElement) => {
+//             const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
         
-            if (typeof container !== 'object') {
-                return element
-            }
+//             if (typeof container !== 'object') {
+//                 return element
+//             }
 
-            PatchAppRow(container);
+//             PatchAppRow(container);
 
-            return element;
-        }
-    )
-    return panel;
-}
+//             return element;
+//         }
+//     )
+//     return panel;
+// }
 
-function PatchAppRow(panel: any): any {
+// function PatchAppRow(panel: any): any {
     
-    console.log("Found AppRow Section", panel);
+//     console.log("Found AppRow Section", panel);
     
-    //     debugger;
-    // window.appRowSection = panel;
+//     //     debugger;
+//     // window.appRowSection = panel;
     
-    wrapReactType(panel)
+//     wrapReactType(panel)
 
-    afterPatch(
-        panel.type,
-        'render',
-        (_2: Record<string, unknown>[], tmpEl?: ReactElement) => {
-            // afterPatch(
-            //     tmpEl.type,
-            //     'render',
-            //     (_2: Record<string, unknown>[], element?: ReactElement) => {
-            //         window.el = element;
-            //         return element
-            //     }
-            // )
+//     afterPatch(
+//         panel.type,
+//         'render',
+//         (_2: Record<string, unknown>[], tmpEl?: ReactElement) => {
+//             // afterPatch(
+//             //     tmpEl.type,
+//             //     'render',
+//             //     (_2: Record<string, unknown>[], element?: ReactElement) => {
+//             //         window.el = element;
+//             //         return element
+//             //     }
+//             // )
 
-            debugger;
+//             debugger;
 
-            return tmpEl;
-        }
-    )
-    return panel;
-}
+//             return tmpEl;
+//         }
+//     )
+//     return panel;
+// }
 
 
 
-export default PatchPlayButton
+export default PatchAppScreen;

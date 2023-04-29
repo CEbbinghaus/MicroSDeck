@@ -5,6 +5,6 @@
   "publish": {
     "tags": ["microsd", "root"],
     "description": "A plugin to manage MicroSD cards.",
-    "image": "https://opengraph.githubassets.com/1/CEbbinghaus/MicroSDeck"
+    "image": "https://raw.githubusercontent.com/CEbbinghaus/MicroSDeck/master/Logo.png"
   }
 }

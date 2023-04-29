@@ -79,6 +79,59 @@ async fn run_server() -> Result<(), ()> {
         .await
 }
 
+async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
+    if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
+        println!("Steam MicroSD card detected.");
+
+        let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
+
+        println!("contentid: {}", library.contentid);
+
+        let files: Vec<_> = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|f| f.path().extension().unwrap_or_default().eq("acf"))
+            .collect();
+
+        println!("Found {} Files", files.len());
+
+        let games: Vec<AppState> = files
+            .iter()
+            .filter_map(|f| fs::read_to_string(f.path()).ok())
+            .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
+            .collect();
+
+        println!("Retrieved {} Games", games.len());
+
+        for game in games.iter() {
+            println!("Found App \"{}\"", game.name);
+        }
+
+        if let Ok(None) = db::get_card(library.contentid.clone()).await {
+            db::add_sd_card(&MicroSDCard {
+                uid: library.contentid.clone(),
+                name: library.label,
+                games: games.iter().map(|v| db::get_id("game", v.appid.clone())).collect(),
+            })
+            .await?;
+        }
+
+        for game in games.iter() {
+            if let Ok(None) = db::get_game(game.appid.clone()).await {
+                db::add_game(&Game {
+                    uid: game.appid.clone(),
+                    name: game.name.clone(),
+                    size: game.size_on_disk,
+                    card: db::get_id("card", library.contentid.clone()),
+                })
+                .await?
+            }
+        }
+    }
+
+    Ok(())
+}
+
 // #[tokio::main]
 async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
@@ -96,54 +149,7 @@ async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
             event.devpath().to_str().unwrap_or("UNKNOWN")
         );
 
-        if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
-            println!("Steam MicroSD card detected.");
-
-            let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
-
-            println!("contentid: {}", library.contentid);
-
-            let files: Vec<_> = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
-                .into_iter()
-                .filter_map(Result::ok)
-                .filter(|f| f.path().extension().unwrap_or_default().eq("acf"))
-                .collect();
-
-            println!("Found {} Files", files.len());
-
-            let games: Vec<AppState> = files
-                .iter()
-                .filter_map(|f| fs::read_to_string(f.path()).ok())
-                .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
-                .collect();
-
-            println!("Retrieved {} Games", games.len());
-
-            for game in games.iter() {
-                println!("Found App \"{}\"", game.name);
-            }
-
-            if let Ok(None) = db::get_card(library.contentid.clone()).await {
-                db::add_sd_card(&MicroSDCard {
-                    uid: library.contentid.clone(),
-                    name: library.label,
-                    games: games.iter().map(|v| db::get_id("game", v.appid.clone())).collect(),
-                })
-                .await?;
-            }
-
-            for game in games.iter() {
-                if let Ok(None) = db::get_game(game.appid.clone()).await {
-                    db::add_game(&Game {
-                        uid: game.appid.clone(),
-                        name: game.name.clone(),
-                        size: game.size_on_disk,
-                        card: db::get_id("card", library.contentid.clone()),
-                    })
-                    .await?
-                }
-            }
-        }
+        read_msd_directory().await?;
     }
     Ok(())
 }
@@ -172,29 +178,35 @@ async fn setup_db() {
     }
 }
 
+fn init() {
+
+}
+
 #[tokio::main]
 async fn main() {
-    env::set_var("RUST_BACKTRACE", "1");
+    if cfg!(debug_assertions) {
+        env::set_var("RUST_BACKTRACE", "1");
+    }
+
+    init();
 
     println!(
         "{}@{} by {}",
         PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
     );
+
     println!("Starting Program...");
 
     setup_db().await;
 
-    // db::setup_test_data().await.expect("Test data to be set up"); 
-
-    println!("{:?}", db::list_games().await);
+    // Try reading the directory when we launch the app. That way we ensure that if a car is currently inserted we still detect it
+    let _ = read_msd_directory().await;
 
     println!("Database Started...");
 
     let server_future = run_server();
 
     let monitor_future = run_monitor();
-
-    // let web_server = ;
 
     let (server_res, monitor_ress) = join(server_future, monitor_future).await;
 

@@ -20,6 +20,8 @@ function PatchAppScreen(serverAPI: ServerAPI) {
                 return props
             }
 
+            console.log("patching...", props);
+
             afterPatch(
                 props.children.props,
                 'renderFunc',
@@ -39,6 +41,8 @@ function PatchAppScreen(serverAPI: ServerAPI) {
 function PatchRootElement(root: any): any {
 
     wrapReactType(root.props.children)
+
+    const appDetails = root?.props?.children?.props?.overview || {};
 
     afterPatch(
         root.props.children.type,
@@ -67,12 +71,12 @@ function PatchRootElement(root: any): any {
                 return element
               }
 
-              console.log("Found Appropriate location to patch.")
+              console.log("Found Appropriate location to patch.", {root, element, container, appDetails});
 
               container.props.children.splice(
                 1,
                 0,
-                <LibraryModal />
+                <LibraryModal appId={appDetails?.appid?.toString()}/>
               )
 
             return element;

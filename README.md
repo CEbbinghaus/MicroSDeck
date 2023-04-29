@@ -1,4 +1,8 @@
-# MicroSDeck
-A MicroSD card manager for the SteamDeck. The goal being to display the card required for any given game to help remember the card for a game.
+![image](Logo.png)
 
-This plugin is still in its early stages of development and while the Backend is already quite solid the frontend is still very unstable. Please do not use yet
+# MicroSDeck
+Manage your MicroSD Cards and view which card each game is on.
+
+> **Warning**
+> This plugin is still in its early stages of development and while the Backend is already quite solid the frontend is still very unstable. If you are technical enough to install it you should be ready to deal with any consequences.
+

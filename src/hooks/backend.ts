@@ -6,19 +6,18 @@ export async function SetNameForMicroSDCard(CardId: string, Name: string){
 }
 
 
-export function getValue(appId: string | undefined){
-    const [value, setValue] = useState<any>(false)
+export function GetCardForGame(appId: string){
+    const [value, setValue] = useState<[string | MicroSDCard] | undefined>()
 
     async function refresh() {
-        const result = await call_backend("ping", []);
-
-        setValue(result)
+        const result = await call_backend("get_card_for_game", [appId]);
+        setValue(result[0])
     }
 
     useEffect(() => {
         (async () => {
-            const result = await call_backend("ping", []);
-            setValue(result)
+            const result = await call_backend("get_card_for_game", [appId]);
+            setValue(result[0])
         })();
       }, [appId])
 

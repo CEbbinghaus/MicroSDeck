@@ -25,6 +25,7 @@ impl From<String> for Name {
 #[derive(Serialize, Deserialize,Debug,Clone)]
 pub struct MicroSDCard {
     pub uid: String,
+    pub libid: String,
     pub name: String,
     pub games: Vec<Thing>
 }

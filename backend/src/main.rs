@@ -3,14 +3,25 @@
 mod api;
 mod db;
 mod dbo;
+mod env;
 mod err;
+mod log;
+mod sdcard;
 mod steam;
+mod watch;
 
+use crate::log::Logger;
+use crate::sdcard::is_card_inserted;
+use crate::watch::async_watch;
+use ::log::{info, trace, warn};
 use futures::executor::block_on;
-use futures::future::join;
+use futures::join;
 use futures::{Future, StreamExt};
+use notify::{RecursiveMode, Watcher};
+use sdcard::get_card_cid;
 use std::borrow::Borrow;
-use std::env;
+use std::fs::{read, OpenOptions};
+use std::ops::Deref;
 use std::path::Path;
 use std::{fs, time::Duration};
 use steam::*;
@@ -27,13 +38,18 @@ use usdpl_back::{core::serdes::Primitive, Instance};
 
 use crate::dbo::{Game, MicroSDCard};
 
+static LOGGER: Logger = Logger;
+
 const PORT: u16 = 55555; // TODO replace with something unique
 
 const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
-// #[tokio::main]
+pub fn init() -> Result<(), ::log::SetLoggerError> {
+    ::log::set_logger(&LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
+}
+
 async fn run_server() -> Result<(), ()> {
     // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     // WriteLogger::init(
@@ -50,7 +66,7 @@ async fn run_server() -> Result<(), ()> {
     // )
     // .unwrap();
 
-    println!("Starting backend...");
+    info!("Starting backend...");
 
     Instance::new(PORT)
         .register("hello", |_: Vec<Primitive>| {
@@ -80,12 +96,20 @@ async fn run_server() -> Result<(), ()> {
 }
 
 async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
+    let cid = match get_card_cid() {
+        None => {
+            warn!("Unable to retrieve CID from MicroSD card");
+            return Ok(());
+        }
+        Some(v) => v,
+    };
+
     if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
-        println!("Steam MicroSD card detected.");
+        info!("Steam MicroSD card detected.");
 
         let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
 
-        println!("contentid: {}", library.contentid);
+        info!("contentid: {}", library.contentid);
 
         let files: Vec<_> = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
             .into_iter()
@@ -93,7 +117,7 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
             .filter(|f| f.path().extension().unwrap_or_default().eq("acf"))
             .collect();
 
-        println!("Found {} Files", files.len());
+        info!("Found {} Files", files.len());
 
         let games: Vec<AppState> = files
             .iter()
@@ -101,30 +125,62 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
             .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
             .collect();
 
-        println!("Retrieved {} Games", games.len());
+        info!("Retrieved {} Games", games.len());
 
         for game in games.iter() {
-            println!("Found App \"{}\"", game.name);
+            info!("Found App \"{}\"", game.name);
         }
 
-        if let Ok(None) = db::get_card(library.contentid.clone()).await {
-            db::add_sd_card(&MicroSDCard {
-                uid: library.contentid.clone(),
-                name: library.label,
-                games: games.iter().map(|v| db::get_id("game", v.appid.clone())).collect(),
-            })
-            .await?;
+        match db::get_card(cid.clone()).await {
+            Ok(None) => {
+                db::add_sd_card(
+                    cid.clone(),
+                    &MicroSDCard {
+                        uid: cid.clone(),
+                        libid: library.contentid.clone(),
+                        name: library.label,
+                        games: games
+                            .iter()
+                            .map(|v| db::get_id("game", v.appid.clone()))
+                            .collect(),
+                    },
+                )
+                .await?;
+                info!("Wrote MicroSD card {} to Database", library.contentid);
+            }
+            Ok(Some(_)) => info!("MicroSD card {} already in Database", library.contentid),
+            Err(err) => warn!(
+                "Unable to write card {} to Database:\n{}",
+                library.contentid, err
+            ),
         }
 
         for game in games.iter() {
-            if let Ok(None) = db::get_game(game.appid.clone()).await {
-                db::add_game(&Game {
-                    uid: game.appid.clone(),
-                    name: game.name.clone(),
-                    size: game.size_on_disk,
-                    card: db::get_id("card", library.contentid.clone()),
-                })
-                .await?
+            match db::get_game(game.appid.clone()).await {
+                Ok(None) => {
+                    db::add_game(
+                        game.appid.clone(),
+                        &Game {
+                            uid: game.appid.clone(),
+                            name: game.name.clone(),
+                            size: game.size_on_disk,
+                            card: db::get_id("card", cid.clone()),
+                        },
+                    )
+                    .await?;
+                    info!(
+                        "Wrote Game {} with id {} to Database",
+                        game.name, game.appid
+                    );
+                }
+                Ok(Some(_)) => info!(
+                    "Game {} with id {} already in Database",
+                    game.name, game.appid
+                ),
+                Err(err) => warn!(
+                    "Unable to write Game {} with id {} to Database:\n{}",
+                    game.name, game.appid, err
+                ),
             }
         }
     }
@@ -132,19 +188,18 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
     Ok(())
 }
 
-// #[tokio::main]
 async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
     let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
 
-    println!("Now listening for Device Events...");
+    info!("Now listening for Device Events...");
     while let Some(Ok(event)) = socket.next().await {
         if event.event_type() != EventType::Bind {
             continue;
         }
 
-        println!(
+        info!(
             "Device {} was Bound",
             event.devpath().to_str().unwrap_or("UNKNOWN")
         );
@@ -159,14 +214,16 @@ async fn setup_db() {
     // match DB.connect::<Mem>(()).await {
 
     let file = match std::env::var("DECKY_PLUGIN_RUNTIME_DIR") {
-        Err(_) => if cfg!(debug_assertions) {
-            Path::new("/tmp").join("MicroSDeck").join("data.db")
-        } else {
-            panic!("Unable to proceed");
-        },
-        Ok(loc) => Path::new(loc.as_str()).join("data.db")
+        Err(_) => {
+            if cfg!(debug_assertions) {
+                Path::new("/tmp").join("MicroSDeck").join("data.db")
+            } else {
+                panic!("Unable to proceed");
+            }
+        }
+        Ok(loc) => Path::new(loc.as_str()).join("data.db"),
     };
-        
+
     match DB.connect::<File>(file.to_string_lossy().as_ref()).await {
         Err(_) => panic!("Unable to construct Database"),
         Ok(_) => {
@@ -178,44 +235,50 @@ async fn setup_db() {
     }
 }
 
-fn init() {
-
-}
-
 #[tokio::main]
 async fn main() {
     if cfg!(debug_assertions) {
-        env::set_var("RUST_BACKTRACE", "1");
+        std::env::set_var("RUST_BACKTRACE", "1");
     }
 
-    init();
+    match init() {
+        Err(err) => {
+            eprintln!("Unable to Initialize:\n{}", err);
+            return;
+        }
+        Ok(()) => trace!("Initialized"),
+    }
 
-    println!(
+    info!(
         "{}@{} by {}",
         PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
     );
 
-    println!("Starting Program...");
+    info!("Starting Program...");
 
     setup_db().await;
 
-    // Try reading the directory when we launch the app. That way we ensure that if a car is currently inserted we still detect it
-    let _ = read_msd_directory().await;
+    if is_card_inserted() {
+        // Try reading the directory when we launch the app. That way we ensure that if a car is currently inserted we still detect it
+        let _ = read_msd_directory().await;
+    }
 
-    println!("Database Started...");
+    info!("Database Started...");
 
     let server_future = run_server();
 
     let monitor_future = run_monitor();
 
-    let (server_res, monitor_ress) = join(server_future, monitor_future).await;
+    let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
 
-    if server_res.is_err() || monitor_ress.is_err() {
-        println!("There was an error.");
+    let (server_res, monitor_res, watch_res) = join!(server_future, monitor_future, watch_future);
+
+    if server_res.is_err() || monitor_res.is_err() || watch_res.is_err(){
+        info!("There was an error.");
     }
     // while !handle1.is_finished() && !handle2.is_finished() {
     //     std::thread::sleep(Duration::from_millis(1));
     // }
 
-    println!("Exiting...");
+    info!("Exiting...");
 }

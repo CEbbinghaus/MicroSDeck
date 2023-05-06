@@ -7,11 +7,12 @@ import {
 } from 'decky-frontend-lib'
 import { ReactElement } from 'react'
 import LibraryModal from '../components/LibraryModal';
+import { Logger } from '../Logging';
 
 function PatchAppScreen(serverAPI: ServerAPI) {
     
     const path = '/library/app/:appid';
-    console.log(`Patching ${path}`)
+    Logger.Log("Patching {path}", {path});
 
     return serverAPI.routerHook.addPatch(
         path,
@@ -20,7 +21,7 @@ function PatchAppScreen(serverAPI: ServerAPI) {
                 return props
             }
 
-            console.log("patching...", props);
+            Logger.Log("patching...", {props});
 
             afterPatch(
                 props.children.props,
@@ -71,7 +72,7 @@ function PatchRootElement(root: any): any {
                 return element
               }
 
-              console.log("Found Appropriate location to patch.", {root, element, container, appDetails});
+              Logger.Log("Found Appropriate location to patch.", {root, element, container, appDetails});
 
               container.props.children.splice(
                 1,

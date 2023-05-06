@@ -1,4 +1,4 @@
-import { Button, Field, Focusable, GamepadButton } from "decky-frontend-lib";
+import { Field, Focusable, GamepadButton } from "decky-frontend-lib";
 import { CSSProperties } from "react"
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 

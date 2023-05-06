@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { call_backend } from 'usdpl-front';
+import { Logger } from '../Logging';
 
 export async function SetNameForMicroSDCard(CardId: string, Name: string){
     await call_backend("set_name_for_card", [CardId, Name])
@@ -29,16 +30,16 @@ export function GetCardForGame(appId: string){
 
 export type CardsAndGames = [MicroSDCard, Game[]][];
 export function GetCardsAndGames() {
-    const [value, setValue] = useState<CardsAndGames | null>(null)
+    const [cards, setValue] = useState<CardsAndGames | null>(null)
 
     async function runQuery() {
-        console.log("Running Query");
+        Logger.Log("Running Query");
         const result = await call_backend("list_cards_with_games", []) as any[];
 
-        console.log("Query Finished", result);
+        Logger.Log("Query Finished", {result});
 
         if(typeof result[0] === "string")
-            console.error("Unable to retrieve data", result);
+            Logger.Log("Unable to retrieve data", {result});
         else {
             setValue(result[0])
         }
@@ -51,7 +52,7 @@ export function GetCardsAndGames() {
       }, [])
 
     return {
-        value,
+        cards,
         refresh: runQuery
     }
 }

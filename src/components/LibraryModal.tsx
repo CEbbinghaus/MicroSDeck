@@ -2,6 +2,7 @@
 import React, { ReactElement, useEffect, useRef, useState} from 'react'
 import { FaSdCard } from 'react-icons/fa'
 import { GetCardForGame } from '../hooks/backend';
+import { Logger } from '../Logging';
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
     var data = null;
@@ -26,18 +27,18 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
             return;
         
         setTop(imageWindowBounds.height - height);
-        console.log("Set Top For Window bacuse of bounds", imageWindowBounds);
+        Logger.Log("Set Top For Window bacuse of bounds", {imageWindowBounds});
     });
 
     if(!value)
     {
-        console.error("Unable to find Card");
+        //Logger.Error("Unable to find Card");
         return (<></>);
     }
 
     if(typeof value === "string")
     {
-        console.error("Error retrieving SD Card: ", value)
+        Logger.Error("Error retrieving SD Card: \"{error}\"", {error: value})
         return (<></>);
     }
 

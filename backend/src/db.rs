@@ -8,18 +8,18 @@ pub fn get_id(table: &str, id: String) -> Thing {
     Thing::from((table.to_string(), Id::String(id)))
 }
 
-pub async fn add_game(game: &Game) -> Result<(), surrealdb::Error> {
-    let _game: Game = crate::DB.create(("game", game.uid.clone())).content(game).await?;
+pub async fn add_game(id: String, game: &Game) -> Result<(), surrealdb::Error> {
+    let _game: Game = crate::DB.create(("game", id)).content(game).await?;
     Ok(())
 }
 
-pub async fn add_sd_card(card: &MicroSDCard) -> Result<(), surrealdb::Error> {
-    let _card: MicroSDCard = crate::DB.create(("card", card.uid.clone())).content(card).await?;
+pub async fn add_sd_card(id: String, card: &MicroSDCard) -> Result<(), surrealdb::Error> {
+    let _card: MicroSDCard = crate::DB.create(("card", id)).content(card).await?;
     Ok(())
 }
 
-pub async fn update_sd_card_name(card_id: String, name: Name) -> Result<(), surrealdb::Error> {
-    let _: Name = crate::DB.update(("card", card_id)).merge(name).await?;
+pub async fn update_sd_card_name(id: String, name: Name) -> Result<(), surrealdb::Error> {
+    let _: Name = crate::DB.update(("card", id)).merge(name).await?;
     Ok(())
 }
 
@@ -104,64 +104,3 @@ pub async fn list_cards_with_games() -> Result<Vec<(MicroSDCard,Vec<Game>)>, Box
 
     Ok(result)
 }
-
-// pub async fn list_cards_with_games() -> Result<Vec<(MicroSDCard, Vec<Game>)>, Box<dyn std::error::Error>> {
-//     let mut query = crate::DB
-//         .query("SELECT *, games.* FROM card")
-//         .await?;
-
-//     let games: Vec<MicroSDCard> = query.take(0)?;
-//     let card: Option<MicroSDCard> = query.take(1)?;
-
-//     match card {
-//         None => Err(Box::new(crate::err::Error::Error("No Microsd card found".into()))),
-//         Some(card) => Ok((card, games))
-//     }
-// }
-
-// pub async fn setup_test_data() -> Result<(), Box<dyn std::error::Error>> {
-//     let card = MicroSDCard {
-//         uid: 1234,
-//         name: "Test".to_string(),
-//         games: vec![Thing::from(get_id("game", 123)), Thing::from(get_id("game", 124))]
-//     };
-
-//     let game = Game {
-//         uid: 123,
-//         name: "TestMcTestFace".to_string(),
-//         size: 64,
-//         card: Thing::from(get_id("card", card.uid)),
-//     };
-
-//     add_game(&game).await?;
-//     add_sd_card(&card).await?;
-
-//     for response in list_games().await? {
-//         println!("Recieved {:?}", response);
-//     }
-
-//     for response in list_cards().await? {
-//         println!("Recieved {:?}", response);
-//     }
-
-//     println!(
-//         "Found Card for game {} {:?}",
-//         game.uid,
-//         get_sd_card_for_game(game.uid).await?
-//     );
-
-//     update_sd_card_name(card.uid, "This is a new Name".into()).await?;
-
-//     println!(
-//         "Found Card for game {} {:?}",
-//         game.uid,
-//         get_sd_card_for_game(game.uid).await?
-//     );
-
-//     println!(
-//         "Found Games on Card {} {:?}",
-//         card.uid,
-//         list_games_on_card(card.uid).await?
-//     );
-//     Ok(())
-// }

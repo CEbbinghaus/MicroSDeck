@@ -1,7 +1,7 @@
 // import { ServerAPI } from 'decky-frontend-lib'
 import React, { ReactElement, useEffect, useRef, useState} from 'react'
 import { FaSdCard } from 'react-icons/fa'
-import { GetCardForGame } from '../hooks/backend';
+import { GetCardsForGame } from '../hooks/backend';
 import { Logger } from '../Logging';
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
@@ -12,7 +12,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
     const height = 20;
     const [top, setTop] = useState<number>(210);
 
-    const {value, refresh} = GetCardForGame(appId);
+    const {value, refresh} = GetCardsForGame(appId);
 
     useEffect(() => {
         if(!ref || !ref.current)return;
@@ -42,6 +42,12 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         return (<></>);
     }
 
+    if(!value.length)
+    {
+        Logger.Info("No MicroSD card could be found for {appId}", {appId});
+        return (<></>);
+    }
+
     // if (!data) return (<></>);
 
     return (
@@ -53,7 +59,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         >
             <FaSdCard size={20} />
             <span>
-                {(value as unknown as MicroSDCard)?.name ?? "Unamed"}
+                {value.map(v => v.name).filter(v => v).join(", ") || "UNAMED"}
             </span>
         </div>
     )

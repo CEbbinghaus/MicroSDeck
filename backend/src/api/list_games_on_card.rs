@@ -25,7 +25,7 @@ impl AsyncCallable for ListGamesOnCard {
             }
         };
 
-        match crate::db::list_games_on_card(id).await {
+        match crate::db::get_games_on_card(id).await {
             Err(err) => {
                 vec![Primitive::String(format!("{err}"))]
             }

@@ -12,7 +12,7 @@ impl ListCardsWithGames {
 #[async_trait::async_trait]
 impl AsyncCallable for ListCardsWithGames {
     async fn call(&self, _: Vec<Primitive>) -> Vec<Primitive> {
-        match crate::db::list_cards_with_games().await {
+        match crate::db::get_cards_with_games().await {
             Err(err) => {
                 vec![format!("{err}").into()]
             }

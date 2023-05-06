@@ -7,8 +7,8 @@ export async function SetNameForMicroSDCard(CardId: string, Name: string){
 }
 
 
-export function GetCardForGame(appId: string){
-    const [value, setValue] = useState<[string | MicroSDCard] | undefined>()
+export function GetCardsForGame(appId: string){
+    const [value, setValue] = useState<string | MicroSDCard[] | undefined>()
 
     async function refresh() {
         const result = await call_backend("get_card_for_game", [appId]);

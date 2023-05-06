@@ -10,6 +10,7 @@ mod sdcard;
 mod steam;
 mod watch;
 
+use crate::db::{add_game_to_card, get_cards_with_games, get_games_on_card, remove_game_from_card};
 use crate::log::Logger;
 use crate::sdcard::is_card_inserted;
 use crate::watch::async_watch;
@@ -139,10 +140,6 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
                         uid: cid.clone(),
                         libid: library.contentid.clone(),
                         name: library.label,
-                        games: games
-                            .iter()
-                            .map(|v| db::get_id("game", v.appid.clone()))
-                            .collect(),
                     },
                 )
                 .await?;
@@ -155,6 +152,14 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
             ),
         }
 
+        futures::future::try_join_all(
+            get_games_on_card(cid.clone()).await?
+                .iter()
+                .filter(|v| !games.iter().any(|g| g.appid == v.uid))
+                .map(|v| remove_game_from_card(v.uid.clone(), cid.clone())),
+            )
+        .await?;
+
         for game in games.iter() {
             match db::get_game(game.appid.clone()).await {
                 Ok(None) => {
@@ -164,7 +169,6 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
                             uid: game.appid.clone(),
                             name: game.name.clone(),
                             size: game.size_on_disk,
-                            card: db::get_id("card", cid.clone()),
                         },
                     )
                     .await?;
@@ -182,6 +186,10 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
                     game.name, game.appid, err
                 ),
             }
+
+            add_game_to_card(game.appid.clone(), cid.clone())
+                .await
+                .unwrap_or_else(|err| panic!("Query to work {:#?}", err));
         }
     }
 
@@ -269,11 +277,11 @@ async fn main() {
 
     let monitor_future = run_monitor();
 
-    let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
+    // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
 
-    let (server_res, monitor_res, watch_res) = join!(server_future, monitor_future, watch_future);
+    let (server_res, monitor_res) = join!(server_future, monitor_future);
 
-    if server_res.is_err() || monitor_res.is_err() || watch_res.is_err(){
+    if server_res.is_err() || monitor_res.is_err()  {
         info!("There was an error.");
     }
     // while !handle1.is_finished() && !handle2.is_finished() {

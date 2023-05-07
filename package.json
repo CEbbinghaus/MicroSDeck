@@ -20,7 +20,7 @@
     "microsd"
   ],
   "author": "Christopher-Robin <git@cebbinghaus.com>",
-  "license": "GPL-2.0-or-later",
+  "license": "GPL-2.0",
   "bugs": {
     "url": "https://github.com/CEbbinghaus/MicroSDeck/issues"
   },

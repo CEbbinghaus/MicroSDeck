@@ -22,7 +22,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 
   return (
     <div>
-      <PanelSection >
+      <PanelSection>
         <PanelSectionRow>          
           <DialogButton
             onClick={() => {

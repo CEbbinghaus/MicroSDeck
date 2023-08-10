@@ -15,7 +15,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
     const {value, refresh} = GetCardsForGame(appId);
 
     useEffect(() => {
-        if(!ref || !ref.current)return;
+        if(!ref || !ref.current) return;
         const doc = (ref.current as unknown as HTMLElement).getRootNode() as Document;
         // const playButton = document.querySelector("[class^='appactionbutton_PlayButton']");
 

@@ -10,10 +10,12 @@ mod sdcard;
 mod steam;
 mod watch;
 
+// use crate::api::set_name_for_card;
 use crate::db::{add_game_to_card, get_cards_with_games, get_games_on_card, remove_game_from_card};
 use crate::log::Logger;
 use crate::sdcard::is_card_inserted;
 use crate::watch::async_watch;
+use actix_web::{HttpServer, App, web};
 use ::log::{info, trace, warn};
 use futures::executor::block_on;
 use futures::join;
@@ -35,7 +37,7 @@ static DB: Surreal<Db> = Surreal::init();
 
 use simplelog::{LevelFilter, WriteLogger};
 
-use usdpl_back::{core::serdes::Primitive, Instance};
+// use usdpl_back::{core::serdes::Primitive, Instance};
 
 use crate::dbo::{Game, MicroSDCard};
 
@@ -51,7 +53,7 @@ pub fn init() -> Result<(), ::log::SetLoggerError> {
     ::log::set_logger(&LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
 }
 
-async fn run_server() -> Result<(), ()> {
+async fn run_server() -> Result<(), std::io::Error> {
     // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     // WriteLogger::init(
     //     #[cfg(debug_assertions)]
@@ -67,33 +69,43 @@ async fn run_server() -> Result<(), ()> {
     // )
     // .unwrap();
 
-    info!("Starting backend...");
+    info!("Starting HTTP server...");
 
-    Instance::new(PORT)
-        .register("hello", |_: Vec<Primitive>| {
-            vec![format!("Hello {}", PACKAGE_NAME).into()]
-        })
-        .register("ping", |_: Vec<Primitive>| vec!["pong".into()])
-        .register_async("list_games", crate::api::list_games::ListGames::new())
-        .register_async("list_cards", crate::api::list_cards::ListCards::new())
-        .register_async(
-            "list_games_on_card",
-            crate::api::list_games_on_card::ListGamesOnCard::new(),
-        )
-        .register_async(
-            "get_card_for_game",
-            crate::api::get_card_for_game::GetCardForGame::new(),
-        )
-        .register_async(
-            "set_name_for_card",
-            crate::api::set_name_for_card::SetNameForCard::new(),
-        )
-        .register_async(
-            "list_cards_with_games",
-            crate::api::list_cards_with_games::ListCardsWithGames::new(),
-        )
-        .run()
-        .await
+    HttpServer::new(|| {
+        App::new()
+            // .route("/", web::post().to(set_name_for_card::set_name_for_card))
+            .service(crate::api::list_games)
+            .service(crate::api::set_name_for_card)
+    })
+    .bind(("192.168.0.240", 12412))?
+    .run()
+    .await
+
+    // Instance::new(PORT)
+    //     .register("hello", |_: Vec<Primitive>| {
+    //         vec![format!("Hello {}", PACKAGE_NAME).into()]
+    //     })
+    //     .register("ping", |_: Vec<Primitive>| vec!["pong".into()])
+    //     .register_async("list_games", crate::api::list_games::ListGames::new()   )
+    //     .register_async("list_cards", crate::api::list_cards::ListCards::new())
+    //     .register_async(
+    //         "list_games_on_card",
+    //         crate::api::list_games_on_card::ListGamesOnCard::new(),
+    //     )
+    //     .register_async(
+    //         "get_card_for_game",
+    //         crate::api::get_card_for_game::GetCardForGame::new(),
+    //     )
+    //     .register_async(
+    //         "set_name_for_card",
+    //         crate::api::set_name_for_card::SetNameForCard::new(),
+    //     )
+    //     .register_async(
+    //         "list_cards_with_games",
+    //         crate::api::list_cards_with_games::ListCardsWithGames::new(),
+    //     )
+    //     .run()
+    //     .await
 }
 
 async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {

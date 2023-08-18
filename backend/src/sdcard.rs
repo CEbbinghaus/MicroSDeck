@@ -6,7 +6,6 @@ pub fn is_card_inserted() -> bool {
     std::fs::metadata("/sys/block/mmcblk0").is_ok()
 }
 
-
 pub fn get_card_cid() -> Option<String> {
     read_to_string("/sys/block/mmcblk0/device/cid").ok()
 }

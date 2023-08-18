@@ -22,7 +22,7 @@ impl log::Log for Logger {
                 .write(true)
                 .append(true)
                 .create(true)
-                .open(get_file_path_and_create_directory("backend.log"))
+                .open(get_file_path_and_create_directory("backend.log").expect("The log file to exist."))
                 .unwrap();
 
             if let Err(e) = writeln!(file, "{message}") {

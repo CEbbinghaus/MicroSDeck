@@ -10,7 +10,6 @@ mod sdcard;
 mod steam;
 mod watch;
 
-// use crate::api::set_name_for_card;
 use crate::db::{add_game_to_card, get_cards_with_games, get_games_on_card, remove_game_from_card};
 use crate::log::Logger;
 use crate::sdcard::is_card_inserted;
@@ -73,11 +72,14 @@ async fn run_server() -> Result<(), std::io::Error> {
 
     HttpServer::new(|| {
         App::new()
-            // .route("/", web::post().to(set_name_for_card::set_name_for_card))
+            .service(crate::api::list_cards)
             .service(crate::api::list_games)
+            .service(crate::api::list_games_on_card)
+            .service(crate::api::list_cards_with_games)
             .service(crate::api::set_name_for_card)
+            .service(crate::api::get_card_for_game)
     })
-    .bind(("192.168.0.240", 12412))?
+    .bind(("0.0.0.0", 12412))?
     .run()
     .await
 
@@ -289,13 +291,14 @@ async fn main() {
 
     let monitor_future = run_monitor();
 
-    // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
-
     let (server_res, monitor_res) = join!(server_future, monitor_future);
-
+    
     if server_res.is_err() || monitor_res.is_err()  {
         info!("There was an error.");
     }
+    // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
+
+
     // while !handle1.is_finished() && !handle2.is_finished() {
     //     std::thread::sleep(Duration::from_millis(1));
     // }

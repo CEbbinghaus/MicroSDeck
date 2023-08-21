@@ -417,6 +417,7 @@ dependencies = [
  "keyvalues-serde",
  "log",
  "notify",
+ "once_cell",
  "serde",
  "serde_json",
  "simplelog",

@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+// #![feature(const_deref)]
 
 mod api;
 mod db;
@@ -20,6 +21,7 @@ use futures::executor::block_on;
 use futures::join;
 use futures::{Future, StreamExt};
 use notify::{RecursiveMode, Watcher};
+use once_cell::sync::Lazy;
 use sdcard::get_card_cid;
 use std::borrow::Borrow;
 use std::fs::{read, OpenOptions};
@@ -40,16 +42,16 @@ use simplelog::{LevelFilter, WriteLogger};
 
 use crate::dbo::{Game, MicroSDCard};
 
-static LOGGER: Logger = Logger;
+static LOGGER: Lazy<Logger> = Lazy::new(|| Logger::new().expect("Logger to be created"));
 
-const PORT: u16 = 55555; // TODO replace with something unique
+const PORT: u16 = 12412; // TODO replace with something unique
 
 const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 pub fn init() -> Result<(), ::log::SetLoggerError> {
-    ::log::set_logger(&LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
+    ::log::set_logger(&*LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
 }
 
 async fn run_server() -> Result<(), std::io::Error> {
@@ -79,35 +81,9 @@ async fn run_server() -> Result<(), std::io::Error> {
             .service(crate::api::set_name_for_card)
             .service(crate::api::get_card_for_game)
     })
-    .bind(("0.0.0.0", 12412))?
+    .bind(("0.0.0.0", PORT))?
     .run()
     .await
-
-    // Instance::new(PORT)
-    //     .register("hello", |_: Vec<Primitive>| {
-    //         vec![format!("Hello {}", PACKAGE_NAME).into()]
-    //     })
-    //     .register("ping", |_: Vec<Primitive>| vec!["pong".into()])
-    //     .register_async("list_games", crate::api::list_games::ListGames::new()   )
-    //     .register_async("list_cards", crate::api::list_cards::ListCards::new())
-    //     .register_async(
-    //         "list_games_on_card",
-    //         crate::api::list_games_on_card::ListGamesOnCard::new(),
-    //     )
-    //     .register_async(
-    //         "get_card_for_game",
-    //         crate::api::get_card_for_game::GetCardForGame::new(),
-    //     )
-    //     .register_async(
-    //         "set_name_for_card",
-    //         crate::api::set_name_for_card::SetNameForCard::new(),
-    //     )
-    //     .register_async(
-    //         "list_cards_with_games",
-    //         crate::api::list_cards_with_games::ListCardsWithGames::new(),
-    //     )
-    //     .run()
-    //     .await
 }
 
 async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
@@ -287,16 +263,19 @@ async fn main() {
 
     info!("Database Started...");
 
-    let server_future = run_server();
+    run_server().await;
+    run_monitor().await;
 
-    let monitor_future = run_monitor();
+    // let server_future = run_server();
 
-    let (server_res, monitor_res) = join!(server_future, monitor_future);
+    // let monitor_future = run_monitor();
+
+    // let (server_res, monitor_res) = join!(server_future, monitor_future);
     
-    if server_res.is_err() || monitor_res.is_err()  {
-        info!("There was an error.");
-    }
-    // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
+    // if server_res.is_err() || monitor_res.is_err()  {
+    //     info!("There was an error.");
+    // }
+    // // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
 
 
     // while !handle1.is_finished() && !handle2.is_finished() {

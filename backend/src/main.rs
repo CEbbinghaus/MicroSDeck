@@ -18,7 +18,7 @@ use crate::watch::async_watch;
 use actix_web::{HttpServer, App, web};
 use ::log::{info, trace, warn};
 use futures::executor::block_on;
-use futures::join;
+use futures::{join, future};
 use futures::{Future, StreamExt};
 use notify::{RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
@@ -54,7 +54,8 @@ pub fn init() -> Result<(), ::log::SetLoggerError> {
     ::log::set_logger(&*LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
 }
 
-async fn run_server() -> Result<(), std::io::Error> {
+// #[actix_web::main]
+async fn run_server() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     // WriteLogger::init(
     //     #[cfg(debug_assertions)]
@@ -84,6 +85,7 @@ async fn run_server() -> Result<(), std::io::Error> {
     .bind(("0.0.0.0", PORT))?
     .run()
     .await
+    .map_err(|err| err.into())
 }
 
 async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
@@ -263,20 +265,17 @@ async fn main() {
 
     info!("Database Started...");
 
-    run_server().await;
-    run_monitor().await;
+    let server_future = run_server();
 
-    // let server_future = run_server();
+    let monitor_future = run_monitor();
 
-    // let monitor_future = run_monitor();
-
-    // let (server_res, monitor_res) = join!(server_future, monitor_future);
+    future::try_join(monitor_future, server_future);
     
     // if server_res.is_err() || monitor_res.is_err()  {
     //     info!("There was an error.");
     // }
-    // // let watch_future = async_watch("/run/media/mmcblk0p1/steamapps/");
 
+    // monitor_future.await;
 
     // while !handle1.is_finished() && !handle2.is_finished() {
     //     std::thread::sleep(Duration::from_millis(1));

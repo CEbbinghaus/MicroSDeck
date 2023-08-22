@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use crate::dbo::Name;
+use crate::{dbo::Name, err::Error};
 use actix_web::{get, post, web, HttpResponse, HttpResponseBuilder, Responder, ResponseError, Result};
 use serde::Deserialize;
 
@@ -16,31 +14,27 @@ pub(crate) async fn list_cards() -> Result<impl Responder> {
 
 #[get("/ListCardsWithGames")]
 pub(crate) async fn list_cards_with_games() -> Result<impl Responder> {
-    Ok(web::Json(crate::db::get_cards_with_games().await.ok()))
+    match crate::db::get_cards_with_games().await {
+        Ok(res) => Ok(web::Json(res)),
+        Err(err) => Err(Error::from(err).into())
+    }
 }
 
-#[derive(Deserialize)]
-pub struct Card {
-    id: String,
-}
-
-#[get("/ListGamesOnCard")]
+#[get("/ListGamesOnCard/{card_id}")]
 pub(crate) async fn list_games_on_card(
-    body: web::Json<Card>,
+    card_id: web::Path<String>
 ) -> Result<impl Responder> {
-    Ok(web::Json(crate::db::get_games_on_card(body.id.to_owned()).await.ok()))
+    match crate::db::get_games_on_card(card_id.to_owned()).await {
+        Ok(res) => Ok(web::Json(res)),
+        Err(err) => Err(Error::from(err).into())
+    }
 }
 
-#[derive(Deserialize)]
-pub struct Game {
-    uid: String,
-}
-
-#[get("/GetCardForGame")]
+#[get("/GetCardForGame/{uid}")]
 pub(crate) async fn get_card_for_game(
-    body: web::Json<Game>,
+    uid: web::Path<String>
 ) -> Result<impl Responder> {
-    Ok(web::Json(crate::db::get_cards_for_game(body.uid.to_owned()).await.ok()))
+    Ok(web::Json(crate::db::get_cards_for_game(uid.to_owned()).await.ok()))
 }
 
 #[derive(Deserialize)]

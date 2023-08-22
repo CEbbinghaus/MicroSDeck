@@ -24,10 +24,7 @@ if [[ "$*" != *"--skip-backend"* ]]; then
     #echo USDPL key: $USDPL_ENCRYPTION_KEY
 
     echo "Building backend..."
-    cd ./backend && ./build.sh decky && cd ..
-
-    echo "Rebuilding USDPL frontend..."
-    cd ./src/usdpl-front && ./rebuild.sh decky && cd ../..
+    cd ./backend && ./build.sh && cd ..
 fi
 
 if [[ "$*" != *"--skip-frontend"* ]]; then

@@ -1,5 +1,5 @@
 import { TextField } from "decky-frontend-lib";
-import { FormEvent, FormEventHandler, Fragment, useRef } from "react";
+import { FormEvent, Fragment, useRef } from "react";
 import { SetNameForMicroSDCard } from "../hooks/backend";
 
 export type CardProps = {

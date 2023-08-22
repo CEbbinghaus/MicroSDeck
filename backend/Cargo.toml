@@ -9,6 +9,7 @@ authors = ["Christopher-Robin Ebbinghaus <git@cebbinghaus.com>"]
 
 [dependencies]
 actix-web = "4"
+actix-cors = "0.6.4"
 # usdpl-back = { version = "0.9" }
 
 # logging

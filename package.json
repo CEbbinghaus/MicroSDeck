@@ -44,8 +44,7 @@
     "decky-frontend-lib": "^3.22.0",
     "lipe": "^0.3.3",
     "re-carousel": "^2.4.0",
-    "react-icons": "^4.10.1",
-    "usdpl-front": "file:src/usdpl-front"
+    "react-icons": "^4.10.1"
   },
   "pnpm": {
     "peerDependencyRules": {

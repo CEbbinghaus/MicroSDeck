@@ -5,14 +5,12 @@ import { GetCardsForGame } from '../hooks/backend';
 import { Logger } from '../Logging';
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
-    var data = null;
-
     var ref = useRef();
 
     const height = 20;
     const [top, setTop] = useState<number>(210);
 
-    const {value, refresh} = GetCardsForGame(appId);
+    const {value} = GetCardsForGame(appId);
 
     useEffect(() => {
         if(!ref || !ref.current) return;

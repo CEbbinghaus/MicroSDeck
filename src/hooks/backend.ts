@@ -1,24 +1,33 @@
 import { useEffect, useState } from 'react'
-import { call_backend } from 'usdpl-front';
 import { Logger } from '../Logging';
+import { API_URL } from '../const';
 
 export async function SetNameForMicroSDCard(CardId: string, Name: string){
-    await call_backend("set_name_for_card", [CardId, Name])
+    await fetch(`${API_URL}/SetNameForCard`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({id: CardId, name: Name}),
+        referrerPolicy: "unsafe-url",
+    })
+    .catch(Error => Logger.Error("There was a critical error: \"{Error}\"", {Error}));
 }
-
 
 export function GetCardsForGame(appId: string){
     const [value, setValue] = useState<string | MicroSDCard[] | undefined>()
 
     async function refresh() {
-        const result = await call_backend("get_card_for_game", [appId]);
-        setValue(result[0])
+        const result = await fetch(`${API_URL}/GetCardForGame/${appId}`, { referrerPolicy: "unsafe-url", })
+            .then(res => res.json())
+            .catch(Error => Logger.Error("There was a critical error: \"{Error}\"", {Error}));
+
+        setValue(result)
     }
 
     useEffect(() => {
         (async () => {
-            const result = await call_backend("get_card_for_game", [appId]);
-            setValue(result[0])
+            await refresh();
         })();
       }, [appId])
 
@@ -34,15 +43,13 @@ export function GetCardsAndGames() {
 
     async function runQuery() {
         Logger.Log("Running Query");
-        const result = await call_backend("list_cards_with_games", []) as any[];
+        const result = await fetch(`${API_URL}/ListCardsWithGames`, { referrerPolicy: "unsafe-url", })
+            .then(res => res.json())
+            .catch(Error => Logger.Error("There was a critical error: \"{Error}\"", {Error}));
 
         Logger.Log("Query Finished", {result});
 
-        if(typeof result[0] === "string")
-            Logger.Log("Unable to retrieve data", {result});
-        else {
-            setValue(result[0])
-        }
+        setValue(result)
     }
 
     useEffect(() => {

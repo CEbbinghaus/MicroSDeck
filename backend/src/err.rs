@@ -19,8 +19,8 @@ pub enum Error {
 // }
 
 impl Error {
-    pub fn new_boxed<T>(value: &str) -> Result<T, Box<dyn Send + Sync + std::error::Error>> {
-        Err::<T, Box<dyn Send + Sync + std::error::Error>>(Box::new(Error::Error(value.to_string())))
+    pub fn new_boxed(value: &str) -> Box<Error> {
+        Box::new(Error::Error(value.to_string()))
     }
 }
 
@@ -48,13 +48,30 @@ impl error::Error for Error {
     }
 }
 
+impl From<Box<dyn Send + Sync + std::error::Error>> for Error {
+    fn from(value: Box<dyn Send + Sync + std::error::Error>) -> Self {
+        Error::Error(value.to_string())
+    }
+}
+
 impl ResponseError for Error {
     fn status_code(&self) -> actix_web::http::StatusCode {
         actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
     }
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
-        let mut res = actix_web::HttpResponse::new(self.status_code());
+        let res = actix_web::HttpResponse::new(self.status_code());
+        res.set_body(actix_web::body::BoxBody::new(format!("{}",self)))
+    }
+}
+
+impl ResponseError for Box<Error> {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
+        let res = actix_web::HttpResponse::new(self.status_code());
         res.set_body(actix_web::body::BoxBody::new(format!("{}",self)))
     }
 }

@@ -15,7 +15,10 @@ use crate::db::{add_game_to_card, get_cards_with_games, get_games_on_card, remov
 use crate::log::Logger;
 use crate::sdcard::is_card_inserted;
 use crate::watch::async_watch;
+use actix_cors::Cors;
 use actix_web::{HttpServer, App, web};
+use env::{get_file_path_and_create_directory, get_data_dir};
+use futures::{select, FutureExt, pin_mut};
 use ::log::{info, trace, warn};
 use futures::executor::block_on;
 use futures::{join, future};
@@ -27,6 +30,7 @@ use std::borrow::Borrow;
 use std::fs::{read, OpenOptions};
 use std::ops::Deref;
 use std::path::Path;
+use std::vec;
 use std::{fs, time::Duration};
 use steam::*;
 use surrealdb::engine::local::{Db, File, Mem};
@@ -54,8 +58,10 @@ pub fn init() -> Result<(), ::log::SetLoggerError> {
     ::log::set_logger(&*LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
 }
 
+type MainResult = Result<(), Box<dyn Send + Sync + std::error::Error>>;
+
 // #[actix_web::main]
-async fn run_server() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
+async fn run_server() -> MainResult {
     // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     // WriteLogger::init(
     //     #[cfg(debug_assertions)]
@@ -74,7 +80,14 @@ async fn run_server() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     info!("Starting HTTP server...");
 
     HttpServer::new(|| {
+        let cors = Cors::default()
+            .allow_any_header()
+            .allow_any_method()
+            .allow_any_origin()
+            .max_age(3600);
+
         App::new()
+            .wrap(cors)
             .service(crate::api::list_cards)
             .service(crate::api::list_games)
             .service(crate::api::list_games_on_card)
@@ -88,7 +101,7 @@ async fn run_server() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
     .map_err(|err| err.into())
 }
 
-async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
+async fn read_msd_directory() -> MainResult {
     let cid = match get_card_cid() {
         None => {
             warn!("Unable to retrieve CID from MicroSD card");
@@ -188,7 +201,7 @@ async fn read_msd_directory() -> Result<(), Box<dyn Send + Sync + std::error::Er
     Ok(())
 }
 
-async fn run_monitor() -> Result<(), Box<dyn Send + Sync + std::error::Error>> {
+async fn run_monitor() -> MainResult {
     let monitor = MonitorBuilder::new()?.match_subsystem("mmc")?;
 
     let mut socket = AsyncMonitorSocket::new(monitor.listen()?)?;
@@ -213,18 +226,20 @@ async fn setup_db() {
     // let ds = Datastore::new("/var/etc/Database.file").await?;
     // match DB.connect::<Mem>(()).await {
 
-    let file = match std::env::var("DECKY_PLUGIN_RUNTIME_DIR") {
-        Err(_) => {
-            if cfg!(debug_assertions) {
-                Path::new("/tmp").join("MicroSDeck").join("data.db")
-            } else {
-                panic!("Unable to proceed");
-            }
-        }
-        Ok(loc) => Path::new(loc.as_str()).join("data.db"),
-    };
+    // let file = match std::env::var("DECKY_PLUGIN_RUNTIME_DIR") {
+    //     Err(_) => {
+    //         if cfg!(debug_assertions) {
+    //             Path::new("/tmp").join("MicroSDeck").join("data.db")
+    //         } else {
+    //             panic!("Unable to proceed");
+    //         }
+    //     }
+    //     Ok(loc) => Path::new(loc.as_str()).join("data.db"),
+    // };
 
-    match DB.connect::<File>(file.to_string_lossy().as_ref()).await {
+    let file = get_file_path_and_create_directory("data.db", &get_data_dir).expect("Data Directory to exist");
+
+    match DB.connect::<File>(file.as_str()).await {
         Err(_) => panic!("Unable to construct Database"),
         Ok(_) => {
             DB.use_ns("")
@@ -265,21 +280,16 @@ async fn main() {
 
     info!("Database Started...");
 
-    let server_future = run_server();
+    let server_future = run_server().fuse();
 
-    let monitor_future = run_monitor();
+    let monitor_future = run_monitor().fuse();
 
-    future::try_join(monitor_future, server_future);
-    
-    // if server_res.is_err() || monitor_res.is_err()  {
-    //     info!("There was an error.");
-    // }
+    pin_mut!(server_future, monitor_future);
 
-    // monitor_future.await;
-
-    // while !handle1.is_finished() && !handle2.is_finished() {
-    //     std::thread::sleep(Duration::from_millis(1));
-    // }
+    select! {
+        _ = server_future => info!("Server Exited..."),
+        _ = monitor_future => info!("Monitor Exited..."),
+    };
 
     info!("Exiting...");
 }

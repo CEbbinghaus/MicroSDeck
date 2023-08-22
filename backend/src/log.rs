@@ -3,7 +3,7 @@ use std::fs::{OpenOptions, File};
 use std::io::prelude::*;
 use chrono;
 
-use crate::env::{get_file_path, get_file_path_and_create_directory};
+use crate::env::{get_file_path, get_file_path_and_create_directory, get_log_dir};
 
 pub struct Logger(File);
 
@@ -17,7 +17,7 @@ impl Logger {
             .write(true)
             .append(true)
             .create(true)
-            .open(get_file_path_and_create_directory("backend.log").expect("The log file to exist."))
+            .open(get_file_path_and_create_directory("backend.log", &get_log_dir).expect("The log file to exist."))
             .map(|f| Logger(f))
             .ok()
     }

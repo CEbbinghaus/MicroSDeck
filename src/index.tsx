@@ -1,7 +1,6 @@
 import {
   definePlugin,
   DialogButton,
-  Focusable,
   PanelSection,
   PanelSectionRow,
   Router,
@@ -14,8 +13,7 @@ import { FaSdCard } from "react-icons/fa";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import MicroSDeckConfigPage from "./pages/Config";
 
-import { init_usdpl, target_usdpl, init_embedded, call_backend } from "usdpl-front";
-import { CONFIGURATION_PATH, USDPL_PORT } from "./const";
+import { CONFIGURATION_PATH } from "./const";
 import { Logger } from "./Logging";
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
@@ -50,15 +48,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 
   const patch = PatchAppScreen(serverApi);
 
-  // init USDPL WASM frontend
-  // this is required to interface with the backend
-  (async () => {
-    await init_embedded();
-    init_usdpl(USDPL_PORT);
-    //@ts-ignore
-    window.call_backend = call_backend;
-    Logger.Log("USDPL started for framework: {framework}", {framework: target_usdpl()});
-  })();
+  Logger.Log("Started MicroSDeck");
 
   return {
     title: <div className={staticClasses.Title}>Example Plugin</div>,

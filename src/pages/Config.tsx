@@ -2,7 +2,7 @@ import { GetCardsAndGames } from "../hooks/backend";
 import CardList from "../components/CardList";
 
 export default function MicroSDeckConfigPage() {
-    const { cards, refresh } = GetCardsAndGames();
+    const { cards } = GetCardsAndGames();
   
     return (
       <div style={{ marginTop: 24, color: "white" }}>

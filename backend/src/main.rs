@@ -155,6 +155,7 @@ async fn read_msd_directory() -> MainResult {
             ),
         }
 
+        // Remove any games that are linked to the card in the database but on the card
         futures::future::try_join_all(
             get_games_on_card(cid.clone()).await?
                 .iter()

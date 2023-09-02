@@ -24,9 +24,8 @@ futures = "0.3.26"
 steam-acf = "0.1.0"
 keyvalues-serde = "0.1.0"
 serde = { version = "1.0.0", features = ["derive", "rc"] }
-surrealdb = { version = "^1.0.0-beta.9+20230402", default-features = false, features = ["kv-mem", "kv-rocksdb"] }
+surrealdb = { version = "^1.0.0-beta.10", default-features = false, features = ["kv-mem", "kv-rocksdb"] }
 async-trait = "0.1.68"
-notify = { version = "5.1.0", default-features = false}
 
 # [features]
 # default = []

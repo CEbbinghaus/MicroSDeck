@@ -9,12 +9,10 @@ mod err;
 mod log;
 mod sdcard;
 mod steam;
-mod watch;
 
 use crate::db::{add_game_to_card, get_cards_with_games, get_games_on_card, remove_game_from_card};
 use crate::log::Logger;
 use crate::sdcard::is_card_inserted;
-use crate::watch::async_watch;
 use actix_cors::Cors;
 use actix_web::{HttpServer, App, web};
 use env::{get_file_path_and_create_directory, get_data_dir};
@@ -23,9 +21,9 @@ use ::log::{info, trace, warn};
 use futures::executor::block_on;
 use futures::{join, future};
 use futures::{Future, StreamExt};
-use notify::{RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use sdcard::get_card_cid;
+use tokio::time::{Sleep, sleep};
 use std::borrow::Borrow;
 use std::fs::{read, OpenOptions};
 use std::ops::Deref;
@@ -38,7 +36,7 @@ use surrealdb::Surreal;
 use tokio_udev::*;
 
 // Creates a new static instance of the client
-static DB: Surreal<Db> = Surreal::init();
+static DB: Lazy<Surreal<Db>> = Lazy::new(Surreal::init);
 
 use simplelog::{LevelFilter, WriteLogger};
 
@@ -111,11 +109,11 @@ async fn read_msd_directory() -> MainResult {
     };
 
     if let Ok(res) = fs::read_to_string("/run/media/mmcblk0p1/libraryfolder.vdf") {
-        info!("Steam MicroSD card detected.");
+        trace!("Steam MicroSD card detected.");
 
         let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
 
-        info!("contentid: {}", library.contentid);
+        trace!("contentid: {}", library.contentid);
 
         let files: Vec<_> = fs::read_dir("/run/media/mmcblk0p1/steamapps/")?
             .into_iter()
@@ -123,7 +121,7 @@ async fn read_msd_directory() -> MainResult {
             .filter(|f| f.path().extension().unwrap_or_default().eq("acf"))
             .collect();
 
-        info!("Found {} Files", files.len());
+        trace!("Found {} Files", files.len());
 
         let games: Vec<AppState> = files
             .iter()
@@ -131,10 +129,10 @@ async fn read_msd_directory() -> MainResult {
             .filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
             .collect();
 
-        info!("Retrieved {} Games", games.len());
+        trace!("Retrieved {} Games", games.len());
 
         for game in games.iter() {
-            info!("Found App \"{}\"", game.name);
+            trace!("Found App \"{}\"", game.name);
         }
 
         match db::get_card(cid.clone()).await {
@@ -150,7 +148,7 @@ async fn read_msd_directory() -> MainResult {
                 .await?;
                 info!("Wrote MicroSD card {} to Database", library.contentid);
             }
-            Ok(Some(_)) => info!("MicroSD card {} already in Database", library.contentid),
+            Ok(Some(_)) => trace!("MicroSD card {} already in Database", library.contentid),
             Err(err) => warn!(
                 "Unable to write card {} to Database:\n{}",
                 library.contentid, err
@@ -182,7 +180,7 @@ async fn read_msd_directory() -> MainResult {
                         game.name, game.appid
                     );
                 }
-                Ok(Some(_)) => info!(
+                Ok(Some(_)) => trace!(
                     "Game {} with id {} already in Database",
                     game.name, game.appid
                 ),
@@ -220,6 +218,18 @@ async fn run_monitor() -> MainResult {
         read_msd_directory().await?;
     }
     Ok(())
+}
+
+async fn start_watch() -> MainResult {
+    loop {
+        sleep(Duration::from_secs(5)).await;
+
+        if is_card_inserted() {
+            read_msd_directory().await?;
+        }
+
+        
+    }
 }
 
 async fn setup_db() {
@@ -273,10 +283,10 @@ async fn main() {
 
     setup_db().await;
 
-    if is_card_inserted() {
-        // Try reading the directory when we launch the app. That way we ensure that if a car is currently inserted we still detect it
-        let _ = read_msd_directory().await;
-    }
+    // if is_card_inserted() {
+    //     // Try reading the directory when we launch the app. That way we ensure that if a car is currently inserted we still detect it
+    //     let _ = read_msd_directory().await;
+    // }
 
     info!("Database Started...");
 
@@ -284,11 +294,14 @@ async fn main() {
 
     let monitor_future = run_monitor().fuse();
 
-    pin_mut!(server_future, monitor_future);
+    let watch_future = start_watch().fuse();
+
+    pin_mut!(server_future, monitor_future, watch_future);
 
     select! {
-        _ = server_future => info!("Server Exited..."),
-        _ = monitor_future => info!("Monitor Exited..."),
+        result = server_future => result.expect("Server Exited..."),
+        result = monitor_future => result.expect("Monitor Exited..."),
+        result = watch_future => result.expect("Watch Exited..."),
     };
 
     info!("Exiting...");

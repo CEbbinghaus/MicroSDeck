@@ -33,17 +33,17 @@ pub fn get_id(table: &str, id: &str) -> Thing {
 }
 
 pub async fn add_game(id: String, game: &Game) -> Result<(), DynError> {
-    let _game: Game = crate::DB.create(("game", id.trim())).content(game).await?;
+    let _game: Option<Game> = crate::DB.create(("game", id.trim())).content(game).await?;
     Ok(())
 }
 
 pub async fn add_sd_card(id: String, card: &MicroSDCard) -> Result<(), DynError> {
-    let _card: MicroSDCard = crate::DB.create(("card", id.trim())).content(card).await?;
+    let _card: Option<MicroSDCard> = crate::DB.create(("card", id.trim())).content(card).await?;
     Ok(())
 }
 
 pub async fn update_sd_card_name(id: String, name: Name) -> Result<(), DynError> {
-    let _: Name = crate::DB.update(("card", id.trim())).merge(name).await?;
+    let _: Option<Name> = crate::DB.update(("card", id.trim())).merge(name).await?;
     Ok(())
 }
 

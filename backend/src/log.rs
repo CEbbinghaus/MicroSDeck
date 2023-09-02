@@ -25,21 +25,20 @@ impl Logger {
 
 impl log::Log for Logger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= Level::Info
+        metadata.level() <= Level::Info && metadata.target() != "tracing::span"
     }
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let message = format!("{:?} {} \"{}\"", chrono::offset::Local::now(), record.level(), record.args());
+            
+            let current_time = chrono::offset::Local::now();
 
-            println!("{message}");
+            println!("{} {}: {}",
+                record.level(),
+                current_time.format("%d/%m/%Y %H:%M:%S"),
+                record.args());
 
-            // let mut file = OpenOptions::new()
-            //     .write(true)
-            //     .append(true)
-            //     .create(true)
-            //     .open(get_file_path_and_create_directory("backend.log").expect("The log file to exist."))
-            //     .unwrap();
+            let message = format!("{} {} @ {}:{} {} \"{}\"", current_time.naive_utc(), record.level(), record.file().unwrap_or("UNKNOWN"), record.line().unwrap_or(0), record.metadata().target(), record.args());
 
             if let Err(e) = writeln!(self.to_file(), "{message}") {
                 eprintln!("Couldn't write to file: {}", e);

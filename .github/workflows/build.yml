@@ -27,10 +27,10 @@ jobs:
 
     - name: Build plugins
       run: |
-        echo "::group::Building plugin $plugin"
+        echo "::group::Building plugin MicroSDeck"
 
         # Run the CLI as root to get around Docker's weird permissions
-        sudo $(which decky) plugin build -b -o /tmp/output -s directory plugins/$plugin
-        sudo chown -R $(whoami) plugins/$plugin
+        sudo $(which decky) plugin build -b -o /tmp/output -s directory .
+        sudo chown -R $(whoami) .
 
         echo "::endgroup::"

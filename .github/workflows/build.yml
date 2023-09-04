@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+    branches: ['*']
+
+jobs:
+  build:
+    name: Build plugin
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout
+    
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8.5.1
+
+    - name: Download Decky CLI
+      run: |
+        mkdir /tmp/decky-cli
+        curl -L -o /tmp/decky-cli/decky "https://github.com/SteamDeckHomebrew/cli/releases/download/0.0.1-alpha.11/decky"
+        chmod +x /tmp/decky-cli/decky
+
+        echo "/tmp/decky-cli" >> $GITHUB_PATH
+
+    - name: Build plugins
+      run: |
+        echo "::group::Building plugin $plugin"
+
+        # Run the CLI as root to get around Docker's weird permissions
+        sudo $(which decky) plugin build -b -o /tmp/output -s directory plugins/$plugin
+        sudo chown -R $(whoami) plugins/$plugin
+
+        echo "::endgroup::"

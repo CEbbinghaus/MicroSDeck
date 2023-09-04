@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
+      if: ${{ !env.ACT }}
       uses: actions/checkout@v3
     
     - uses: pnpm/action-setup@v2
@@ -34,3 +35,10 @@ jobs:
         sudo chown -R $(whoami) .
 
         echo "::endgroup::"
+
+    - name: Upload Artifacts to Github
+      if: ${{ !env.ACT }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: "MicroSDeck"
+        path: /tmp/output/*.zip

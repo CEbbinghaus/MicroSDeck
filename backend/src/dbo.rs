@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Thing;
 
 
 #[derive(Serialize, Deserialize,Debug,Clone)]

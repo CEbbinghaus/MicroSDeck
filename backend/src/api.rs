@@ -13,7 +13,6 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig) {
         .service(delete_card)
         .service(list_cards)
         .service(get_card)
-        
         .service(create_game)
         .service(delete_game)
         .service(list_games)

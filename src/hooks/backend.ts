@@ -18,7 +18,7 @@ export function GetCardsForGame(appId: string){
     const [value, setValue] = useState<string | MicroSDCard[] | undefined>()
 
     async function refresh() {
-        const result = await fetch(`${API_URL}/GetCardForGame/${appId}`, { referrerPolicy: "unsafe-url", })
+        const result = await fetch(`${API_URL}/GetCardsForGame/${appId}`, { referrerPolicy: "unsafe-url", })
             .then(res => res.json())
             .catch(Error => Logger.Error("There was a critical error: \"{Error}\"", {Error}));
 

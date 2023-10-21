@@ -73,6 +73,7 @@ async fn run_server(datastore: Arc<Store>) -> MainResult {
             .app_data(web::Data::new(datastore.clone()))
             .configure(config)
     })
+    .workers(1)
     .bind(("0.0.0.0", PORT))?
     .run()
     .await

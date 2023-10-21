@@ -5,9 +5,7 @@ use std::{
     path::PathBuf,
     sync::Mutex,
 };
-
 use serde::{Deserialize, Serialize};
-
 use crate::{
     dto::{Game, MicroSDCard},
     err::Error,

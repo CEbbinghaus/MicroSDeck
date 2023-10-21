@@ -36,6 +36,11 @@ jobs:
 
         echo "::endgroup::"
 
+    - name: Unzip Result
+      run: |
+        cd /tmp/output
+        unzip MicroSDeck.zip
+
     - name: Upload Artifacts to Github
       if: ${{ !env.ACT }}
       uses: actions/upload-artifact@v3

@@ -10,14 +10,6 @@ pub enum Error {
     Error(String),
 }
 
-// unsafe impl Send for Error {
-    
-// }
-
-// unsafe impl Sync for Error {
-    
-// }
-
 impl Error {
     pub fn new_boxed(value: &str) -> Box<Error> {
         Box::new(Error::Error(value.to_string()))
@@ -27,7 +19,7 @@ impl Error {
         Error::Error(value.to_string())
     }
 
-    pub fn new<T>(value: &str) -> Result<T, Self> {
+    pub fn new_res<T>(value: &str) -> Result<T, Self> {
         Err(Error::Error(value.to_string()))
     }
 }
@@ -42,26 +34,6 @@ impl fmt::Display for Error {
     }
 }
 
-// impl error::Error for Error {
-//     fn description(&self) -> &str {
-//         // Both underlying errors already impl `Error`, so we defer to their
-//         // implementations.
-//         match *self {
-//             Error::Error(ref err) => err,
-//         }
-//     }
-
-//     fn cause(&self) -> Option<&dyn error::Error> {
-//         return Some(self);
-//     }
-// }
-
-// impl From<Box<dyn Send + Sync + std::error::Error>> for Error {
-//     fn from(value: Box<dyn Send + Sync + std::error::Error>) -> Self {
-//         Error::Error(value.to_string())
-//     }
-// }
-
 impl<T: error::Error + Send + Sync + 'static> From<T> for Error {
     fn from(e: T) -> Self {
         Error::Error(e.to_string())
@@ -75,7 +47,7 @@ impl ResponseError for Error {
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
         let res = actix_web::HttpResponse::new(self.status_code());
-        res.set_body(actix_web::body::BoxBody::new(format!("{}",self)))
+        res.set_body(actix_web::body::BoxBody::new(format!("{}", self)))
     }
 }
 
@@ -86,6 +58,6 @@ impl ResponseError for Box<Error> {
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
         let res = actix_web::HttpResponse::new(self.status_code());
-        res.set_body(actix_web::body::BoxBody::new(format!("{}",self)))
+        res.set_body(actix_web::body::BoxBody::new(format!("{}", self)))
     }
 }

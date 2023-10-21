@@ -17,18 +17,10 @@ chrono = "0.4.24"
 serde_json = "1.0"
 tokio = { version = "1.26.0", features = ["full"] }
 futures = "0.3.26"
-steam-acf = "0.1.0"
-keyvalues-serde = "0.1.0"
+keyvalues-serde = "0.1.0" # Key Value format that Steam uses
 async-trait = "0.1.68"
 serde = { version = "1.0.145", features = ["derive", "rc"] }
-petgraph = { version = "0.6.4", features = ["serde-1"] }
 slotmap = { version = "1.0.6", features = ["serde"] }
-anyhow = "1.0.75"
-
-# [features]
-# default = []
-# encrypt = ["usdpl-back/encrypt"]
-# decky = ["usdpl-back/decky"]
 
 [profile.release]
 debug = false

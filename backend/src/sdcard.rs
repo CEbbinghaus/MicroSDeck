@@ -1,4 +1,4 @@
-use std::{path::Path, fs::read_to_string};
+use std::fs::read_to_string;
 
 pub fn is_card_inserted() -> bool {
     std::fs::metadata("/sys/block/mmcblk0").is_ok()

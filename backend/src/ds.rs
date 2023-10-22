@@ -1,14 +1,15 @@
+use crate::{
+    dto::{Game, MicroSDCard},
+    err::Error,
+};
+use log::error;
+use serde::{Deserialize, Serialize};
 use slotmap::{DefaultKey, SlotMap};
 use std::{
     collections::{HashMap, HashSet},
     fs::{read_to_string, write},
     path::PathBuf,
-    sync::Mutex,
-};
-use serde::{Deserialize, Serialize};
-use crate::{
-    dto::{Game, MicroSDCard},
-    err::Error,
+    sync::RwLock,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -131,6 +132,10 @@ impl StoreData {
         Ok(())
     }
 
+    pub fn contains_element(&self, card_id: &str) -> bool {
+        self.node_ids.contains_key(card_id)
+    }
+
     pub fn get_card(&self, card_id: &str) -> Result<MicroSDCard, Error> {
         self.node_ids
             .get(card_id)
@@ -216,14 +221,14 @@ impl StoreData {
 }
 
 pub struct Store {
-    data: Mutex<StoreData>,
+    data: RwLock<StoreData>,
     file: Option<PathBuf>,
 }
 
 impl Store {
     pub fn new(file: Option<PathBuf>) -> Self {
         Store {
-            data: Mutex::new(StoreData {
+            data: RwLock::new(StoreData {
                 nodes: SlotMap::new(),
                 node_ids: HashMap::new(),
             }),
@@ -235,7 +240,7 @@ impl Store {
         let contents = read_to_string(&file).map_err(|e| Error::from(e))?;
         let data: StoreData = serde_json::from_str(&contents).map_err(|e| Error::from(e))?;
         Ok(Store {
-            data: Mutex::new(data),
+            data: RwLock::new(data),
             file: Some(file),
         })
     }
@@ -255,61 +260,85 @@ impl Store {
         Ok(())
     }
 
+    fn try_write_to_file(&self) {
+        if self.file.is_none() {
+            return;
+        }
+
+        if let Err(err) = self.write_to_file() {
+            error!("Unable to write datastore to file: {}", err);
+        }
+    }
+
     pub fn add_card(&self, id: String, card: MicroSDCard) {
-        self.data.lock().unwrap().add_card(id, card)
+        self.data.write().unwrap().add_card(id, card);
+        self.try_write_to_file()
     }
 
     pub fn add_game(&self, id: String, card: Game) {
-        self.data.lock().unwrap().add_game(id, card)
+        self.data.write().unwrap().add_game(id, card);
+        self.try_write_to_file()
     }
 
     pub fn update_card<F>(&self, card_id: &str, func: F) -> Result<(), Error>
     where
         F: FnMut(&mut MicroSDCard),
     {
-        self.data.lock().unwrap().update_card(card_id, func)
+        self.data.write().unwrap().update_card(card_id, func)?;
+        self.try_write_to_file();
+        Ok(())
     }
 
     pub fn link(&self, a_id: &str, b_id: &str) -> Result<(), Error> {
-        self.data.lock().unwrap().link(a_id, b_id)
+        self.data.write().unwrap().link(a_id, b_id)?;
+        self.try_write_to_file();
+        Ok(())
     }
 
     pub fn remove_element(&self, game_id: &str) -> Result<(), Error> {
-        self.data.lock().unwrap().remove_item(game_id)
+        self.data.write().unwrap().remove_item(game_id)?;
+        self.try_write_to_file();
+        Ok(())
     }
 
     pub fn remove_game_from_card(&self, game_id: &str, card_id: &str) -> Result<(), Error> {
         self.data
-            .lock()
+            .write()
             .unwrap()
-            .remove_game_from_card(game_id, card_id)
+            .remove_game_from_card(game_id, card_id)?;
+        self.try_write_to_file();
+        Ok(())
+    }
+
+    pub fn contains_element(&self, id: &str) -> bool {
+        self.data.read().unwrap().contains_element(id)
     }
 
     pub fn get_card(&self, card_id: &str) -> Result<MicroSDCard, Error> {
-        self.data.lock().unwrap().get_card(card_id)
+        self.data.read().unwrap().get_card(card_id)
     }
 
     pub fn get_game(&self, game_id: &str) -> Result<Game, Error> {
-        self.data.lock().unwrap().get_game(game_id)
+        self.data.read().unwrap().get_game(game_id)
     }
 
     pub fn get_games_on_card(&self, card_id: &str) -> Result<Vec<Game>, Error> {
-        self.data.lock().unwrap().get_games_on_card(card_id)
+        self.data.read().unwrap().get_games_on_card(card_id)
     }
 
     pub fn get_cards_for_game(&self, game_id: &str) -> Result<Vec<MicroSDCard>, Error> {
-        self.data.lock().unwrap().get_cards_for_game(game_id)
+        self.data.read().unwrap().get_cards_for_game(game_id)
     }
 
     pub fn list_cards(&self) -> Vec<MicroSDCard> {
-        self.data.lock().unwrap().list_cards()
+        self.data.read().unwrap().list_cards()
     }
 
     pub fn list_games(&self) -> Vec<Game> {
-        self.data.lock().unwrap().list_games()
+        self.data.read().unwrap().list_games()
     }
 
     pub fn list_cards_with_games(&self) -> Vec<(MicroSDCard, Vec<Game>)> {
-        self.data.lock().unwrap().list_cards_with_games()
+        self.data.read().unwrap().list_cards_with_games()
     }
 }

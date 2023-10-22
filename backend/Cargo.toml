@@ -21,6 +21,14 @@ keyvalues-serde = "0.1.0" # Key Value format that Steam uses
 async-trait = "0.1.68"
 serde = { version = "1.0.145", features = ["derive", "rc"] }
 slotmap = { version = "1.0.6", features = ["serde"] }
+glob = "0.3.1"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "my_benchmark"
+harness = false
 
 [profile.release]
 debug = false

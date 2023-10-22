@@ -1,3 +1,5 @@
+use std::fmt::{Display, Debug};
+
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -6,7 +8,7 @@ pub struct LibraryFolder {
     pub label: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct AppState {
     pub appid: String,
     pub universe: i32,
@@ -16,4 +18,16 @@ pub struct AppState {
     pub installdir: String,
     #[serde(rename(deserialize = "SizeOnDisk"))]
     pub size_on_disk: u64,
+}
+
+impl Display for AppState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.appid, self.name)
+    }
+}
+
+impl Debug for AppState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.appid, self.name)
+    }
 }

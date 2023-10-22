@@ -12,17 +12,13 @@ has_sudo() {
     fi
 }
 
-echo "--- Building a new encrypted USDPL plugin for Decky loader ---"
-echo "This script assumes you have a functioning cargo (Rust) and pnpm (Node/Javascript) setup"
-echo "If you do not, parts of this script will not work correctly (but may still exit 0)"
+PluginName=$(basename "$PWD")
+
+echo "Building plugin $PluginName..."
 
 mkdir -p build
 
 if [[ "$*" != *"--skip-backend"* ]]; then
-    # export USDPL_ENCRYPTION_KEY=$(openssl enc -aes-256-cbc -k caylon -pbkdf2 -P -md sha1 | awk -F= '{if ($1 == "key") print $2}')
-    # echo "Key generated..."
-    #echo USDPL key: $USDPL_ENCRYPTION_KEY
-
     echo "Building backend..."
     cd ./backend && ./build.sh && cd ..
 fi
@@ -43,7 +39,6 @@ cp package.json build/
 
 if [[ "$*" != *"--skip-copy"* ]]; then
     echo "Copying build folder to local plugin directory"
-    PluginName="DeckyPlugin"
 
     sudo rm -rf /home/deck/homebrew/plugins/$PluginName
     sudo cp -r build/ /home/deck/homebrew/plugins/$PluginName

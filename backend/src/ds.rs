@@ -9,7 +9,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs::{read_to_string, write},
     path::PathBuf,
-    sync::RwLock,
+    sync::RwLock, borrow::BorrowMut,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -76,7 +76,7 @@ impl StoreData {
 
     pub fn update_card<F>(&mut self, card_id: &str, mut func: F) -> Result<(), Error>
     where
-        F: FnMut(&mut MicroSDCard),
+        F: FnMut(&mut MicroSDCard) -> Result<(), Error>,
     {
         let node = self
             .node_ids
@@ -85,7 +85,7 @@ impl StoreData {
 
         match self.nodes.get_mut(*node).unwrap().element {
             StoreElement::Card(ref mut card) => {
-                func(card);
+                func(card)?;
             }
             StoreElement::Game(_) => return Err(Error::Error("Expected Card, got Game".into())),
         }
@@ -270,6 +270,46 @@ impl Store {
         }
     }
 
+	pub fn validate(&self) -> bool {
+		let data = self.data.read().unwrap();
+
+		let mut result = true;
+
+		{
+			let mut dead_node_ids: Vec<(&String, &DefaultKey)> = vec![];
+
+			for pair in &data.node_ids {
+				if data.nodes.contains_key(*pair.1) {
+					dead_node_ids.push(pair);
+				}
+			}
+
+			if dead_node_ids.len() > 0 {
+				result |= false;
+				error!("Found dead node_ids: {:?}", dead_node_ids);
+			}
+		}
+
+		return result;
+	}
+
+	pub fn clean_up(&self) {
+		let mut data = self.data.write().unwrap();
+
+		let cleaned_node_ids: HashMap<String, DefaultKey> = data.node_ids.iter().map(|f| (f.0.trim().to_string(), *f.1)).collect();
+
+		data.node_ids = cleaned_node_ids;
+
+		for node in data.nodes.borrow_mut() {
+			match node.1.element {
+				StoreElement::Card(ref mut card) => {
+					card.uid = card.uid.trim().to_string();
+				},
+				StoreElement::Game(_) => {},
+			}
+		}
+	}
+
     pub fn add_card(&self, id: String, card: MicroSDCard) {
         self.data.write().unwrap().add_card(id, card);
         self.try_write_to_file()
@@ -282,7 +322,7 @@ impl Store {
 
     pub fn update_card<F>(&self, card_id: &str, func: F) -> Result<(), Error>
     where
-        F: FnMut(&mut MicroSDCard),
+        F: FnMut(&mut MicroSDCard) -> Result<(), Error>,
     {
         self.data.write().unwrap().update_card(card_id, func)?;
         self.try_write_to_file();

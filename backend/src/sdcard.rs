@@ -6,7 +6,7 @@ pub fn is_card_inserted() -> bool {
 
 // Based on https://www.cameramemoryspeed.com/sd-memory-card-faq/reading-sd-card-cid-serial-psn-internal-numbers/
 pub fn get_card_cid() -> Option<String> {
-    read_to_string("/sys/block/mmcblk0/device/cid").ok()
+    read_to_string("/sys/block/mmcblk0/device/cid").map(|v| v.trim().to_string()).ok()
 }
 
 pub fn is_card_steam_formatted() -> bool {

@@ -1,99 +1,99 @@
 import {
-    afterPatch,
-    ServerAPI,
-    wrapReactType,
-    findInReactTree,
-    appDetailsClasses
+	afterPatch,
+	ServerAPI,
+	wrapReactType,
+	findInReactTree,
+	appDetailsClasses
 } from 'decky-frontend-lib'
 import { ReactElement } from 'react'
 import LibraryModal from '../components/LibraryModal';
 import { Logger } from '../Logging';
 
 function PatchAppScreen(serverAPI: ServerAPI) {
-    
-    const path = '/library/app/:appid';
-    Logger.Log("Patching {path}", {path});
 
-    return serverAPI.routerHook.addPatch(
-        path,
-        (props?: { path?: string; children?: ReactElement }) => {
-            if (!props?.children?.props?.renderFunc) {
-                return props
-            }
+	const path = '/library/app/:appid';
+	Logger.Log("Patching {path}", { path });
 
-            Logger.Log("patching...", {props});
+	return serverAPI.routerHook.addPatch(
+		path,
+		(props?: { path?: string; children?: ReactElement }) => {
+			if (!props?.children?.props?.renderFunc) {
+				return props
+			}
 
-            afterPatch(
-                props.children.props,
-                'renderFunc',
-                (_: Record<string, unknown>[], element?: ReactElement) => {
-                    if (!element?.props?.children?.type?.type) {
-                        return element
-                    }
+			Logger.Log("patching...", { props });
 
-                    return PatchRootElement(element);
-                }
-            )
-            return props
-        }
-    )
+			afterPatch(
+				props.children.props,
+				'renderFunc',
+				(_: Record<string, unknown>[], element?: ReactElement) => {
+					if (!element?.props?.children?.type?.type) {
+						return element
+					}
+
+					return PatchRootElement(element);
+				}
+			)
+			return props
+		}
+	)
 }
 
 function PatchRootElement(root: any): any {
 
-    wrapReactType(root.props.children)
+	wrapReactType(root.props.children)
 
-    const appDetails = root?.props?.children?.props?.overview || {};
+	const appDetails = root?.props?.children?.props?.overview || {};
 
-    afterPatch(
-        root.props.children.type,
-        'type',
-        (_2: Record<string, unknown>[], element?: ReactElement) => {
-            // window.rootEl = element;
+	afterPatch(
+		root.props.children.type,
+		'type',
+		(_2: Record<string, unknown>[], element?: ReactElement) => {
+			// window.rootEl = element;
 
-            // const container = findInReactTree(element, v => v.type?.prototype?.onGameInfoToggle); 
-        
-            // if (typeof container !== 'object') {
-            //     return element
-            // }
-            
-            // PatchPanelElement(container);
+			// const container = findInReactTree(element, v => v.type?.prototype?.onGameInfoToggle); 
 
-            const container = findInReactTree(
-                element,
-                (x: ReactElement) =>
-                  Array.isArray(x?.props?.children) &&
-                  x?.props?.className?.includes(
-                    appDetailsClasses.InnerContainer
-                  )
-              )
+			// if (typeof container !== 'object') {
+			//     return element
+			// }
 
-              if (typeof container !== 'object') {
-                return element
-              }
+			// PatchPanelElement(container);
 
-              Logger.Log("Found Appropriate location to patch.", {root, element, container, appDetails});
+			const container = findInReactTree(
+				element,
+				(x: ReactElement) =>
+					Array.isArray(x?.props?.children) &&
+					x?.props?.className?.includes(
+						appDetailsClasses.InnerContainer
+					)
+			)
 
-              container.props.children.splice(
-                1,
-                0,
-                <LibraryModal appId={appDetails?.appid?.toString()}/>
-              )
+			if (typeof container !== 'object') {
+				return element
+			}
 
-            return element;
-        }
-    )
+			Logger.Log("Found Appropriate location to patch.", { root, element, container, appDetails });
 
-    return root;
+			container.props.children.splice(
+				1,
+				0,
+				<LibraryModal appId={appDetails?.appid?.toString()} />
+			)
+
+			return element;
+		}
+	)
+
+	return root;
 }
 
 // function PatchPanelElement(panel: any): any {
-    
+
 //     console.log("Found Container", panel);
-    
+
 //     //     debugger;
 //     // window.panel = panel;
-    
+
 //     wrapReactClass(panel)
 
 //     afterPatch(
@@ -102,7 +102,7 @@ function PatchRootElement(root: any): any {
 //         (_2: Record<string, unknown>[], element?: ReactElement) => {
 
 //             const container = findInReactTree(element, v => v?.props?.setSections); 
-        
+
 //             if (typeof container !== 'object') {
 //                 return element
 //             }
@@ -116,12 +116,12 @@ function PatchRootElement(root: any): any {
 // }
 
 // function PatchAppDetailsOverview(panel: any): any {
-    
+
 //     console.log("Found AppDetails", panel);
-    
+
 //     //     debugger;
 //     // window.appDetailsOverview = panel;
-    
+
 //     // wrapReactType(panel)
 
 //     afterPatch(
@@ -139,13 +139,13 @@ function PatchRootElement(root: any): any {
 //                         return cache;
 
 //                     const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
-        
+
 //                     if (typeof container !== 'object') {
 //                         return element
 //                     }
-        
+
 //                     PatchPlaySection(container);
-        
+
 //                     return (cache = element);
 //                 }
 //             )
@@ -156,12 +156,12 @@ function PatchRootElement(root: any): any {
 // }
 
 // function PatchPlaySection(panel: any): any {
-    
+
 //     console.log("Found AppDetails Section", panel);
-    
+
 //     //     debugger;
 //     // window.appDetailsSection = panel;
-    
+
 //     wrapReactType(panel)
 
 //     afterPatch(
@@ -169,7 +169,7 @@ function PatchRootElement(root: any): any {
 //         'render',
 //         (_2: Record<string, unknown>[], element?: ReactElement) => {
 //             const container = findInReactTree(element, v => v?.props?.setSections && v?.type?.render); 
-        
+
 //             if (typeof container !== 'object') {
 //                 return element
 //             }
@@ -183,12 +183,12 @@ function PatchRootElement(root: any): any {
 // }
 
 // function PatchAppRow(panel: any): any {
-    
+
 //     console.log("Found AppRow Section", panel);
-    
+
 //     //     debugger;
 //     // window.appRowSection = panel;
-    
+
 //     wrapReactType(panel)
 
 //     afterPatch(

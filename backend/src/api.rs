@@ -6,7 +6,7 @@ use crate::{
 };
 use actix_web::{delete, get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(create_card)
@@ -58,15 +58,24 @@ pub(crate) async fn get_games_on_current_card(
     datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
     if !is_card_inserted() {
-        return Err(Error::Error("No card is inserted".into()).into());
+        return Err(Error::from_str("No card is inserted").into());
     }
 
-    let uid = get_card_cid().ok_or(Error::Error("Unable to evaluate Card Id".into()))?;
+    let uid = get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?;
 
     match datastore.get_games_on_card(&uid) {
         Ok(value) => Ok(web::Json(value)),
         Err(err) => Err(actix_web::Error::from(err)),
     }
+}
+
+#[get("/GetCurrentCardId")]
+pub(crate) async fn get_current_card_id() -> Result<impl Responder> {
+    if !is_card_inserted() {
+        return Err(Error::from_str("No card is inserted").into());
+    }
+
+    Ok(get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?)
 }
 
 #[derive(Deserialize)]
@@ -80,8 +89,22 @@ pub(crate) async fn set_name_for_card(
     body: web::Json<SetNameForCardBody>,
     datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
-    datastore.update_card(&body.id, |card| card.name = body.name.clone())?;
+    datastore.update_card(&body.id, |card| {
+        card.name = body.name.clone();
+        Ok(())
+    })?;
     Ok(HttpResponse::Ok())
+}
+
+#[get("/card/current")]
+pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+    if !is_card_inserted() {
+        return Err(Error::from_str("No card is inserted").into());
+    }
+
+    let uid = get_card_cid().ok_or(Error::Error("Unable to evaluate Card Id".into()))?;
+
+    Ok(web::Json(datastore.get_card(&uid)?))
 }
 
 #[post("/card/{id}")]
@@ -89,10 +112,17 @@ pub(crate) async fn create_card(
     id: web::Path<String>,
     body: web::Json<MicroSDCard>,
     datastore: web::Data<Arc<Store>>,
-) -> impl Responder {
-    datastore.add_card(id.into_inner(), body.into_inner());
-
-    HttpResponse::Ok()
+) -> Result<impl Responder> {
+    match datastore.contains_element(&id) {
+		// Merge the records allowing us to update all properties
+        true => datastore.update_card(&id, move |existing_card| {
+            existing_card.merge(body.deref().to_owned())?;
+            Ok(())
+        })?,
+        // Insert a new card if it doesn't exist
+        false => datastore.add_card(id.into_inner(), body.into_inner()),
+    }
+    Ok(HttpResponse::Ok())
 }
 
 #[delete("/card/{id}")]

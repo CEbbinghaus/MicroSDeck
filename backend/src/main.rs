@@ -13,7 +13,7 @@ use crate::ds::Store;
 use crate::env::get_file_path_and_create_directory;
 use crate::log::Logger;
 use crate::watch::start_watch;
-use ::log::{info, trace};
+use ::log::{info, trace, error};
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use env::get_data_dir;
@@ -22,6 +22,7 @@ use futures::{pin_mut, select, FutureExt};
 use once_cell::sync::Lazy;
 use simplelog::LevelFilter;
 use std::path::PathBuf;
+use std::process::exit;
 use std::sync::Arc;
 
 static LOGGER: Lazy<Logger> = Lazy::new(|| Logger::new().expect("Logger to be created"));
@@ -91,6 +92,13 @@ async fn main() {
     );
     let store: Arc<Store> =
         Arc::new(Store::read_from_file(store_path.clone()).unwrap_or(Store::new(Some(store_path))));
+
+	store.clean_up();
+
+	if !store.validate() {
+		error!("Validity of the data is not guaranteed. Cannot run backend...");
+		exit(1);
+	}
 
     info!("Database Started...");
 

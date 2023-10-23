@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::err::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Name {
@@ -25,7 +26,30 @@ impl From<String> for Name {
 pub struct MicroSDCard {
     pub uid: String,
     pub libid: String,
+	
     pub name: String,
+	#[serde(default)]
+	pub position: u32,
+	#[serde(default)]
+	pub hidden: bool
+}
+
+impl MicroSDCard {
+	pub fn merge(&mut self, other: MicroSDCard) -> Result<(), Error> {
+		if self.uid != other.uid {
+			return Error::new_res("uid's did not match");
+		}
+	
+		if self.libid != other.libid {
+			return Error::new_res("libid's did not match");
+		}
+
+		self.name = other.name;
+		self.position = other.position;
+		self.hidden = other.hidden;
+
+		Ok(())
+	}
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

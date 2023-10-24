@@ -9,7 +9,10 @@ use serde::Deserialize;
 use std::{ops::Deref, sync::Arc};
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(create_card)
+    cfg.service(get_current_card)
+        .service(get_current_card_id)
+        .service(get_current_card_and_games)
+        .service(create_card)
         .service(delete_card)
         .service(list_cards)
         .service(get_card)
@@ -23,7 +26,13 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig) {
         .service(get_games_on_current_card)
         .service(set_name_for_card)
         .service(create_link)
+        .service(health)
         .service(save);
+}
+
+#[get("/health")]
+pub(crate) async fn health() -> impl Responder {
+    HttpResponse::Ok()
 }
 
 #[get("/ListCardsWithGames")]
@@ -53,31 +62,6 @@ pub(crate) async fn get_cards_for_game(
     }
 }
 
-#[get("/GetGamesOnCurrentCard")]
-pub(crate) async fn get_games_on_current_card(
-    datastore: web::Data<Arc<Store>>,
-) -> Result<impl Responder> {
-    if !is_card_inserted() {
-        return Err(Error::from_str("No card is inserted").into());
-    }
-
-    let uid = get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?;
-
-    match datastore.get_games_on_card(&uid) {
-        Ok(value) => Ok(web::Json(value)),
-        Err(err) => Err(actix_web::Error::from(err)),
-    }
-}
-
-#[get("/GetCurrentCardId")]
-pub(crate) async fn get_current_card_id() -> Result<impl Responder> {
-    if !is_card_inserted() {
-        return Err(Error::from_str("No card is inserted").into());
-    }
-
-    Ok(get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?)
-}
-
 #[derive(Deserialize)]
 pub struct SetNameForCardBody {
     id: String,
@@ -96,7 +80,18 @@ pub(crate) async fn set_name_for_card(
     Ok(HttpResponse::Ok())
 }
 
-#[get("/card/current")]
+#[get("/current")]
+pub(crate) async fn get_current_card_and_games(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+    if !is_card_inserted() {
+        return Err(Error::from_str("No card is inserted").into());
+    }
+
+    let uid = get_card_cid().ok_or(Error::Error("Unable to evaluate Card Id".into()))?;
+
+    Ok(web::Json(datastore.get_card_and_games(&uid)?))
+}
+
+#[get("/current/card")]
 pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
     if !is_card_inserted() {
         return Err(Error::from_str("No card is inserted").into());
@@ -107,14 +102,44 @@ pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result
     Ok(web::Json(datastore.get_card(&uid)?))
 }
 
+#[get("/current/id")]
+pub(crate) async fn get_current_card_id() -> Result<impl Responder> {
+    if !is_card_inserted() {
+        return Err(Error::from_str("No card is inserted").into());
+    }
+
+    Ok(get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?)
+}
+
+#[get("/current/games")]
+pub(crate) async fn get_games_on_current_card(
+    datastore: web::Data<Arc<Store>>,
+) -> Result<impl Responder> {
+    if !is_card_inserted() {
+        return Err(Error::from_str("No card is inserted").into());
+    }
+
+    let uid = get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?;
+
+    match datastore.get_games_on_card(&uid) {
+        Ok(value) => Ok(web::Json(value)),
+        Err(err) => Err(actix_web::Error::from(err)),
+    }
+}
+
+
 #[post("/card/{id}")]
 pub(crate) async fn create_card(
     id: web::Path<String>,
     body: web::Json<MicroSDCard>,
     datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+    if *id != body.uid {
+        return Err(Error::from_str("uid did not match id provided").into());
+    }
+
     match datastore.contains_element(&id) {
-		// Merge the records allowing us to update all properties
+        // Merge the records allowing us to update all properties
         true => datastore.update_card(&id, move |existing_card| {
             existing_card.merge(body.deref().to_owned())?;
             Ok(())
@@ -154,7 +179,17 @@ pub(crate) async fn create_game(
     body: web::Json<Game>,
     datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
-    datastore.add_game(id.into_inner(), body.into_inner());
+    if *id != body.uid {
+        return Err(Error::from_str("uid did not match id provided").into());
+    }
+
+	let mut game = body.to_owned();
+
+	if !cfg!(debug_assertions) {
+		game.is_steam = false;
+	}
+
+    datastore.add_game(id.into_inner(), game);
 
     Ok(HttpResponse::Ok())
 }

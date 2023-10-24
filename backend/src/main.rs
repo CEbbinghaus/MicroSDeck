@@ -90,6 +90,8 @@ async fn main() {
                 .expect("should retrieve data directory"),
         ),
     );
+
+	println!("Loading from store \"{:?}\"", store_path);
     let store: Arc<Store> =
         Arc::new(Store::read_from_file(store_path.clone()).unwrap_or(Store::new(Some(store_path))));
 

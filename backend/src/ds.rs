@@ -68,10 +68,10 @@ impl StoreData {
             .or_insert_with(|| self.nodes.insert(Node::from_card(card)));
     }
 
-    pub fn add_game(&mut self, id: String, card: Game) {
+    pub fn add_game(&mut self, id: String, game: Game) {
         self.node_ids
             .entry(id)
-            .or_insert_with(|| self.nodes.insert(Node::from_game(card)));
+            .or_insert_with(|| self.nodes.insert(Node::from_game(game)));
     }
 
     pub fn update_card<F>(&mut self, card_id: &str, mut func: F) -> Result<(), Error>
@@ -156,6 +156,25 @@ impl StoreData {
                     .as_game()
                     .expect("Expected game but card was returned"))
             })
+    }
+
+
+    pub fn get_card_and_games(&self, card_id: &str) -> Result<(MicroSDCard, Vec<Game>), Error> {
+        let card_key = self
+            .node_ids
+            .get(card_id)
+            .ok_or_else(|| Error::from_str("Card Id not present"))?;
+
+		let node = &self.nodes[*card_key];
+
+		let card = node.element.as_card().ok_or(Error::from_str("Element was not a card"))?;
+        let games = node 
+            .links
+            .iter()
+            .filter_map(|game_key| self.nodes[*game_key].element.as_game())
+            .collect();
+
+        Ok((card, games))
     }
 
     pub fn get_games_on_card(&self, card_id: &str) -> Result<Vec<Game>, Error> {
@@ -315,8 +334,8 @@ impl Store {
         self.try_write_to_file()
     }
 
-    pub fn add_game(&self, id: String, card: Game) {
-        self.data.write().unwrap().add_game(id, card);
+    pub fn add_game(&self, id: String, game: Game) {
+        self.data.write().unwrap().add_game(id, game);
         self.try_write_to_file()
     }
 
@@ -360,6 +379,10 @@ impl Store {
 
     pub fn get_game(&self, game_id: &str) -> Result<Game, Error> {
         self.data.read().unwrap().get_game(game_id)
+    }
+
+    pub fn get_card_and_games(&self, card_id: &str) -> Result<(MicroSDCard, Vec<Game>), Error> {
+        self.data.read().unwrap().get_card_and_games(card_id)
     }
 
     pub fn get_games_on_card(&self, card_id: &str) -> Result<Vec<Game>, Error> {

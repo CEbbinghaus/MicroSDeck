@@ -1,26 +1,34 @@
 import {
 	ConfirmModal,
 	Field,
+	Focusable,
+	ScrollPanel,
 	TextField,
+	ToggleField,
 	quickAccessControlsClasses
 } from "decky-frontend-lib";
 import React from "react";
 import { useState, VFC, useEffect, } from "react";
 import { DeckyAPI } from "../lib/DeckyApi";
+import { Game, MicroSDCard } from "../lib/Types";
+import { Logger } from "../Logging";
+import { UNAMED_CARD_NAME } from "../const";
 
 
 type EditCardProps = {
 	closeModal?: () => void,
-	onConfirm: (cardId: string, name: string) => void,
-	cardName: string | undefined,
-	cardId: string
+	onConfirm: (card: MicroSDCard) => void,
+	card: MicroSDCard,
+	games: Game[]
 };
 
 /**
  * The modal for editing and creating custom tabs.
  */
-export const EditCardModal: VFC<EditCardProps> = ({ cardId, cardName, onConfirm, closeModal }) => {
-	const [name, setName] = useState<string>(cardName ?? '');
+export const EditCardModal: VFC<EditCardProps> = ({ card, games, onConfirm, closeModal }) => {
+
+	const [name, setName] = useState<string>(card.name ?? '');
+	const [hidden, setHidden] = useState<boolean>(card.hidden);
 	const [canSave, setCanSave] = useState<boolean>(false);
 
 	const nameInputElt = <TextField value={name} onChange={onNameChange} />;
@@ -38,33 +46,42 @@ export const EditCardModal: VFC<EditCardProps> = ({ cardId, cardName, onConfirm,
 			DeckyAPI.Toast("Cannot Save MicroSD Card", "You must provide a valid name");
 			return;
 		}
-		onConfirm(cardId, name);
+		onConfirm({ ...card, name, hidden });
 		closeModal!();
 	}
 
 	return (
-		<>
-			<div>
-				<ConfirmModal
-					bAllowFullSize
-					onCancel={closeModal}
-					onEscKeypress={closeModal}
-					strTitle={"Editing" + (name ?? "Unamed")}
-					onOK={onSave}
-					strOKButtonText="Save"
-				>
-					<div style={{ padding: "4px 16px 1px" }} className="name-field">
-						<Field description={
-							<>
-								<div style={{ paddingBottom: "6px" }} className={quickAccessControlsClasses.PanelSectionTitle}>
-									Name
-								</div>
-								{nameInputElt}
-							</>
-						} />
+		<ConfirmModal
+			bAllowFullSize
+			onCancel={closeModal}
+			onEscKeypress={closeModal}
+			strTitle={`Editing Card: "${(card.name ?? UNAMED_CARD_NAME)}"`}
+			onOK={onSave}
+			strOKButtonText="Save">
+			<Field description={
+				<>
+					<div style={{ paddingBottom: "6px" }} className={quickAccessControlsClasses.PanelSectionTitle}>
+						Name
 					</div>
-				</ConfirmModal>
-			</div>
-		</>
+					{nameInputElt}
+				</>
+			} />
+			<ToggleField label="Hidden" checked={hidden} onChange={(checked) => {
+				Logger.Log("changed value to: {checked}", { checked });
+				setHidden(checked);
+			}} />
+			<Focusable>
+				<ScrollPanel>
+					<div style={{ padding: "8px 0px 1px" }} className={quickAccessControlsClasses.PanelSectionTitle}>
+						Games
+					</div>
+					<ul style={{margin: 0, padding: 0}}>
+						{
+							games.map(v => (<li>{v.name}</li>))
+						}
+					</ul>
+				</ScrollPanel>
+			</Focusable>
+		</ConfirmModal>
 	);
 };

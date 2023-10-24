@@ -6,8 +6,8 @@ export type MicroSDCard = {
 	uid: string,
 	name: string,
 	games: string[],
-	position: number | undefined,
-	hidden: boolean | undefined
+	position: number,
+	hidden: boolean,
 }
 
 
@@ -15,7 +15,7 @@ export type Game = {
 	uid: string,
 	name: string,
 	size: number,
-	card: string
+	is_steam: boolean,
 }
 
 export type CardAndGames = [MicroSDCard, Game[]];

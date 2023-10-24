@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Logger } from '../Logging';
 import { API_URL } from '../const';
-import { CardsAndGames, MicroSDCard } from '../lib/Types';
+import { CardAndGames, CardsAndGames, MicroSDCard } from '../lib/Types';
 
 export async function SetNameForMicroSDCard(CardId: string, Name: string) {
 	await fetch(`${API_URL}/SetNameForCard`, {
@@ -12,7 +12,7 @@ export async function SetNameForMicroSDCard(CardId: string, Name: string) {
 		body: JSON.stringify({ id: CardId, name: Name }),
 		referrerPolicy: "unsafe-url",
 	})
-		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
 }
 
 export function GetCardsForGame(appId: string) {
@@ -38,14 +38,43 @@ export function GetCardsForGame(appId: string) {
 	}
 }
 
+export async function fetchDeleteCard(card: MicroSDCard) {
+	await fetch(`${API_URL}/card/${card.uid}`, {
+		method: "DELETE",
+		referrerPolicy: "unsafe-url",
+	})
+	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+}
+
+export async function fetchUpdateCard(card: MicroSDCard) {
+	await fetch(`${API_URL}/card/${card.uid}`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(card),
+		referrerPolicy: "unsafe-url",
+	})
+	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+}
+
+export async function fetchCurrentCardAndGames(): Promise<CardAndGames | undefined> {
+	return await fetch(`${API_URL}/current`, { referrerPolicy: "unsafe-url", })
+		.then(res => res.json())
+		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+}
+export async function fetchCardsAndGames(): Promise<CardsAndGames | undefined> {
+	return await fetch(`${API_URL}/ListCardsWithGames`, { referrerPolicy: "unsafe-url", })
+		.then(res => res.json())
+		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+}
+
 export function GetCardsAndGames() {
 	const [cards, setValue] = useState<CardsAndGames | null>(null)
 
 	async function runQuery() {
-		const result = await fetch(`${API_URL}/ListCardsWithGames`, { referrerPolicy: "unsafe-url", })
-			.then(res => res.json())
-			.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
-		setValue(result)
+		const result = await fetchCardsAndGames();
+		setValue(result || null)
 	}
 
 	useEffect(() => {

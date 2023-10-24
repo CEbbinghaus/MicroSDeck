@@ -22,6 +22,10 @@ impl From<String> for Name {
     }
 }
 
+fn default_true() -> bool {
+	true
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MicroSDCard {
     pub uid: String,
@@ -31,7 +35,7 @@ pub struct MicroSDCard {
 	#[serde(default)]
 	pub position: u32,
 	#[serde(default)]
-	pub hidden: bool
+	pub hidden: bool,
 }
 
 impl MicroSDCard {
@@ -57,4 +61,7 @@ pub struct Game {
     pub uid: String,
     pub name: String,
     pub size: u64,
+	
+	#[serde(default="default_true")]
+	pub is_steam: bool
 }

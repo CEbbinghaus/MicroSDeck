@@ -86,8 +86,8 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
                 uid: cid.clone(),
                 libid: library.contentid.clone(),
                 name: library.label,
-				position: 0,
-				hidden: false
+                position: 0,
+                hidden: false,
             },
         );
     }
@@ -109,6 +109,7 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
                     uid: game.appid.clone(),
                     name: game.name.clone(),
                     size: game.size_on_disk,
+                    is_steam: true,
                 },
             );
         }

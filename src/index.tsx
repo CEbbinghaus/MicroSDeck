@@ -6,25 +6,23 @@ import {
 	PanelSection,
 	ReorderableEntry,
 	ReorderableList,
-	ScrollPanel,
 	ServerAPI,
-	showModal,
+	showContextMenu,
 	staticClasses,
-	TextField,
 } from "decky-frontend-lib";
-import { useState, VFC } from "react";
-import { FaPen, FaSdCard } from "react-icons/fa";
+import { FaEllipsisH, FaSdCard } from "react-icons/fa";
 
 import PatchAppScreen from "./patch/PatchAppScreen";
 
-import { DOCUMENTATION_PATH } from "./const";
+import { DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
-import { GetCardsAndGames, SetNameForMicroSDCard } from "./hooks/backend";
 import React from "react";
-import { CardAndGames, MicroSDEntryType } from "./lib/Types";
-import { EditCardModal } from "./modals/EditCardModal";
+import { CardAndGames, MicroSDCard, MicroSDEntryType } from "./lib/Types";
 import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
+import { MicroSDeckContextProvider, useMicroSDeckContext } from "./state/MicroSDeckContext";
+import { MicroSDeckManager } from "./state/MicoSDeckManager";
+import { CardActionsContextMenu } from "./components/CardActions";
 
 // function RenderCard({ data }: { data: CardAndGames }) {
 // 	Logger.Log("Rendering Card");
@@ -45,36 +43,33 @@ import { DeckyAPI } from "./lib/DeckyApi";
 // 		</div>
 // 	)
 // }
-
-function EditCardButton({ card }: { card: CardAndGames }) {
-
-
+interface EditCardButtonProps {
+	microSDeckManager: MicroSDeckManager,
+	currentCard: MicroSDCard | undefined,
+	cardAndGames: CardAndGames
+}
+function EditCardButton(props: EditCardButtonProps) {
 	const onClick = () => {
-		showModal(<EditCardModal
-			onConfirm={(cardId: string, name: string) => {
-				Logger.Log("Changed Card {cardId} to name \"{name}\"", { cardId, name });
-				SetNameForMicroSDCard(cardId, name);
-			}}
-			cardId={card[0].uid}
-			cardName={card[0].name}
-		/>);
+		showContextMenu(<CardActionsContextMenu {...props} />);
 	}
 	return (
 		<DialogButton
 			style={{ height: "40px", minWidth: "40px", width: "40px", display: "flex", justifyContent: "center", alignItems: "center", padding: "10px", marginRight: "8px" }}
 			onClick={onClick}
 			onOKButton={onClick}
-			onOKActionDescription="Edit Card"
+			onOKActionDescription="Open Card Options"
 		>
-			<FaPen />
+			<FaEllipsisH />
 		</DialogButton>
 	)
 }
 
-const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
-	const { cards, refresh } = GetCardsAndGames();
+function Content(){
+	const {currentCardAndGames, cardsAndGames, microSDeckManager} = useMicroSDeckContext();
 
-	const isLoaded = !!cards;
+	const [currentCard] = currentCardAndGames || [undefined];
+
+	const isLoaded = !!cardsAndGames;
 
 	// const [selectedCard, setSelectedCard] = useState<number>(0);
 
@@ -88,16 +83,15 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 	// }) ?? [{ label: "Loading...", data: null } as DropdownOption];
 
 
-	const entries = cards?.map(([card]) => {
+	const entries = cardsAndGames?.map(([card]) => {
 		return {
 			label:
-
-				<div className="tab-label-cont">
-					<div style={{ height: "80%", float: "left" }}>
-						<FaSdCard />
+				<div style={{ width: "100%" }} className="tab-label-cont">
+					<div style={{ float: "left" }}>
+						<FaSdCard size={14} />
 					</div>
-					<div style={{ marginLeft: "1.2em", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name}</div>
-					<div style={{ position: "relative", bottom: 0, left: 0, fontSize: 8, color: "#aaa", whiteSpace: "nowrap" }}>{card.uid}</div>
+					<div style={{ marginLeft: "1.2rem", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name || UNAMED_CARD_NAME}</div>
+					<div style={{ position: "absolute", bottom: 0, left: 0, fontSize: 8, color: "#aaa", whiteSpace: "nowrap" }}>{card.uid}</div>
 				</div>
 			,
 			position: card.position || 0,
@@ -108,10 +102,9 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 	function CardInteractables({ entry }: {
 		entry: ReorderableEntry<MicroSDEntryType>
 	}) {
-		const card = cards!.find(([card]) => card.uid == entry.data!.uid)!;
-		return (<EditCardButton {...{ card }} />);
+		const cardAndGames = cardsAndGames!.find(([card]) => card.uid == entry.data!.uid)!;
+		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeckManager }} />);
 	}
-
 
 	return (
 		<>
@@ -168,6 +161,11 @@ export default definePlugin((serverApi: ServerAPI) => {
 		exact: true,
 	});
 
+	const microSDeckManager = new MicroSDeckManager();
+	//@ts-ignore sssshhhhh
+	window.microSDeckManager = microSDeckManager;
+	microSDeckManager.init();
+
 	DeckyAPI.SetApi(serverApi);
 
 	const patch = PatchAppScreen(serverApi);
@@ -176,7 +174,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 
 	return {
 		title: <div className={staticClasses.Title}>Example Plugin</div>,
-		content: <Content serverAPI={serverApi} />,
+		content:
+			<MicroSDeckContextProvider microSDeckManager={microSDeckManager}>
+				<Content />
+			</MicroSDeckContextProvider>,
 		icon: <FaSdCard />,
 		onDismount() {
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);

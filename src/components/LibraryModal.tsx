@@ -3,6 +3,7 @@ import React, { ReactElement, useEffect, useRef, useState} from 'react'
 import { FaSdCard } from 'react-icons/fa'
 import { GetCardsForGame } from '../hooks/backend';
 import { Logger } from '../Logging';
+import { UNAMED_CARD_NAME } from '../const';
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
     var ref = useRef();
@@ -57,7 +58,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         >
             <FaSdCard size={20} />
             <span>
-                {value.map(v => v.name).filter(v => v).join(", ") || "UNAMED"}
+				{value.map(v => v.name || UNAMED_CARD_NAME).join(", ")}
             </span>
         </div>
     )

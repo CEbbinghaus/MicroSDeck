@@ -162,8 +162,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 	});
 
 	const microSDeckManager = new MicroSDeckManager();
-	//@ts-ignore sssshhhhh
-	window.microSDeckManager = microSDeckManager;
+	
+	//@ts-ignore ssshhhh 🤫
+	window.MicroSDeck = microSDeckManager;
+
 	microSDeckManager.init();
 
 	DeckyAPI.SetApi(serverApi);
@@ -182,6 +184,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 		onDismount() {
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
 			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
+
+			//@ts-ignore
+			window.MicroSDeck = null;
+			microSDeckManager.deinit();
 		},
 	};
 });

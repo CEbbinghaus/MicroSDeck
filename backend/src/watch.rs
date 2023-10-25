@@ -4,8 +4,8 @@ use std::collections::hash_map::DefaultHasher;
 use std::fs::DirEntry;
 use std::hash::{Hash, Hasher};
 use std::{borrow::Borrow, collections::HashMap, fs, sync::Arc, time::Duration};
-use tokio::time::interval;
 use tokio::sync::broadcast::Sender;
+use tokio::time::interval;
 
 const STEAM_LIB_FILE: &'static str = "/run/media/mmcblk0p1/libraryfolder.vdf";
 const STEAM_LIB_FOLDER: &'static str = "/run/media/mmcblk0p1/steamapps/";
@@ -126,13 +126,25 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<()>) -> Result<()
 
     let mut changeset = ChangeSet::new();
 
+    let mut card_inserted = false;
+
     loop {
         interval.tick().await;
 
         // No card no worries.
         if !is_card_inserted() {
+            // The card has been removed since the last check
+            if card_inserted {
+                let _ = sender.send(());
+            }
+
+            card_inserted = false;
             continue;
         }
+
+        // was the card inserted since the last check.
+        let card_changed = !card_inserted;
+        card_inserted = true;
 
         // There is no steam directory so it hasn't been formatted.
         if !is_card_steam_formatted() {
@@ -149,7 +161,13 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<()>) -> Result<()
 
         // Do we have changes in the steam directory. This should only occur when something has been added/deleted
         let hash = match changeset.is_changed(&cid) {
-            None => continue,
+            None => {
+                // A new card has been inserted but no content on it changed.
+                if card_changed {
+                    let _ = sender.send(());
+                }
+                continue;
+            }
             Some(v) => v,
         };
 

@@ -24,6 +24,10 @@ import { MicroSDeckContextProvider, useMicroSDeckContext } from "./state/MicroSD
 import { MicroSDeckManager } from "./state/MicoSDeckManager";
 import { CardActionsContextMenu } from "./components/CardActions";
 
+declare global {
+	let collectionStore: CollectionStore;
+}
+
 // function RenderCard({ data }: { data: CardAndGames }) {
 // 	Logger.Log("Rendering Card");
 // 	const [card, games] = data;

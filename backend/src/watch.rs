@@ -5,6 +5,7 @@ use std::fs::DirEntry;
 use std::hash::{Hash, Hasher};
 use std::{borrow::Borrow, collections::HashMap, fs, sync::Arc, time::Duration};
 use tokio::time::interval;
+use tokio::sync::broadcast::Sender;
 
 const STEAM_LIB_FILE: &'static str = "/run/media/mmcblk0p1/libraryfolder.vdf";
 const STEAM_LIB_FOLDER: &'static str = "/run/media/mmcblk0p1/steamapps/";
@@ -120,7 +121,7 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn start_watch(datastore: Arc<Store>) -> Result<(), Error> {
+pub async fn start_watch(datastore: Arc<Store>, sender: Sender<()>) -> Result<(), Error> {
     let mut interval = interval(Duration::from_secs(5));
 
     let mut changeset = ChangeSet::new();
@@ -162,5 +163,7 @@ pub async fn start_watch(datastore: Arc<Store>) -> Result<(), Error> {
 
         // commit update
         changeset.update(&cid, hash);
+
+        let _ = sender.send(());
     }
 }

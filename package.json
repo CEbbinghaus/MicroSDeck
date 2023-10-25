@@ -1,6 +1,6 @@
 {
   "name": "microsdeck",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "A SteamDeck plugin to track games across MicroSD cards",
   "scripts": {
     "build": "shx rm -rf dist && rollup -c",

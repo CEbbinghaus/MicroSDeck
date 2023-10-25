@@ -12,7 +12,7 @@ export async function SetNameForMicroSDCard(CardId: string, Name: string) {
 		body: JSON.stringify({ id: CardId, name: Name }),
 		referrerPolicy: "unsafe-url",
 	})
-	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
 }
 
 export function GetCardsForGame(appId: string) {
@@ -38,35 +38,81 @@ export function GetCardsForGame(appId: string) {
 	}
 }
 
+export async function fetchEventPoll({signal}: {signal: AbortSignal}): Promise<boolean | undefined> {
+	try {
+		const response = await fetch(`${API_URL}/listen`, {
+			keepalive: true,
+			referrerPolicy: "unsafe-url",
+			signal
+		});
+
+		if (response.ok) {
+			return true;
+		}
+
+		Logger.Log("Poll timed out...")
+		return false;
+	} catch (error) {
+		Logger.Error("Lost contact with server..");
+		return undefined;
+	}
+}
+
 export async function fetchDeleteCard(card: MicroSDCard) {
-	await fetch(`${API_URL}/card/${card.uid}`, {
-		method: "DELETE",
-		referrerPolicy: "unsafe-url",
-	})
-	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+	try {
+		await fetch(`${API_URL}/card/${card.uid}`, {
+			method: "DELETE",
+			referrerPolicy: "unsafe-url",
+		});
+	} catch (error) {
+		Logger.Error("There was a critical error: \"{Error}\"", { Error });
+	}
 }
 
 export async function fetchUpdateCard(card: MicroSDCard) {
-	await fetch(`${API_URL}/card/${card.uid}`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(card),
-		referrerPolicy: "unsafe-url",
-	})
-	.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+	try {
+		await fetch(`${API_URL}/card/${card.uid}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(card),
+			referrerPolicy: "unsafe-url",
+		});
+	} catch (error) {
+		Logger.Error("There was a critical error: \"{Error}\"", { Error });
+	}
 }
 
 export async function fetchCurrentCardAndGames(): Promise<CardAndGames | undefined> {
-	return await fetch(`${API_URL}/current`, { referrerPolicy: "unsafe-url", })
-		.then(res => res.json())
-		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+	try {
+		let result = await fetch(`${API_URL}/current`, { referrerPolicy: "unsafe-url", });
+		
+		if(!result.ok) {
+			Logger.Warn("Fetch returned non 200 code {status} status, {statusText}", {status: result.status, statusText: result.statusText})
+			return undefined;
+		}
+
+		return await result.json();
+	} catch (error) {
+		Logger.Error("There was a critical error: \"{Error}\"", { Error });
+		return undefined;
+	}
 }
 export async function fetchCardsAndGames(): Promise<CardsAndGames | undefined> {
-	return await fetch(`${API_URL}/ListCardsWithGames`, { referrerPolicy: "unsafe-url", })
-		.then(res => res.json())
-		.catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+	try {
+		let result = await fetch(`${API_URL}/ListCardsWithGames`, { referrerPolicy: "unsafe-url", });
+		
+		if(!result.ok) {
+			Logger.Warn("Fetch returned non 200 code {status} status, {statusText}", {status: result.status, statusText: result.statusText})
+			return undefined;
+		}
+
+		return await result.json();
+	} catch (error) {
+		Logger.Error("There was a critical error: \"{Error}\"", { Error });
+		return undefined;
+	}
 }
 
 export function GetCardsAndGames() {

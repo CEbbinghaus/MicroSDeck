@@ -7,9 +7,11 @@ use crate::{
 use actix_web::{delete, get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
 use std::{ops::Deref, sync::Arc};
+use tokio::sync::broadcast::Sender;
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_current_card)
+    cfg.service(listen)
+        .service(get_current_card)
         .service(get_current_card_id)
         .service(get_current_card_and_games)
         .service(create_card)
@@ -34,6 +36,13 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig) {
 pub(crate) async fn health() -> impl Responder {
     HttpResponse::Ok()
 }
+
+#[get("/listen")]
+pub(crate) async fn listen(sender: web::Data<Sender<()>>) -> Result<impl Responder> {
+    sender.subscribe().recv().await.map_err(|_| Error::from_str("Unable to retrieve update"))?;
+    Ok(HttpResponse::Ok())
+}
+
 
 #[get("/ListCardsWithGames")]
 pub(crate) async fn list_cards_with_games(datastore: web::Data<Arc<Store>>) -> impl Responder {

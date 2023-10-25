@@ -21,6 +21,7 @@ use err::Error;
 use futures::{pin_mut, select, FutureExt};
 use once_cell::sync::Lazy;
 use simplelog::LevelFilter;
+use tokio::sync::broadcast::{self, Sender};
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
@@ -39,7 +40,7 @@ pub fn init() -> Result<(), ::log::SetLoggerError> {
 
 type MainResult = Result<(), Error>;
 
-async fn run_server(datastore: Arc<Store>) -> MainResult {
+async fn run_server(datastore: Arc<Store>, sender: Sender<()>) -> MainResult {
     // let log_filepath = format!("/tmp/{}.log", PACKAGE_NAME);
     // WriteLogger::init(
     //     #[cfg(debug_assertions)]
@@ -58,6 +59,7 @@ async fn run_server(datastore: Arc<Store>) -> MainResult {
     info!("Starting HTTP server...");
 
     HttpServer::new(move || {
+
         let cors = Cors::default()
             .allow_any_header()
             .allow_any_method()
@@ -68,6 +70,7 @@ async fn run_server(datastore: Arc<Store>) -> MainResult {
             .wrap(cors)
             // .app_data(web::Data::new(api::AppState{datastore: datastore.clone()}))
             .app_data(web::Data::new(datastore.clone()))
+            .app_data(web::Data::new(sender.clone()))
             .configure(config)
     })
     .workers(1)
@@ -119,9 +122,11 @@ async fn main() {
 
     info!("Starting Program...");
 
-    let server_future = run_server(store.clone()).fuse();
+    let (txtx, _) = broadcast::channel::<()>(1);
 
-    let watch_future = start_watch(store.clone()).fuse();
+    let server_future = run_server(store.clone(),  txtx.clone()).fuse();
+
+    let watch_future = start_watch(store.clone(), txtx.clone()).fuse();
 
     pin_mut!(server_future, watch_future);
 

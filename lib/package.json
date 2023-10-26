@@ -5,11 +5,13 @@
   "keywords": [],
   "author": "CEbbinghaus",
   "license": "GPLv2",
+  
   "main": "dist/index.js",
-  "typings": "dist/types/index.d.ts",
+  "typings": "dist/index.d.ts",
   "files": [
-    "src"
+    "dist"
   ],
+
   "scripts": {
     "build": "tsc"
   },

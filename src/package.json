@@ -2,15 +2,6 @@
   "name": "microsdeck-frontend",
   "version": "0.9.5",
   "description": "A SteamDeck plugin to track games across MicroSD cards",
-  "scripts": {
-    "build": "shx rm -rf dist && rollup -c",
-    "watch": "rollup -c -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CEbbinghaus/MicroSDeck.git"
-  },
   "keywords": [
     "decky",
     "plugin",
@@ -21,6 +12,11 @@
   ],
   "author": "Christopher-Robin <git@cebbinghaus.com>",
   "license": "GPL-2.0",
+  "scripts": {
+    "build": "shx rm -rf dist && rollup -c",
+    "watch": "rollup -c -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "bugs": {
     "url": "https://github.com/CEbbinghaus/MicroSDeck/issues"
   },
@@ -42,7 +38,6 @@
   "dependencies": {
     "@types/re-carousel": "^2.4.0",
     "decky-frontend-lib": "^3.22.0",
-    "microsdeck": "link:./lib",
     "lipe": "^0.3.3",
     "re-carousel": "^2.4.0",
     "react-icons": "^4.10.1"

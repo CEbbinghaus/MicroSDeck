@@ -1,0 +1,33 @@
+{
+  "name": "@cebbinghaus/microsdeck",
+  "version": "0.9.5",
+  "description": "",
+  "keywords": [],
+  "author": "CEbbinghaus",
+  "license": "GPLv2",
+  
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+
+  "scripts": {
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CEbbinghaus/MicroSDeck.git",
+    "directory": "src/lib"
+  },
+  "devDependencies": {
+    "@types/react": "16.14.0",
+    "lipe": "^0.3.3"
+  },
+  "dependencies": {
+    "typescript": "^4.9.5"
+  }
+}

@@ -1,9 +1,7 @@
 on:
+  pull_request:
   push:
-    branches:
-      - master
-  pull_request_target:
-    branches: ['*']
+    branches: master
 
 jobs:
   build:
@@ -47,3 +45,37 @@ jobs:
       with:
         name: "MicroSDeck"
         path: release/MicroSDeck/*
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    needs: build
+    name: Deploy Package
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+    - name: Checkout
+      if: ${{ !env.ACT }}
+      uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        registry-url: https://npm.pkg.github.com/
+
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8.5.1
+
+    - name: Install & Build
+      run: |
+        cd lib && \
+        pnpm install && \
+        pnpm build && \
+
+    - run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+   

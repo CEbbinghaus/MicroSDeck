@@ -13,7 +13,7 @@ import React, { CSSProperties, Fragment, useMemo } from "react";
 import { useState, VFC, useEffect, } from "react";
 import { BiSolidDownArrow } from "react-icons/bi";
 import { DeckyAPI } from "../lib/DeckyApi";
-import { Game, MicroSDCard } from "../lib/Types";
+import { Game, MicroSDCard } from "../../lib/src";
 import { Logger } from "../Logging";
 import { UNAMED_CARD_NAME } from "../const";
 import { GamesOnCardModal } from './GamesOnCardModal';

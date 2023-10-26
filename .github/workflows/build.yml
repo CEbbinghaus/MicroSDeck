@@ -70,9 +70,9 @@ jobs:
 
     - name: Install & Build
       run: |
-        cd lib \
-        pnpm install \
-        pnpm build \
+        cd lib && \
+        pnpm install && \
+        pnpm build
 
     - run: npm publish
       env:

@@ -14,14 +14,13 @@ import { FaEllipsisH, FaSdCard } from "react-icons/fa";
 
 import PatchAppScreen from "./patch/PatchAppScreen";
 
-import { DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
+import { API_URL, DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
 import React from "react";
-import { CardAndGames, MicroSDCard, MicroSDEntryType } from "./lib/Types";
 import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
-import { MicroSDeckContextProvider, useMicroSDeckContext } from "./state/MicroSDeckContext";
-import { MicroSDeckManager } from "./state/MicoSDeckManager";
+import { MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "microsdeck";
+import { MicroSDeckManager } from "microsdeck/src/state/MicoSDeckManager";
 import { CardActionsContextMenu } from "./components/CardActions";
 
 // function RenderCard({ data }: { data: CardAndGames }) {
@@ -166,7 +165,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	//@ts-ignore ssshhhh 🤫
 	window.MicroSDeck = microSDeckManager;
 
-	microSDeckManager.init();
+	microSDeckManager.init({logger: Logger, url: API_URL});
 
 	DeckyAPI.SetApi(serverApi);
 

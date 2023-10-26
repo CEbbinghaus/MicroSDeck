@@ -1,17 +1,22 @@
-// import { ServerAPI } from 'decky-frontend-lib'
-import React, { ReactElement, useEffect, useRef, useState} from 'react'
-import { FaSdCard } from 'react-icons/fa'
-import { GetCardsForGame } from '../hooks/backend';
+import React, { ReactElement, useEffect, useRef, useState} from 'react';
+import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { UNAMED_CARD_NAME } from '../const';
+import { MicroSDCard, useMicroSDeckContext } from 'microsdeck';
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
+	const {microSDeckManager} = useMicroSDeckContext();
     var ref = useRef();
 
     const height = 20;
     const [top, setTop] = useState<number>(210);
 
-    const {value} = GetCardsForGame(appId);
+	const [cards, setCards] = useState<MicroSDCard[] | undefined>(undefined);
+	useEffect(() => {
+		microSDeckManager.fetchCardsForGame(appId).then(setCards);
+	}, []);
+
+    
 
     useEffect(() => {
         if(!ref || !ref.current) return;
@@ -29,25 +34,17 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         Logger.Log("Set Top For Window bacuse of bounds", {imageWindowBounds});
     });
 
-    if(!value)
+    if(!cards)
     {
         //Logger.Error("Unable to find Card");
         return (<></>);
     }
 
-    if(typeof value === "string")
+    if(!cards.length)
     {
-        Logger.Error("Error retrieving SD Card: \"{error}\"", {error: value})
+        Logger.Debug("No MicroSD card could be found for {appId}", {appId});
         return (<></>);
     }
-
-    if(!value.length)
-    {
-        Logger.Info("No MicroSD card could be found for {appId}", {appId});
-        return (<></>);
-    }
-
-    // if (!data) return (<></>);
 
     return (
         <div
@@ -58,7 +55,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         >
             <FaSdCard size={20} />
             <span>
-				{value.map(v => v.name || UNAMED_CARD_NAME).join(", ")}
+				{cards.map(v => v.name || UNAMED_CARD_NAME).join(", ")}
             </span>
         </div>
     )

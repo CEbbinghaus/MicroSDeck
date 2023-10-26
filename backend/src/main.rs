@@ -10,7 +10,7 @@ mod steam;
 
 use crate::api::config;
 use crate::ds::Store;
-use crate::env::get_file_path_and_create_directory;
+use crate::env::*;
 use crate::log::Logger;
 use crate::watch::start_watch;
 use ::log::{info, trace, error};
@@ -27,12 +27,6 @@ use std::process::exit;
 use std::sync::Arc;
 
 static LOGGER: Lazy<Logger> = Lazy::new(|| Logger::new().expect("Logger to be created"));
-
-const PORT: u16 = 12412; // TODO replace with something unique
-
-const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
-const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 pub fn init() -> Result<(), ::log::SetLoggerError> {
     ::log::set_logger(&*LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))

@@ -1,6 +1,6 @@
 import { MenuItem, showModal, Menu, ConfirmModal } from "decky-frontend-lib"
-import { CardAndGames, MicroSDCard } from "../lib/Types";
-import { MicroSDeckManager } from "../state/MicoSDeckManager";
+import { CardAndGames, MicroSDCard } from "microsdeck";
+import { MicroSDeckManager } from "microsdeck/src/state/MicoSDeckManager";
 import { EditCardModal } from "../modals/EditCardModal";
 import { UNAMED_CARD_NAME } from "../const";
 

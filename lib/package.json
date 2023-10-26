@@ -1,0 +1,24 @@
+{
+  "name": "microsdeck",
+  "version": "0.9.5",
+  "description": "",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "CEbbinghaus",
+  "license": "GPLv2",
+  "scripts": {
+	"build": "tsc"
+  },
+  "devDependencies": {
+    "@types/react": "16.14.0",
+    "lipe": "^0.3.3"
+  },
+  "dependencies": {
+	"typescript": "^4.9.5"
+  }
+}

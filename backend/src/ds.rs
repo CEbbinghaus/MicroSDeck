@@ -106,6 +106,19 @@ impl StoreData {
         Ok(())
     }
 
+	pub fn unlink(&mut self, a_id: &str, b_id: &str) -> Result<(), Error> {
+        let game_key = self.node_ids.get(a_id);
+        let card_key = self.node_ids.get(b_id);
+        let (game_key, card_key) = game_key
+            .zip(card_key)
+            .ok_or_else(|| Error::from_str("Either Game or Card could not be found"))?;
+
+        self.nodes[*game_key].links.remove(card_key);
+        self.nodes[*card_key].links.remove(game_key);
+
+        Ok(())
+    }
+
     pub fn remove_item(&mut self, id: &str) -> Result<(), Error> {
         let element_key = self
             .node_ids
@@ -115,19 +128,6 @@ impl StoreData {
         for key in self.nodes.remove(element_key).unwrap().links {
             self.nodes[key].links.remove(&element_key);
         }
-
-        Ok(())
-    }
-
-    pub fn remove_game_from_card(&mut self, game_id: &str, card_id: &str) -> Result<(), Error> {
-        let game_key = self.node_ids.get(game_id);
-        let card_key = self.node_ids.get(card_id);
-        let (game_key, card_key) = game_key
-            .zip(card_key)
-            .ok_or_else(|| Error::from_str("Either Game or Card could not be found"))?;
-
-        self.nodes[*game_key].links.remove(card_key);
-        self.nodes[*card_key].links.remove(game_key);
 
         Ok(())
     }
@@ -354,17 +354,17 @@ impl Store {
         Ok(())
     }
 
-    pub fn remove_element(&self, game_id: &str) -> Result<(), Error> {
-        self.data.write().unwrap().remove_item(game_id)?;
+	pub fn unlink(&self, a_id: &str, b_id: &str) -> Result<(), Error> {
+        self.data
+            .write()
+            .unwrap()
+            .unlink(a_id, b_id)?;
         self.try_write_to_file();
         Ok(())
     }
 
-    pub fn remove_game_from_card(&self, game_id: &str, card_id: &str) -> Result<(), Error> {
-        self.data
-            .write()
-            .unwrap()
-            .remove_game_from_card(game_id, card_id)?;
+    pub fn remove_element(&self, game_id: &str) -> Result<(), Error> {
+        self.data.write().unwrap().remove_item(game_id)?;
         self.try_write_to_file();
         Ok(())
     }

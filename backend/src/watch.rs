@@ -99,7 +99,7 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
         .iter()
         .filter(|v| !games.iter().any(|g| g.appid == v.uid))
     {
-        datastore.remove_game_from_card(&deleted_game.uid, &cid)?
+        datastore.unlink(&deleted_game.uid, &cid)?
     }
 
     for game in games.iter() {

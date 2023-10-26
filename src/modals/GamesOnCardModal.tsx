@@ -1,6 +1,6 @@
 import { Focusable, ModalPosition, ScrollPanelGroup, SimpleModal, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
 import { Fragment, VFC } from "react";
-import { Game, MicroSDCard } from '../lib/Types';
+import { Game, MicroSDCard } from '../../lib/src';
 
 interface GamesOnCardModalProps {
 	card: MicroSDCard;

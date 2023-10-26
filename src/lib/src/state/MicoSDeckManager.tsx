@@ -9,8 +9,8 @@ function sleep(ms: number): Promise<void> {
 export class MicroSDeckManager {
 	private abortController = new AbortController();
 
-	private logger: Logger.default | undefined;
-	private fetchProps!: { url: string, logger?: Logger.default | undefined };
+	private logger: Logger | undefined;
+	private fetchProps!: { url: string, logger?: Logger | undefined };
 
 	public eventBus = new EventTarget();
 
@@ -21,7 +21,7 @@ export class MicroSDeckManager {
 
 	private pollLock: any | undefined;
 
-	init(props: { logger?: Logger.default, url: string }) {
+	init(props: { logger?: Logger, url: string }) {
 		this.logger = props.logger;
 
 		this.logger?.Log("Initializing MicroSDeckManager");

@@ -2,7 +2,7 @@ import React, { ReactElement, useEffect, useRef, useState} from 'react';
 import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { UNAMED_CARD_NAME } from '../const';
-import { MicroSDCard, useMicroSDeckContext } from 'microsdeck';
+import { MicroSDCard, useMicroSDeckContext } from "../../lib/src"
 
 export default function LibraryModal({appId}: {appId: string}): ReactElement {
 	const {microSDeckManager} = useMicroSDeckContext();

@@ -3,7 +3,7 @@ import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js";
 
 export type FetchProps = {
 	url: string,
-	logger?: Logger.default | undefined;
+	logger?: Logger | undefined;
 }
 
 const ApplicationJsonHeaders = {
@@ -14,20 +14,20 @@ const ApplicationJsonHeaders = {
 
 async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promise<any | undefined> {
 	try {
-		const result = await fetch(url, { ...init, referrerPolicy: "unsafe-url" });
+		const response = await fetch(url, init);
 
-		if (!result.ok) {
-			logger?.Debug("Fetching {url} returned a non 200 status code {status}. Response: {statusText}", result as any);
+		if (!response.ok) {
+			logger?.Debug("Fetching {url} returned a non 200 status code {status}. Response: {statusText}", response as any);
 			return undefined;
 		}
 
-		if (init?.headers?.["Content-Type"])
-			return await result.json();
+		if (response.headers.get("content-type") === "application/json")
+			return await response.json();
 		else
-			return await result.text();
+			return await response.text();
 
 	} catch (err) {
-		logger?.Error("Fetch failed with error {err}", { err });
+		logger?.Error("Failed to fetch \"{url}\" with error {err}", { url, err });
 	}
 	return undefined;
 }
@@ -35,7 +35,6 @@ async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promi
 export async function fetchEventPoll({ url, logger, signal }: FetchProps & { signal: AbortSignal }): Promise<boolean | undefined> {
 	try {
 		const result = await fetch(`${url}/listen`, {
-			referrerPolicy: "unsafe-url",
 			keepalive: true,
 			signal
 		});
@@ -54,11 +53,11 @@ export async function fetchEventPoll({ url, logger, signal }: FetchProps & { sig
 }
 
 export async function fetchHealth({url, logger}: FetchProps): Promise<boolean> {
-	return await wrapFetch({url: `${url}/health`, logger}, ApplicationJsonHeaders) !== undefined;
+	return await wrapFetch({url: `${url}/health`, logger}) !== undefined;
 }
 
 export async function fetchVersion({url, logger}: FetchProps): Promise<string | undefined> {
-	return await wrapFetch({url: `${url}/health`, logger}, ApplicationJsonHeaders);
+	return await wrapFetch({url: `${url}/health`, logger});
 }
 
 export async function fetchDeleteCard({ url, logger, card }: FetchProps & { card: MicroSDCard }) {
@@ -74,11 +73,11 @@ export async function fetchUpdateCard({ url, logger, card }: FetchProps & { card
 }
 
 export async function fetchCurrentCardAndGames({url, logger}: FetchProps): Promise<CardAndGames | undefined> {
-	return await wrapFetch({url: `${url}/current`, logger}, ApplicationJsonHeaders);
+	return await wrapFetch({url: `${url}/current`, logger});
 }
 
 export async function fetchCardsAndGames({url, logger}: FetchProps): Promise<CardsAndGames | undefined> {
-	return await wrapFetch({url: `${url}/list`, logger}, ApplicationJsonHeaders);
+	return await wrapFetch({url: `${url}/list`, logger});
 }
 
 export async function fetchCardsForGame({ url, logger, gameId }: FetchProps & { gameId: string }): Promise<MicroSDCard[] | undefined> {

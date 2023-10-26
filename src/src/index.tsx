@@ -11,16 +11,13 @@ import {
 	staticClasses,
 } from "decky-frontend-lib";
 import { FaEllipsisH, FaSdCard } from "react-icons/fa";
-
 import PatchAppScreen from "./patch/PatchAppScreen";
-
 import { API_URL, DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
 import React from "react";
 import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
-import { MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "microsdeck";
-import { MicroSDeckManager } from "microsdeck/src/state/MicoSDeckManager";
+import { MicroSDeckManager, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 
 // function RenderCard({ data }: { data: CardAndGames }) {

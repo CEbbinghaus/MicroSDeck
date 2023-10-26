@@ -1,12 +1,11 @@
 {
-  "name": "microsdeck",
+  "name": "@cebbinghaus/microsdeck",
   "version": "0.9.5",
   "description": "",
   "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "type": "module",
+  "typings": "dist/types/index.d.ts",
   "files": [
-    "dist"
+    "src"
   ],
   "keywords": [],
   "author": "CEbbinghaus",

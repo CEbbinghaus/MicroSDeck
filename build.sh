@@ -23,25 +23,19 @@ if [[ "$*" != *"--skip-backend"* ]]; then
     cd backend && ./build.sh && cd ..
 fi
 
-if [[ "$*" != *"--skip-lib"* ]]; then
-    echo "Building library..."
-    # pnpm does not like local dependencies, and doesn't install them unless forced to install everything
-    cd lib && pnpm install && pnpm run build && cd ..
-fi
-
 if [[ "$*" != *"--skip-frontend"* ]]; then
     echo "Building frontend..."
     # pnpm does not like local dependencies, and doesn't install them unless forced to install everything
-    cd frontend && pnpm install && pnpm run build && cd ..
+    cd src && pnpm install && pnpm run build && cd ..
 fi
 
 echo  "Collecting outputs into /build folder"
-cp -r frontend/dist build/
+cp -r src/dist build/
 cp -r bin build/
 cp main.py build/
 cp plugin.json build/
 cp README.md build/
-cp frontend/package.json build/
+cp src/package.json build/
 
 if [[ "$*" != *"--skip-copy"* ]]; then
     echo "Copying build folder to local plugin directory"

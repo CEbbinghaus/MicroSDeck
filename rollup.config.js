@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     commonjs(),
     nodeResolve({browser: true}),
-    typescript(),
+	typescript(),
     json(),
     replace({
       preventAssignment: false,

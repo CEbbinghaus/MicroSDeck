@@ -10,7 +10,7 @@ import {
 import React from "react";
 import { useState, VFC, useEffect, } from "react";
 import { DeckyAPI } from "../lib/DeckyApi";
-import { Game, MicroSDCard } from "../lib/Types";
+import { Game, MicroSDCard } from "../../lib/src";
 import { Logger } from "../Logging";
 import { UNAMED_CARD_NAME } from "../const";
 

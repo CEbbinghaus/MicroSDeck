@@ -20,22 +20,21 @@ mkdir -p build
 
 if [[ "$*" != *"--skip-backend"* ]]; then
     echo "Building backend..."
-    cd ./backend && ./build.sh && cd ..
+    cd backend && ./build.sh && cd ..
 fi
 
 if [[ "$*" != *"--skip-frontend"* ]]; then
     echo "Building frontend..."
-    # pnpm does not like local dependencies, and doesn't install them unless forced to install everything
-    rm -rf ./node_modules && pnpm install && pnpm run build
+    cd src && pnpm install && pnpm run build && cd ..
 fi
 
 echo  "Collecting outputs into /build folder"
-cp -r dist build/
+cp -r src/dist build/
 cp -r bin build/
 cp main.py build/
 cp plugin.json build/
 cp README.md build/
-cp package.json build/
+cp src/package.json build/
 
 if [[ "$*" != *"--skip-copy"* ]]; then
     echo "Copying build folder to local plugin directory"

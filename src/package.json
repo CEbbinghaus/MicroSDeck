@@ -1,5 +1,5 @@
 {
-  "name": "microsdeck-frontend",
+  "name": "microsdeck",
   "version": "0.9.5",
   "description": "A SteamDeck plugin to track games across MicroSD cards",
   "keywords": [

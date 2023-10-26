@@ -1,9 +1,7 @@
 on:
+  pull_request:
   push:
-    branches:
-      - master
-  pull_request_target:
-    branches: ['']
+    branches: master
 
 jobs:
   build:

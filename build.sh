@@ -25,7 +25,6 @@ fi
 
 if [[ "$*" != *"--skip-frontend"* ]]; then
     echo "Building frontend..."
-    # pnpm does not like local dependencies, and doesn't install them unless forced to install everything
     cd src && pnpm install && pnpm run build && cd ..
 fi
 

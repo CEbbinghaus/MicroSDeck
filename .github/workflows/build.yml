@@ -67,10 +67,12 @@ jobs:
     - uses: pnpm/action-setup@v2
       with:
         version: 8.5.1
-    - run: |
-      cd lib
-      pnpm install
-      pnpm build
+
+    - name: Install & Build
+      run: |
+        cd lib \
+        pnpm install \
+        pnpm build \
 
     - run: npm publish
       env:

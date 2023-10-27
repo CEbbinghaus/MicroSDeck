@@ -44,7 +44,6 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeckMa
 								//* i think the collection is only null if user has no shortcuts (non-steam games)
 								//* so if we just got the shorcut ids then i think we're good to assert that the collection and the specific game exist here
 								body: JSON.stringify({ uid: appId, name: collectionStore.deckDesktopApps!.apps.get(parseInt(appId))!.display_name, is_steam: false, size: 0 }),
-								referrerPolicy: "unsafe-url",
 							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
 
 							const res2 = await fetch(`${API_URL}/link`, {
@@ -53,12 +52,18 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeckMa
 									"Content-Type": "application/json",
 								},
 								body: JSON.stringify({ card_id: card.uid, game_id: appId }),
-								referrerPolicy: "unsafe-url",
 							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
 						});
 
 						nonSteamDeletions.forEach(async appId => {
 							//* api call to remove game from card
+							await fetch(`${API_URL}/unlink`, {
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({ card_id: card.uid, game_id: appId }),
+							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
 						});
 					}}
 					card={{ ...card }}

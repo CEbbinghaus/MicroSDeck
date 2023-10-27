@@ -68,14 +68,14 @@ jobs:
       with:
         version: 8.9.2
 
-    - name: Install & Build
-      run: |
-        cd lib && \
-        pnpm install && \
-        pnpm build
-
-    - run: npm publish
+    - name: Install, Build & Publish
+      working-directory: lib    
       env:
-        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      run: |
+        pnpm install && \
+        pnpm build && \
+        pnpm publish
+     
 
    

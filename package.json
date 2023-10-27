@@ -1,6 +1,6 @@
 {
   "name": "microsdeck",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "A SteamDeck plugin to track games across MicroSD cards",
   "keywords": [
     "decky",

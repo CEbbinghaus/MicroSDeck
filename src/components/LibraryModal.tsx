@@ -1,22 +1,16 @@
 import React, { ReactElement, useEffect, useRef, useState} from 'react';
 import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
-import { UNAMED_CARD_NAME } from '../const';
-import { MicroSDCard, useMicroSDeckContext } from "../../lib/src"
+import { API_URL, UNAMED_CARD_NAME } from '../const';
+import { useCardsForGame } from "../../lib/src"
 
-export default function LibraryModal({appId}: {appId: string}): ReactElement {
-	const {microSDeckManager} = useMicroSDeckContext();
+export default function LibraryModal({appId: gameId}: {appId: string}): ReactElement {
+	const {cards} = useCardsForGame({url: API_URL, logger: Logger, gameId});
+
     var ref = useRef();
 
     const height = 20;
     const [top, setTop] = useState<number>(210);
-
-	const [cards, setCards] = useState<MicroSDCard[] | undefined>(undefined);
-	useEffect(() => {
-		microSDeckManager.fetchCardsForGame(appId).then(setCards);
-	}, []);
-
-    
 
     useEffect(() => {
         if(!ref || !ref.current) return;
@@ -26,13 +20,12 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
         const imageWindow = doc.querySelector("[class^='appdetails_Header']");
         const imageWindowBounds = imageWindow?.getBoundingClientRect();
 
-
         if(!imageWindowBounds)
             return;
         
         setTop(imageWindowBounds.height - height);
         Logger.Log("Set Top For Window bacuse of bounds", {imageWindowBounds});
-    });
+    }, []);
 
     if(!cards)
     {
@@ -42,7 +35,7 @@ export default function LibraryModal({appId}: {appId: string}): ReactElement {
 
     if(!cards.length)
     {
-        Logger.Debug("No MicroSD card could be found for {appId}", {appId});
+        Logger.Debug("No MicroSD card could be found for {appId}", {appId: gameId});
         return (<></>);
     }
 

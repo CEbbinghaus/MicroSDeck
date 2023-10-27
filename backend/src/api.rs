@@ -1,8 +1,9 @@
 use crate::{
     ds::Store,
     dto::{Game, MicroSDCard},
+    env::PACKAGE_VERSION,
     err::Error,
-    sdcard::{get_card_cid, is_card_inserted}, env::PACKAGE_VERSION,
+    sdcard::{get_card_cid, is_card_inserted},
 };
 use actix_web::{delete, get, post, web, HttpResponse, Responder, Result};
 use serde::Deserialize;
@@ -11,9 +12,9 @@ use tokio::sync::broadcast::Sender;
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(health)
-		.service(version)
-		.service(listen)
-		.service(save)
+        .service(version)
+        .service(listen)
+        .service(save)
         .service(get_current_card)
         .service(get_current_card_id)
         .service(get_current_card_and_games)
@@ -23,13 +24,18 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig) {
         .service(list_cards)
         .service(get_card)
         .service(create_game)
+        .service(create_games)
         .service(delete_game)
         .service(list_games)
         .service(get_game)
         .service(list_games_for_card)
         .service(list_cards_for_game)
         .service(list_cards_with_games)
-        .service(create_link);
+        .service(create_link)
+        .service(create_links)
+        .service(delete_link)
+        .service(delete_links)
+		;
 }
 
 #[get("/version")]
@@ -44,10 +50,13 @@ pub(crate) async fn health() -> impl Responder {
 
 #[get("/listen")]
 pub(crate) async fn listen(sender: web::Data<Sender<()>>) -> Result<impl Responder> {
-    sender.subscribe().recv().await.map_err(|_| Error::from_str("Unable to retrieve update"))?;
+    sender
+        .subscribe()
+        .recv()
+        .await
+        .map_err(|_| Error::from_str("Unable to retrieve update"))?;
     Ok(HttpResponse::Ok())
 }
-
 
 #[get("/list")]
 pub(crate) async fn list_cards_with_games(datastore: web::Data<Arc<Store>>) -> impl Responder {
@@ -77,7 +86,9 @@ pub(crate) async fn list_cards_for_game(
 }
 
 #[get("/current")]
-pub(crate) async fn get_current_card_and_games(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+pub(crate) async fn get_current_card_and_games(
+    datastore: web::Data<Arc<Store>>,
+) -> Result<impl Responder> {
     if !is_card_inserted() {
         return Err(Error::from_str("No card is inserted").into());
     }
@@ -123,7 +134,6 @@ pub(crate) async fn get_games_on_current_card(
     }
 }
 
-
 #[post("/card/{id}")]
 pub(crate) async fn create_card(
     id: web::Path<String>,
@@ -164,7 +174,7 @@ pub(crate) async fn get_card(
     Ok(web::Json(datastore.get_card(&id)?))
 }
 
-#[get("/cards")]
+#[post("/cards")]
 pub(crate) async fn list_cards(datastore: web::Data<Arc<Store>>) -> impl Responder {
     web::Json(datastore.list_cards())
 }
@@ -179,11 +189,11 @@ pub(crate) async fn create_game(
         return Err(Error::from_str("uid did not match id provided").into());
     }
 
-	let mut game = body.to_owned();
+    let mut game = body.to_owned();
 
-	if !cfg!(debug_assertions) {
-		game.is_steam = false;
-	}
+    if !cfg!(debug_assertions) {
+        game.is_steam = false;
+    }
 
     datastore.add_game(id.into_inner(), game);
 
@@ -213,10 +223,34 @@ pub(crate) async fn list_games(datastore: web::Data<Arc<Store>>) -> impl Respond
     web::Json(datastore.list_games())
 }
 
+#[post("/games")]
+pub(crate) async fn create_games(
+    body: web::Json<Vec<Game>>,
+    datastore: web::Data<Arc<Store>>,
+) -> impl Responder {
+	for game in body.iter() {
+		let mut game = game.to_owned();
+	
+		if !cfg!(debug_assertions) {
+			game.is_steam = false;
+		}
+	
+		datastore.add_game(game.uid.clone(), game);
+	}
+	
+    HttpResponse::Ok()
+}
+
 #[derive(Deserialize)]
 pub struct LinkBody {
     card_id: String,
     game_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct ManyLinkBody {
+    card_id: String,
+    game_ids: Vec<String>,
 }
 
 #[post("/link")]
@@ -229,12 +263,40 @@ pub(crate) async fn create_link(
     Ok(HttpResponse::Ok())
 }
 
+#[post("/linkmany")]
+pub(crate) async fn create_links(
+    body: web::Json<ManyLinkBody>,
+    datastore: web::Data<Arc<Store>>,
+) -> Result<impl Responder> {
+
+	let data = body.into_inner();
+    for game_id in data.game_ids.iter() {
+		datastore.link(&game_id, &data.card_id)?;
+	}
+
+    Ok(HttpResponse::Ok())
+}
+
 #[post("/unlink")]
 pub(crate) async fn delete_link(
     body: web::Json<LinkBody>,
     datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
     datastore.unlink(&body.game_id, &body.card_id)?;
+
+    Ok(HttpResponse::Ok())
+}
+
+#[post("/unlinkmany")]
+pub(crate) async fn delete_links(
+    body: web::Json<ManyLinkBody>,
+    datastore: web::Data<Arc<Store>>,
+) -> Result<impl Responder> {
+
+	let data = body.into_inner();
+    for game_id in data.game_ids.iter() {
+		datastore.unlink(&game_id, &data.card_id)?;
+	}
 
     Ok(HttpResponse::Ok())
 }

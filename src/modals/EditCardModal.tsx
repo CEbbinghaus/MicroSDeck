@@ -69,7 +69,7 @@ export const EditCardModal: VFC<EditCardProps> = ({ card, games, onConfirm, clos
 			if (additions[appId]) setAdditions(current => (({ [appId]: _, ...rest }) => rest)(current));
 		}
 	};
-	
+
 	return (
 		<ConfirmModal
 			bAllowFullSize
@@ -96,7 +96,7 @@ export const EditCardModal: VFC<EditCardProps> = ({ card, games, onConfirm, clos
 				idsOnCard={nonSteamIdsOnCard}
 				numAdditions={Object.keys(additions).length}
 				numDeletions={Object.keys(deletions).length}
-			style={{ marginBottom: "24px" }}
+				style={{ marginBottom: "24px" }}
 			/>
 			<DialogButton onClick={() => {
 				showModal(<GamesOnCardModal
@@ -186,14 +186,13 @@ const NonSteamPanel: VFC<NonSteamPanelProps> = ({ checkedIds, idsOnCard, numAddi
 								/>
 							</div>
 							{filteredPairs.map(([appId, displayName]) => {
-								const onChanged = (checked: boolean) => {
-									GamepadUIAudio.AudioPlaybackManager.PlayAudioURL(checked ? '/sounds/deck_ui_switch_toggle_on.wav' : '/sounds/deck_ui_switch_toggle_off.wav');
-									onChange(appId, checked);
-								};
 								return (
 									<DialogCheckbox
 										checked={checkedIds[appId]}
-										onChange={onChanged}
+										onChange={(checked) => {
+											GamepadUIAudio.AudioPlaybackManager.PlayAudioURL(checked ? '/sounds/deck_ui_switch_toggle_on.wav' : '/sounds/deck_ui_switch_toggle_off.wav');
+											onChange(appId, checked);
+										}}
 										label={<Fragment>
 											<div style={{ flex: 1 }}>{displayName}</div>
 											{idsOnCard[appId] &&

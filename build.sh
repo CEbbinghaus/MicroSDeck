@@ -25,16 +25,16 @@ fi
 
 if [[ "$*" != *"--skip-frontend"* ]]; then
     echo "Building frontend..."
-    cd src && pnpm install && pnpm run build && cd ..
+    pnpm install && pnpm run build
 fi
 
 echo  "Collecting outputs into /build folder"
-cp -r src/dist build/
+cp -r dist build/
 cp -r bin build/
 cp main.py build/
 cp plugin.json build/
 cp README.md build/
-cp src/package.json build/
+cp package.json build/
 
 if [[ "$*" != *"--skip-copy"* ]]; then
     echo "Copying build folder to local plugin directory"

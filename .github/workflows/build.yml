@@ -72,7 +72,7 @@ jobs:
       run: |
         cd lib && \
         pnpm install && \
-        pnpm build && \
+        pnpm build
 
     - run: npm publish
       env:

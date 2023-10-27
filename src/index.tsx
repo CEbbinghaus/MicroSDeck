@@ -20,6 +20,10 @@ import { DeckyAPI } from "./lib/DeckyApi";
 import { MicroSDeckManager, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 
+declare global {
+	let collectionStore: CollectionStore;
+}
+
 // function RenderCard({ data }: { data: CardAndGames }) {
 // 	Logger.Log("Rendering Card");
 // 	const [card, games] = data;

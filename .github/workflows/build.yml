@@ -76,7 +76,7 @@ jobs:
         echo "`jq \".version+=\\\"-$(git rev-parse --short HEAD)\\\"\" package.json`" > package.json && \
         pnpm install && \
         pnpm build && \
-        pnpm publish
+        pnpm publish --no-git-checks
      
 
    

@@ -11,12 +11,9 @@
   "files": [
     "dist"
   ],
-
   "scripts": {
-    "build": "tsc"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "build": "tsc",
+    "watch": "tsc -w"
   },
   "repository": {
     "type": "git",

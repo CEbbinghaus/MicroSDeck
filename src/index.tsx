@@ -156,17 +156,16 @@ function Content(){
 	);
 };
 
+declare global {
+	var MicroSDeck: MicroSDeckManager | undefined;
+}
+
 export default definePlugin((serverApi: ServerAPI) => {
 	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, DocumentationPage, {
 		exact: true,
 	});
 
-	const microSDeckManager = new MicroSDeckManager();
-	
-	//@ts-ignore ssshhhh 🤫
-	window.MicroSDeck = microSDeckManager;
-
-	microSDeckManager.init({logger: Logger, url: API_URL});
+	const microSDeckManager = window.MicroSDeck = (window.MicroSDeck || new MicroSDeckManager({url: API_URL}));
 
 	DeckyAPI.SetApi(serverApi);
 
@@ -187,7 +186,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 
 			//@ts-ignore
 			window.MicroSDeck = null;
-			microSDeckManager.deinit();
+			microSDeckManager.destruct();
 		},
 	};
 });

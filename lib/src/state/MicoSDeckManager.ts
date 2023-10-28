@@ -15,35 +15,55 @@ export class MicroSDeckManager {
 	public eventBus = new EventTarget();
 
 	private enabled: boolean = false;
+	public get Enabled() {
+		return this.enabled;
+	}
 	private version: string | undefined;
 	private currentCardAndGames: CardAndGames | undefined;
+	public get CurrentCardAndGames() {
+		return this.currentCardAndGames;
+	}
 	private cardsAndGames: CardsAndGames = [];
+	public get CardsAndGames() {
+		return this.cardsAndGames;
+	}
 
 	private pollLock: any | undefined;
 
-	init(props: { logger?: Logger, url: string }) {
+	private isDestructed = false;
+
+	constructor(props: { logger?: Logger, url: string }) {
 		this.logger = props.logger;
 
 		this.logger?.Log("Initializing MicroSDeckManager");
 
 		this.fetchProps = props;
 
-		this.init = () => { throw "Do Not call init more than once"; };
 		this.fetch();
 		this.subscribeToUpdates();
 	}
 
-	deinit() {
+	destruct() {
+		if(this.isDestructed)return;
+		this.isDestructed = true;
 		this.logger?.Log("Deinitializing MicroSDeckManager");
-		this.abortController.abort("deinit");
+		this.abortController.abort("destruct");
 	}
 
 	async fetch() {
 		this.enabled = await fetchHealth(this.fetchProps);
 		this.version = await fetchVersion(this.fetchProps);
-		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps);
-		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || [];
+		
+		await this.fetchCurrent();
+		await this.fetchCardsAndGames();
 		this.eventBus.dispatchEvent(new Event("update"));
+	}
+
+	async fetchCurrent(){
+		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps);
+	}
+	async fetchCardsAndGames(){
+		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || [];
 	}
 
 	getProps() {
@@ -55,7 +75,7 @@ export class MicroSDeckManager {
 		}
 	}
 
-	async subscribeToUpdates() {
+	private async subscribeToUpdates() {
 		let signal = this.abortController.signal;
 
 		let sleepDelay = 500;

@@ -62,7 +62,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-        registry-url: https://npm.pkg.github.com/
 
     - uses: pnpm/action-setup@v2
       with:
@@ -76,7 +75,7 @@ jobs:
         echo "`jq \".version+=\\\"-$(git rev-parse --short HEAD)\\\"\" package.json`" > package.json && \
         pnpm install && \
         pnpm build && \
-        pnpm publish --no-git-checks
+        pnpm publish --no-git-checks --tag prerelease
      
 
    

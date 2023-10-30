@@ -103,7 +103,7 @@ export class MicroSDeckManager {
 				// Server is down. Lets try again but back off a bit
 				case undefined:
 					this.logger?.Warn("Unable to contact Server. Backing off and waiting {sleepDelay}ms", { sleepDelay });
-					await sleep(sleepDelay *= 1.5);
+					await sleep(sleepDelay = Math.min(sleepDelay * 1.5, 1000 * 60));
 					break;
 
 				// We got an update. Time to refresh.

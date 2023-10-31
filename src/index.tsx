@@ -165,7 +165,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 		exact: true,
 	});
 
-	const microSDeckManager = window.MicroSDeck = (window.MicroSDeck || new MicroSDeckManager({url: API_URL}));
+	if(window.MicroSDeck) {
+		window.MicroSDeck.destruct();
+	}
+	window.MicroSDeck = new MicroSDeckManager({url: API_URL, logger: Logger});
 
 	DeckyAPI.SetApi(serverApi);
 
@@ -176,17 +179,14 @@ export default definePlugin((serverApi: ServerAPI) => {
 	return {
 		title: <div className={staticClasses.Title}>Example Plugin</div>,
 		content:
-			<MicroSDeckContextProvider microSDeckManager={microSDeckManager}>
+			<MicroSDeckContextProvider microSDeckManager={window.MicroSDeck}>
 				<Content />
 			</MicroSDeckContextProvider>,
 		icon: <FaSdCard />,
 		onDismount() {
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
 			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
-
-			//@ts-ignore
-			window.MicroSDeck = null;
-			microSDeckManager.destruct();
+			window.MicroSDeck = undefined;
 		},
 	};
 });

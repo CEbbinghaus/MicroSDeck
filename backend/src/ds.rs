@@ -4,7 +4,7 @@ use crate::{
 	err::Error,
 	sdcard::get_steam_acf_files,
 };
-use log::{error, info};
+use log::error;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use slotmap::{DefaultKey, SlotMap};
@@ -263,15 +263,15 @@ impl StoreData {
 		*self.hashes.entry(key.to_string()).or_insert(0) = hash;
 	}
 
-	pub fn is_hash_changed(&self, id: &'_ str) -> Option<u64> {
-		info!("Checking Hashes. Current values: {:?}", self.hashes);
-
-		let file_metadata: Vec<_> = get_steam_acf_files()
+	pub fn is_hash_changed(&self, id: &'_ str, mount: &Option<String>) -> Option<u64> {
+		let file_metadata: Vec<_> = get_steam_acf_files(mount)
 			.ok()?
 			.filter_map(|f| fs::metadata(f.path()).ok())
 			.collect();
 
 		let mut s = DefaultHasher::new();
+
+		mount.hash(&mut s);
 
 		for metadata in file_metadata {
 			metadata.len().hash(&mut s);
@@ -472,8 +472,8 @@ impl Store {
 		self.data.read().unwrap().list_cards_with_games()
 	}
 
-	pub fn is_hash_changed(&self, key: &str) -> Option<u64> {
-		self.data.read().unwrap().is_hash_changed(key)
+	pub fn is_hash_changed(&self, key: &str, mount: &Option<String>) -> Option<u64> {
+		self.data.read().unwrap().is_hash_changed(key, mount)
 	}
 
 	pub fn update_hash(&self, key: &str, hash: u64) {

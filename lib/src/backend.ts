@@ -32,7 +32,7 @@ async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promi
 	return undefined;
 }
 
-export async function fetchEventPoll({ url, logger, signal }: FetchProps & { signal: AbortSignal }): Promise<string | boolean | undefined> {
+export async function fetchEventPoll({ url, logger, signal }: FetchProps & { signal: AbortSignal }): Promise<string | false | undefined> {
 	try {
 		const result = await fetch(`${url}/listen`, {
 			keepalive: true,

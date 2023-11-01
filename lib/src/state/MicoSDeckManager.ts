@@ -44,7 +44,7 @@ export class MicroSDeckManager {
 	}
 
 	destruct() {
-		if(this.isDestructed)return;
+		if (this.isDestructed) return;
 		this.isDestructed = true;
 		this.logger?.Log("Deinitializing MicroSDeckManager");
 		this.abortController.abort("destruct");
@@ -53,16 +53,16 @@ export class MicroSDeckManager {
 	async fetch() {
 		this.enabled = await fetchHealth(this.fetchProps);
 		this.version = await fetchVersion(this.fetchProps);
-		
+
 		await this.fetchCurrent();
 		await this.fetchCardsAndGames();
 		this.eventBus.dispatchEvent(new Event("update"));
 	}
 
-	async fetchCurrent(){
+	async fetchCurrent() {
 		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps);
 	}
-	async fetchCardsAndGames(){
+	async fetchCardsAndGames() {
 		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || [];
 	}
 
@@ -95,9 +95,9 @@ export class MicroSDeckManager {
 			this.pollLock = {};
 			this.logger?.Debug("Poll");
 
-			let result = await fetchEventPoll({...this.fetchProps, signal });
+			let result = await fetchEventPoll({ ...this.fetchProps, signal });
 
-			this.logger?.Debug("Result was: " + (result === undefined ? "undefined" : result), { result });
+			this.logger?.Debug("Backend detected an update: {result}", { result });
 
 			switch (result) {
 				// Server is down. Lets try again but back off a bit
@@ -106,15 +106,15 @@ export class MicroSDeckManager {
 					await sleep(sleepDelay = Math.min(sleepDelay * 1.5, 1000 * 60));
 					break;
 
-				// We got an update. Time to refresh.
-				case true:
-					this.logger?.Debug("Card detected an update.");
-					await this.fetch();
-
 				// Request must have timed out
 				case false:
 					sleepDelay = 100;
 					break;
+
+				// We got an update. Time to refresh.
+				default:
+					this.eventBus.dispatchEvent(new Event(result));
+					await this.fetch();
 			}
 
 			this.pollLock = undefined;
@@ -123,13 +123,13 @@ export class MicroSDeckManager {
 
 	async updateCard(card: MicroSDCard) {
 		this.logger?.Debug("Updating card {uid}", card);
-		await fetchUpdateCard({...this.fetchProps, card});
+		await fetchUpdateCard({ ...this.fetchProps, card });
 		await this.fetch()
 	}
 
 	async deleteCard(card: MicroSDCard) {
 		this.logger?.Debug("Deleting Card {uid}", card);
-		await fetchDeleteCard({...this.fetchProps, card});
+		await fetchDeleteCard({ ...this.fetchProps, card });
 		await this.fetch();
 	}
 
@@ -140,6 +140,6 @@ export class MicroSDeckManager {
 	}
 
 	async fetchCardsForGame(gameId: string) {
-		return await fetchCardsForGame({...this.fetchProps, gameId})
+		return await fetchCardsForGame({ ...this.fetchProps, gameId })
 	}
 }

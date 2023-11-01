@@ -16,6 +16,9 @@ fn default_true() -> bool {
 pub struct MicroSDCard {
 	pub uid: String,
 	pub libid: String,
+	
+	#[serde(default)]
+	pub mount: Option<String>,
 
 	pub name: String,
 	#[serde(default)]

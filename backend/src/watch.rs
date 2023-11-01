@@ -1,18 +1,19 @@
 use crate::{ds::Store, dto::*, err::Error, sdcard::*, steam::*};
-use log::{error, info, trace, debug};
-use std::{borrow::Borrow, fs, sync::Arc, time::Duration};
+use log::{debug, error, info, trace};
+use std::borrow::Borrow;
+use std::path::{Path, PathBuf};
+use std::{fs, sync::Arc, time::Duration};
 use tokio::sync::broadcast::Sender;
 use tokio::time::interval;
 
-fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
+fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), Error> {
 	let cid = get_card_cid().ok_or(Error::from_str("Unable to retrieve CID from MicroSD card"))?;
-	let res = fs::read_to_string(STEAM_LIB_FILE)?;
 
-	let library: LibraryFolder = keyvalues_serde::from_str(res.as_str())?;
+	let library: LibraryFolder = keyvalues_serde::from_str(&read_libraryfolder(mount)?)?;
 
 	trace!("contentid: {}", library.contentid);
 
-	let games: Vec<AppState> = get_steam_acf_files()?
+	let games: Vec<AppState> = get_steam_acf_files(mount)?
 		.filter_map(|f| fs::read_to_string(f.path()).ok())
 		.filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
 		.collect();
@@ -25,6 +26,7 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
 			MicroSDCard {
 				uid: cid.clone(),
 				libid: library.contentid.clone(),
+				mount: mount.clone(),
 				name: library.label,
 				position: 0,
 				hidden: false,
@@ -61,16 +63,16 @@ fn read_msd_directory(datastore: &Store) -> Result<(), Error> {
 }
 
 pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Result<(), Error> {
-	let mut interval = interval(Duration::from_secs(5));
+	let mut interval = interval(Duration::from_secs(1));
 
 	let mut card_inserted = false;
 
 	info!("Starting Watcher...");
 
+	let mut mount: Option<String> = None;
+
 	loop {
 		interval.tick().await;
-
-		debug!("Watch loop");
 
 		// No card no worries.
 		if !is_card_inserted() {
@@ -79,20 +81,18 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 				debug!("Card was removed");
 				let _ = sender.send(CardEvent::Removed);
 			}
-
 			card_inserted = false;
+			mount = None;
+
 			continue;
 		}
 
-		// was the card inserted since the last check.
-		let card_changed = !card_inserted;
+		if !card_inserted {
+			let _ = sender.send(CardEvent::Inserted);
+			mount = None;
+		}
+
 		card_inserted = true;
-
-		// There is no steam directory so it hasn't been formatted.
-		if !is_card_steam_formatted() {
-			debug!("card is not steam formatted");
-			continue;
-		}
 
 		let cid = match get_card_cid() {
 			Some(v) => v,
@@ -102,12 +102,51 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 			}
 		};
 
-		if card_changed {
-			let _ = sender.send(CardEvent::Inserted);
+		if !has_libraryfolder(&mount) {
+			debug!(
+				"could not find library folder under mount {}",
+				mount.clone().unwrap_or("mmcblk0".into())
+			);
+			debug!("trying to automatically determine label");
+
+			if mount == None {
+				if let Some(card) = datastore.get_card(&cid).ok() {
+					if card.mount != None {
+						debug!("MicroSD card had preexisting mount saved. Reusing that.");
+					}
+					mount = card.mount
+				}
+			}
+
+			// Whatever we loaded did not work.
+			if mount != None && !has_libraryfolder(&mount) {
+				debug!("mount {mount:?} does not resolve library. Removing it");				
+				mount = None;
+			}
+
+			if mount == None {
+				for entry in Path::new("/dev/disk/by-label")
+					.read_dir()?
+					.filter_map(|dir| dir.ok())
+				{
+					if entry.path().canonicalize()? == PathBuf::from("/dev/mmcblk0p1") {
+						let label = entry.file_name();
+						info!("Found MicroSD Card label {label:?}");
+						mount = Some(label.to_string_lossy().to_string());
+					}
+				}
+			}
+
+			let _ = datastore.update_card(&cid, |card| {
+				card.mount = mount.clone();
+				Ok(())
+			});
+
+			continue;
 		}
 
 		// Do we have changes in the steam directory. This should only occur when something has been added/deleted
-		let hash = match datastore.is_hash_changed(&cid) {
+		let hash = match datastore.is_hash_changed(&cid, &mount) {
 			None => continue,
 			Some(v) => v,
 		};
@@ -115,7 +154,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 		info!("Watcher Detected update");
 
 		// Something went wrong during parsing. Not great
-		if let Err(err) = read_msd_directory(datastore.borrow()) {
+		if let Err(err) = read_msd_directory(datastore.borrow(), &mount) {
 			error!("Problem reading MicroSD Card: \"{err}\"");
 			continue;
 		}

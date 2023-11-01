@@ -44,7 +44,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: "MicroSDeck"
-        path: release/MicroSDeck/*
+        path: release/MicroSDeck
 
   deploy:
     if: github.ref == 'refs/heads/master'

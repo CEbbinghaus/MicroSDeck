@@ -28,7 +28,7 @@ pub struct MicroSDCard {
 }
 
 impl MicroSDCard {
-	pub fn merge(&mut self, other: MicroSDCard) -> Result<(), Error> {
+	pub fn merge(&mut self, other: &MicroSDCard) -> Result<(), Error> {
 		if self.uid != other.uid {
 			return Error::new_res("uid's did not match");
 		}
@@ -37,7 +37,7 @@ impl MicroSDCard {
 			return Error::new_res("libid's did not match");
 		}
 
-		self.name = other.name;
+		self.name = other.name.clone();
 		self.position = other.position;
 		self.hidden = other.hidden;
 

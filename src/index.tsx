@@ -19,6 +19,7 @@ import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
 import { MicroSDeckManager, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
+import { fetchUpdateCards } from "../lib/src/backend";
 
 declare global {
 	let collectionStore: CollectionStore;
@@ -64,8 +65,8 @@ function EditCardButton(props: EditCardButtonProps) {
 	)
 }
 
-function Content(){
-	const {currentCardAndGames, cardsAndGames, microSDeckManager} = useMicroSDeckContext();
+function Content() {
+	const { currentCardAndGames, cardsAndGames, microSDeckManager } = useMicroSDeckContext();
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
@@ -83,7 +84,7 @@ function Content(){
 	// }) ?? [{ label: "Loading...", data: null } as DropdownOption];
 
 
-	const entries = cardsAndGames?.map(([card]) => {
+	const entries = cardsAndGames?.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
 		return {
 			label:
 				<div style={{ width: "100%" }} className="tab-label-cont">
@@ -94,13 +95,13 @@ function Content(){
 					<div style={{ position: "absolute", bottom: 0, left: 0, fontSize: 8, color: "#aaa", whiteSpace: "nowrap" }}>{card.uid}</div>
 				</div>
 			,
-			position: card.position || 0,
-			data: { uid: card.uid }
+			position: index,
+			data: card
 		};
 	});
 
 	function CardInteractables({ entry }: {
-		entry: ReorderableEntry<MicroSDEntryType>
+		entry: ReorderableEntry<MicroSDCard>
 	}) {
 		const cardAndGames = cardsAndGames!.find(([card]) => card.uid == entry.data!.uid)!;
 		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeckManager }} />);
@@ -124,12 +125,18 @@ function Content(){
 			</PanelSection> */}
 				<PanelSection title="Cards">
 					{isLoaded ? (
-						<ReorderableList<MicroSDEntryType>
+						<ReorderableList<MicroSDCard>
 							entries={entries!}
 							interactables={CardInteractables}
-							onSave={(entries: ReorderableEntry<MicroSDEntryType>[]) => {
-								// tabMasterManager.reorderTabs();
-								Logger.Log(`Reordered Tabs: [${entries.map(entry => entry.data!.uid).join(", ")}]`)
+							onSave={async (entries: ReorderableEntry<MicroSDCard>[]) => {
+								await fetchUpdateCards({
+									url: API_URL, logger: Logger, cards: entries.map(v => {
+										v.data!.position = v.position;
+										return v.data!;
+									})
+								});
+
+								Logger.Log(`Reordered Tabs`)
 							}}
 						/>
 					) : (
@@ -165,10 +172,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 		exact: true,
 	});
 
-	if(window.MicroSDeck) {
+	if (window.MicroSDeck) {
 		window.MicroSDeck.destruct();
 	}
-	window.MicroSDeck = new MicroSDeckManager({url: API_URL, logger: Logger});
+	window.MicroSDeck = new MicroSDeckManager({ url: API_URL, logger: Logger });
 
 	DeckyAPI.SetApi(serverApi);
 
@@ -186,7 +193,6 @@ export default definePlugin((serverApi: ServerAPI) => {
 		onDismount() {
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
 			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
-			window.MicroSDeck = undefined;
 		},
 	};
 });

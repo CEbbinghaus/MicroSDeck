@@ -360,13 +360,13 @@ impl Store {
 			let mut dead_node_ids: Vec<(&String, &DefaultKey)> = vec![];
 
 			for pair in &data.node_ids {
-				if data.nodes.contains_key(*pair.1) {
+				if !data.nodes.contains_key(*pair.1) {
 					dead_node_ids.push(pair);
 				}
 			}
 
 			if dead_node_ids.len() > 0 {
-				result |= false;
+				result &= false;
 				error!("Found dead node_ids: {:?}", dead_node_ids);
 			}
 		}

@@ -72,6 +72,14 @@ export async function fetchUpdateCard({ url, logger, card }: FetchProps & { card
 	});
 }
 
+export async function fetchUpdateCards({ url, logger, cards }: FetchProps & { cards: MicroSDCard[] }) {
+	await wrapFetch({ url: `${url}/cards`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify(cards),
+	});
+}
+
 export async function fetchCurrentCardAndGames({url, logger}: FetchProps): Promise<CardAndGames | undefined> {
 	return await wrapFetch({url: `${url}/current`, logger});
 }

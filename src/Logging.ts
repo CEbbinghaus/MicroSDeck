@@ -17,12 +17,19 @@ const Pipe = new LoggerPipe()
 	.Pipe((message, { logLevel, args }) => {
 		var logFunc = logLevel & (LogLevel.Critical | LogLevel.Error) ? console.error : console.log;
 
-		logFunc(
-			message,
+		var params: any[] = [
 			'background: #165da0; color: black;',
 			`background: ${colors[logLevel as 1 | 2 | 4 | 8 | 16 | 32]}; color: black;`,
 			'background: transparent; color: white;',
-			args
+		]
+
+		if(Object.keys(args).length > 0) {
+			params.push(args);
+		}
+
+		logFunc(
+			message,
+			...params
 		);
 	})
 

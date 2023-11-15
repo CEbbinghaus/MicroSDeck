@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { MicroSDeckManager } from "./MicoSDeckManager.js";
+import { MicroSDeckManager } from "../MicoSDeckManager.js";
 import { CardAndGames, CardsAndGames } from "../types.js";
 
 const MicroSDeckContext = createContext<MicroSDeckContext>(null as any);

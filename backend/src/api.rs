@@ -5,12 +5,16 @@ use crate::{
 	err::Error,
 	sdcard::{get_card_cid, is_card_inserted},
 };
-use actix_web::{delete, get, post, web, HttpResponse, Responder, Result, http::StatusCode, Either, HttpResponseBuilder};
-use actix_ws::Message;
+use actix_web::{
+	delete, get, http::StatusCode, post, web::{self, Bytes}, Either, HttpResponse, HttpResponseBuilder, Responder,
+	Result,
+};
 use futures::StreamExt;
+use log::debug;
 use serde::Deserialize;
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::broadcast::Sender;
+use tokio_stream::wrappers::BroadcastStream;
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
 	cfg //
@@ -52,10 +56,25 @@ pub(crate) async fn health() -> impl Responder {
 }
 
 #[get("/listen")]
-pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<impl Responder> {
-	Ok(web::Json(sender.subscribe().recv().await.map_err(
-		|_| Error::from_str("Unable to retrieve update"),
-	)?))
+pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpResponse> {
+	let event_stream = BroadcastStream::new(sender.subscribe()).map(|res|
+		{
+			debug!("Streaming Event {:?}", res);
+			let bytes = match res {
+				Err(_) => return Err(Error::from_str("Subscriber Closed")),
+				Ok(value) => {
+					let data = format!("data: {}\n\n", serde_json::to_string(&value)?);
+					Bytes::from(data)
+				}
+			};
+			
+			Ok::<actix_web::web::Bytes, Error>(bytes)
+		}
+	);
+	Ok(HttpResponse::Ok()
+		.content_type("text/event-stream")
+		.streaming(event_stream)
+	)
 }
 
 #[get("/list")]
@@ -90,12 +109,20 @@ pub(crate) async fn get_current_card_and_games(
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<Either<impl Responder, impl Responder>> {
 	if !is_card_inserted() {
-		return Ok(Either::Right(HttpResponseBuilder::new(StatusCode::NO_CONTENT).reason("No Card inserted").finish()));
+		return Ok(Either::Right(
+			HttpResponseBuilder::new(StatusCode::NO_CONTENT)
+				.reason("No Card inserted")
+				.finish(),
+		));
 	}
 
 	match get_card_cid() {
 		Some(uid) => Ok(Either::Left(web::Json(datastore.get_card_and_games(&uid)?))),
-		None => Ok(Either::Right(HttpResponseBuilder::new(StatusCode::NO_CONTENT).reason("Card Id could not be resolved").finish()))
+		None => Ok(Either::Right(
+			HttpResponseBuilder::new(StatusCode::NO_CONTENT)
+				.reason("Card Id could not be resolved")
+				.finish(),
+		)),
 	}
 }
 
@@ -105,7 +132,7 @@ pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result
 		return Err(Error::from_str("No card is inserted").into());
 	}
 
-	let uid = get_card_cid().ok_or(Error::Error("Unable to evaluate Card Id".into()))?;
+	let uid = get_card_cid().ok_or(Error::from_str("Unable to evaluate Card Id"))?;
 
 	Ok(web::Json(datastore.get_card(&uid)?))
 }

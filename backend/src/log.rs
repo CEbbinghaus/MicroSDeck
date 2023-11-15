@@ -30,9 +30,15 @@ impl Logger {
 			.ok()?;
 
 		let max_level = env::var("LOG_LEVEL")
-			.map_err(|e| Error::from(e))
-			.and_then(|v| Level::from_str(&v).map_err(|e| Error::from(e)))
-			.unwrap_or(Level::Info);
+			.map_err(Error::from)
+			.and_then(|v| Level::from_str(&v).map_err(Error::from))
+			.unwrap_or({
+				if cfg!(debug_assertions) {
+					Level::Debug
+				} else {
+					Level::Info
+				}
+			});
 
 		println!("Logging enabled to {file_path} with level {max_level}");
 

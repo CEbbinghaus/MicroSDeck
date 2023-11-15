@@ -94,13 +94,13 @@ impl StoreData {
 		let node = self
 			.node_ids
 			.get(card_id)
-			.ok_or(Error::Error("Card Id not present".into()))?;
+			.ok_or(Error::from_str("Card Id not present"))?;
 
 		match self.nodes.get_mut(*node).unwrap().element {
 			StoreElement::Card(ref mut card) => {
 				func(card)?;
 			}
-			StoreElement::Game(_) => return Err(Error::Error("Expected Card, got Game".into())),
+			StoreElement::Game(_) => return Err(Error::from_str("Expected Card, got Game")),
 		}
 
 		Ok(())
@@ -427,6 +427,7 @@ impl Store {
 	}
 
 	pub fn remove_element(&self, id: &str) -> Result<(), Error> {
+		// these two operations have to happen within a single scope otherwise the try_write_to_file causes a deadlock
 		{
 			let mut lock = self.data.write().unwrap();
 			lock.remove_item(id)?;

@@ -1,6 +1,6 @@
-import { fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventPoll, fetchHealth, fetchUpdateCard, fetchVersion } from "../backend.js";
+import { fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventPoll, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
 import Logger from "lipe";
-import { CardAndGames, CardsAndGames, MicroSDCard } from "../types.js"
+import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
 
 function sleep(ms: number): Promise<void> {
 	return new Promise(resolve => setTimeout(() => resolve(), ms));
@@ -44,6 +44,7 @@ export class MicroSDeckManager {
 	}
 
 	destruct() {
+		this.logger?.Debug("Deconstruct Called");
 		if (this.isDestructed) return;
 		this.isDestructed = true;
 		this.logger?.Log("Deinitializing MicroSDeckManager");
@@ -81,6 +82,8 @@ export class MicroSDeckManager {
 		let sleepDelay = 500;
 		this.logger?.Debug("Starting poll");
 
+
+
 		while (true) {
 			if (signal.aborted) {
 				this.logger?.Debug("Aborting poll")
@@ -95,27 +98,23 @@ export class MicroSDeckManager {
 			this.pollLock = {};
 			this.logger?.Debug("Poll");
 
-			let result = await fetchEventPoll({ ...this.fetchProps, signal });
+			await new Promise((res, rej) => {
+				const source = new EventSource(`${this.fetchProps.url}/listen`);
+				this.abortController.signal.addEventListener("abort", () => {
+					this.logger?.Debug("Abort was called. Trying to close the EventSource");
+					source.close();
+				})
 
-			this.logger?.Debug("Backend detected an update: {result}", { result });
+				source.onopen = () => this.logger?.Debug("Successfully subscribed to events");
+				source.onmessage = async (message) => {
+					this.logger?.Debug("Recieved message {data}", {message, data: message.data});
+					let data = message.data && JSON.parse(message.data);
 
-			switch (result) {
-				// Server is down. Lets try again but back off a bit
-				case undefined:
-					this.logger?.Warn("Unable to contact Server. Backing off and waiting {sleepDelay}ms", { sleepDelay });
-					await sleep(sleepDelay = Math.min(sleepDelay * 1.5, 1000 * 60));
-					break;
-
-				// Request must have timed out
-				case false:
-					sleepDelay = 100;
-					break;
-
-				// We got an update. Time to refresh.
-				default:
-					this.eventBus.dispatchEvent(new Event(result));
-					await this.fetch();
-			}
+					this.eventBus.dispatchEvent(new Event(data));
+					await this.fetch();	
+				}
+				source.onerror = rej;
+			})
 
 			this.pollLock = undefined;
 		}

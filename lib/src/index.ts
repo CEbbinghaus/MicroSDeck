@@ -1,4 +1,4 @@
 export * from "./types.js";
 export * from "./hooks.js";
-export * from "./state/MicoSDeckManager.js"
-export * from "./state/MicroSDeckContext.js"
+export * from "./MicoSDeckManager.js"
+export * from "./components/MicroSDeckContext.js"

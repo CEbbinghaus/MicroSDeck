@@ -32,26 +32,6 @@ async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promi
 	return undefined;
 }
 
-export async function fetchEventPoll({ url, logger, signal }: FetchProps & { signal: AbortSignal }): Promise<string | false | undefined> {
-	try {
-		const result = await fetch(`${url}/listen`, {
-			keepalive: true,
-			signal
-		});
-
-		if (!result.ok) {
-			logger?.Log("Poll timed out...");
-			return false;
-		}
-
-		return await result.json();
-
-	} catch (err) {
-		logger?.Error("Fetch failed with error {err}", { err });
-	}
-	return undefined;
-}
-
 export async function fetchHealth({url, logger}: FetchProps): Promise<boolean> {
 	return await wrapFetch({url: `${url}/health`, logger}) !== undefined;
 }

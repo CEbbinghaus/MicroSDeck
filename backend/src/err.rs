@@ -1,42 +1,53 @@
 #![allow(dead_code)]
 
-use std::error;
+
 use std::fmt;
 
 use actix_web::ResponseError;
 
 #[derive(Debug)]
-pub enum Error {
-	Error(String),
+struct StdErr;
+
+impl std::error::Error for StdErr{}
+
+impl fmt::Display for StdErr {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "StdErr")
+	}
 }
+
+#[derive(Debug)]
+pub struct Error(String);
 
 impl Error {
 	pub fn new_boxed(value: &str) -> Box<Error> {
-		Box::new(Error::Error(value.to_string()))
+		Box::new(Error(value.to_string()))
 	}
 
 	pub fn from_str(value: &str) -> Self {
-		Error::Error(value.to_string())
+		Error(value.to_string())
 	}
 
 	pub fn new_res<T>(value: &str) -> Result<T, Self> {
-		Err(Error::Error(value.to_string()))
+		Err(Error(value.to_string()))
 	}
 }
 
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		match self {
-			// Both underlying errors already impl `Display`, so we defer to
-			// their implementations.
-			Error::Error(err) => write!(f, "Error: {}", err),
-		}
+		write!(f, "Error: {}", self)
 	}
 }
 
-impl<T: error::Error + Send + Sync + 'static> From<T> for Error {
+impl Into<Box<dyn std::error::Error>> for Error {
+    fn into(self) -> Box<dyn std::error::Error> {
+        Box::new(StdErr)
+    }
+}
+
+impl<T: std::error::Error + Send + Sync + 'static> From<T> for Error {
 	fn from(e: T) -> Self {
-		Error::Error(e.to_string())
+		Error(e.to_string())
 	}
 }
 

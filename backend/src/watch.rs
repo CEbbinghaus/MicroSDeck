@@ -28,7 +28,7 @@ fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), E
 				libid: library.contentid.clone(),
 				mount: mount.clone(),
 				name: library.label,
-				position: 0,
+				position: u32::MAX,
 				hidden: false,
 			},
 		);

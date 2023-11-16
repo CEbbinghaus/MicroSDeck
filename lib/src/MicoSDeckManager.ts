@@ -1,4 +1,4 @@
-import { fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventPoll, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
+import { Event, fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
 import Logger from "lipe";
 import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
 
@@ -79,45 +79,45 @@ export class MicroSDeckManager {
 	private async subscribeToUpdates() {
 		let signal = this.abortController.signal;
 
-		let sleepDelay = 500;
+		const handleCallback = async (event: string, data: Event) => {
+			await this.fetch();
+			this.eventBus.dispatchEvent(new CustomEvent(event, { detail: data }));
+		}
+
+		let sleepDelay = 5000;
+
+		if (this.pollLock !== undefined) {
+			this.logger?.Error("Tried Polling twice at the same time...");
+			return;
+		}
+
+		this.pollLock = {};
+
 		this.logger?.Debug("Starting poll");
 
-
-
-		while (true) {
-			if (signal.aborted) {
-				this.logger?.Debug("Aborting poll")
-				return;
-			}
-
-			if (this.pollLock !== undefined) {
-				this.logger?.Error("Tried Polling twice at the same time...");
-				return;
-			}
-
-			this.pollLock = {};
-			this.logger?.Debug("Poll");
-
-			await new Promise((res, rej) => {
-				const source = new EventSource(`${this.fetchProps.url}/listen`);
-				this.abortController.signal.addEventListener("abort", () => {
-					this.logger?.Debug("Abort was called. Trying to close the EventSource");
-					source.close();
-				})
-
-				source.onopen = () => this.logger?.Debug("Successfully subscribed to events");
-				source.onmessage = async (message) => {
-					this.logger?.Debug("Recieved message {data}", {message, data: message.data});
-					let data = message.data && JSON.parse(message.data);
-
-					this.eventBus.dispatchEvent(new Event(data));
-					await this.fetch();	
+		try {
+			while (true) {
+				if (signal.aborted) {
+					this.logger?.Debug("Aborting poll")
+					return;
 				}
-				source.onerror = rej;
-			})
 
+				this.logger?.Debug("Poll listen");
+
+				await new Promise(async (res, rej) => {
+					await sleep(sleepDelay);
+					
+					fetchEventTarget({ ...this.fetchProps, callback: handleCallback }, { signal })
+						.catch((reason) => {
+							this.logger?.Warn(`Listen was aborted with reason "${reason}"`);
+							res(0);
+						});
+				})
+			}
+		} finally {
 			this.pollLock = undefined;
 		}
+
 	}
 
 	async updateCard(card: MicroSDCard) {

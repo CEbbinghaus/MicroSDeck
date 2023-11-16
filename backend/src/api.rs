@@ -3,11 +3,15 @@ use crate::{
 	dto::{CardEvent, Game, MicroSDCard},
 	env::PACKAGE_VERSION,
 	err::Error,
+	event::Event,
 	sdcard::{get_card_cid, is_card_inserted},
 };
 use actix_web::{
-	delete, get, http::StatusCode, post, web::{self, Bytes}, Either, HttpResponse, HttpResponseBuilder, Responder,
-	Result,
+	delete, get,
+	http::StatusCode,
+	post,
+	web,
+	Either, HttpResponse, HttpResponseBuilder, Responder, Result,
 };
 use futures::StreamExt;
 use log::debug;
@@ -57,24 +61,13 @@ pub(crate) async fn health() -> impl Responder {
 
 #[get("/listen")]
 pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpResponse> {
-	let event_stream = BroadcastStream::new(sender.subscribe()).map(|res|
-		{
-			debug!("Streaming Event {:?}", res);
-			let bytes = match res {
-				Err(_) => return Err(Error::from_str("Subscriber Closed")),
-				Ok(value) => {
-					let data = format!("data: {}\n\n", serde_json::to_string(&value)?);
-					Bytes::from(data)
-				}
-			};
-			
-			Ok::<actix_web::web::Bytes, Error>(bytes)
-		}
-	);
+	let event_stream = BroadcastStream::new(sender.subscribe()).map(|res| match res {
+		Err(_) => Err(Error::from_str("Subscriber Closed")),
+		Ok(value) => Ok(Event::new(value).into()),
+	});
 	Ok(HttpResponse::Ok()
 		.content_type("text/event-stream")
-		.streaming(event_stream)
-	)
+		.streaming(event_stream))
 }
 
 #[get("/list")]
@@ -211,6 +204,7 @@ pub(crate) async fn get_card(
 pub(crate) async fn update_cards(
 	body: web::Json<Vec<MicroSDCard>>,
 	datastore: web::Data<Arc<Store>>,
+	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
 	for card in body.iter() {
 		let card = card.to_owned();
@@ -226,6 +220,7 @@ pub(crate) async fn update_cards(
 		}
 	}
 
+	_ = sender.send(CardEvent::Updated);
 	Ok(HttpResponse::Ok())
 }
 
@@ -251,7 +246,6 @@ pub(crate) async fn create_game(
 	}
 
 	datastore.add_game(id.into_inner(), game);
-
 	Ok(HttpResponse::Ok())
 }
 

@@ -3,6 +3,7 @@ mod ds;
 mod dto;
 mod env;
 mod err;
+mod event;
 mod log;
 mod sdcard;
 mod steam;
@@ -52,7 +53,7 @@ async fn run_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainRes
 			.app_data(web::Data::new(sender.clone()))
 			.configure(config)
 	})
-	.workers(1)
+	.workers(2)
 	.bind(("0.0.0.0", PORT))?
 	.run()
 	.await

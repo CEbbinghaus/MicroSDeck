@@ -1,4 +1,4 @@
-use crate::err::Error;
+use crate::{err::Error, event::EventTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
@@ -6,6 +6,23 @@ pub enum CardEvent {
 	Inserted,
 	Removed,
 	Updated
+}
+
+impl EventTrait for CardEvent {
+    fn get_event(&self) -> Option<&'static str> {
+        Some(match self {
+			CardEvent::Inserted => "Inserted",
+			CardEvent::Removed => "Removed",
+			CardEvent::Updated => "Updated",
+		})
+    }
+	// fn get_data(&self) -> Option<&'static str> {
+	// 	match self {
+	// 		CardEvent::Inserted => None,
+	// 		CardEvent::Removed => None,
+	// 		CardEvent::Updated => Some("Hello, World!"),
+	// 	}
+	// }
 }
 
 fn default_true() -> bool {

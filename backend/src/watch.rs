@@ -88,6 +88,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 		}
 
 		if !card_inserted {
+			debug!("Card was inserted");
 			let _ = sender.send(CardEvent::Inserted);
 			mount = None;
 		}

@@ -10,7 +10,7 @@ import {
 	showContextMenu,
 	staticClasses,
 } from "decky-frontend-lib";
-import { FaEllipsisH, FaSdCard } from "react-icons/fa";
+import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
@@ -72,26 +72,16 @@ function Content() {
 
 	const isLoaded = !!cardsAndGames;
 
-	// const [selectedCard, setSelectedCard] = useState<number>(0);
-
-	// Logger.Log("Currently Selected Card: {selectedCard}", { selectedCard });
-
-	// const dropdownOptions = cards?.map(([card], index) => {
-	// 	return {
-	// 		label: <div>{card.name ?? `Unamed - ${card.uid}`}</div>,
-	// 		data: index,
-	// 	} as DropdownOption
-	// }) ?? [{ label: "Loading...", data: null } as DropdownOption];
-
-
 	const entries = cardsAndGames?.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
+		const currentCardMark = card.uid === currentCard?.uid ? (<small style={{marginLeft: "0.5em"}}><FaStar size={12} /></small>) : "";
+
 		return {
 			label:
 				<div style={{ width: "100%" }} className="tab-label-cont">
 					<div style={{ float: "left" }}>
 						<FaSdCard size={14} />
 					</div>
-					<div style={{ marginLeft: "1.2rem", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name || UNAMED_CARD_NAME}</div>
+					<div style={{ marginLeft: "1.2rem", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name || UNAMED_CARD_NAME}{currentCardMark}</div>
 					<div style={{ position: "absolute", bottom: 0, left: 0, fontSize: 8, color: "#aaa", whiteSpace: "nowrap" }}>{card.uid}</div>
 				</div>
 			,
@@ -113,16 +103,6 @@ function Content() {
 				<div style={{ margin: "5px", marginTop: "0px" }}>
 					Rename, Reorder or Remove MicroSD Cards
 				</div>
-				{/* <PanelSection>
-				<PanelSectionRow>
-					<DialogButton
-						onClick={() => {
-							Router.Navigate(CONFIGURATION_PATH);
-							Router.CloseSideMenus();
-						}}
-					>Open Settings Page</DialogButton>
-				</PanelSectionRow>
-			</PanelSection> */}
 				<PanelSection title="Cards">
 					{isLoaded ? (
 						<ReorderableList<MicroSDCard>
@@ -144,19 +124,6 @@ function Content() {
 							Loading...
 						</div>
 					)}
-					{/* 					
-					<PanelSectionRow>
-						<Dropdown
-							focusable={true}
-							disabled={!cards || !cards.length}
-							rgOptions={dropdownOptions}
-							selectedOption={selectedCard}
-							onChange={handleDropDownChange}
-						/>
-					</PanelSectionRow>
-					<PanelSectionRow>
-						{cards && <RenderCard data={cards[selectedCard]} />}
-					</PanelSectionRow> */}
 				</PanelSection>
 			</Focusable>
 		</>
@@ -184,7 +151,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	Logger.Log("Started MicroSDeck");
 
 	return {
-		title: <div className={staticClasses.Title}>Example Plugin</div>,
+		title: <div className={staticClasses.Title}>MicroSDeck</div>,
 		content:
 			<MicroSDeckContextProvider microSDeck={window.MicroSDeck}>
 				<Content />

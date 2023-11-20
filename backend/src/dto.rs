@@ -11,9 +11,9 @@ pub enum CardEvent {
 impl EventTrait for CardEvent {
     fn get_event(&self) -> Option<&'static str> {
         Some(match self {
-			CardEvent::Inserted => "Inserted",
-			CardEvent::Removed => "Removed",
-			CardEvent::Updated => "Updated",
+			CardEvent::Inserted => "insert",
+			CardEvent::Removed => "remove",
+			CardEvent::Updated => "update",
 		})
     }
 	// fn get_data(&self) -> Option<&'static str> {

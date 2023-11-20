@@ -1,4 +1,4 @@
-import { Event, fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
+import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
 import Logger from "lipe";
 import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
 
@@ -6,13 +6,27 @@ function sleep(ms: number): Promise<void> {
 	return new Promise(resolve => setTimeout(() => resolve(), ms));
 }
 
-export class MicroSDeckManager {
+interface EventBusListener<T extends Event> {
+	(evt: T): void;
+}
+
+interface EventBusListenerObject<T extends Event> {
+	handleEvent(object: T): void;
+}
+
+export type EventBus<K extends string, T extends Event> = {
+	addEventListener(type: K, callback: EventBusListener<T> | EventBusListenerObject<T> | null, options?: boolean | AddEventListenerOptions | undefined): void;
+	dispatchEvent(event: T): boolean;
+	removeEventListener(type: K, callback: EventBusListener<T> | EventBusListenerObject<T> | null, options?: boolean | EventListenerOptions | undefined): void;
+}
+
+export class MicroSDeck {
 	private abortController = new AbortController();
 
 	private logger: Logger | undefined;
 	private fetchProps!: { url: string, logger?: Logger | undefined };
 
-	public eventBus = new EventTarget();
+	public eventBus = new EventTarget() as unknown as EventBus<EventType, Event | CustomEvent<BackendEvent>>;
 
 	private enabled: boolean = false;
 	public get Enabled() {
@@ -35,7 +49,9 @@ export class MicroSDeckManager {
 	constructor(props: { logger?: Logger, url: string }) {
 		this.logger = props.logger;
 
-		this.logger?.Log("Initializing MicroSDeckManager");
+		this.eventBus.addEventListener
+
+		this.logger?.Log("Initializing MicroSDeck");
 
 		this.fetchProps = props;
 
@@ -47,7 +63,7 @@ export class MicroSDeckManager {
 		this.logger?.Debug("Deconstruct Called");
 		if (this.isDestructed) return;
 		this.isDestructed = true;
-		this.logger?.Log("Deinitializing MicroSDeckManager");
+		this.logger?.Log("Deinitializing MicroSDeck");
 		this.abortController.abort("destruct");
 	}
 
@@ -79,11 +95,6 @@ export class MicroSDeckManager {
 	private async subscribeToUpdates() {
 		let signal = this.abortController.signal;
 
-		const handleCallback = async (event: string, data: Event) => {
-			await this.fetch();
-			this.eventBus.dispatchEvent(new CustomEvent(event, { detail: data }));
-		}
-
 		let sleepDelay = 5000;
 
 		if (this.pollLock !== undefined) {
@@ -104,10 +115,10 @@ export class MicroSDeckManager {
 
 				this.logger?.Debug("Poll listen");
 
-				await new Promise(async (res, rej) => {
+				await new Promise(async (res) => {
 					await sleep(sleepDelay);
-					
-					fetchEventTarget({ ...this.fetchProps, callback: handleCallback }, { signal })
+
+					fetchEventTarget({ ...this.fetchProps, callback: this.handleCallback.bind(this) }, { signal })
 						.catch((reason) => {
 							this.logger?.Warn(`Listen was aborted with reason "${reason}"`);
 							res(0);
@@ -118,6 +129,11 @@ export class MicroSDeckManager {
 			this.pollLock = undefined;
 		}
 
+	}
+
+	async handleCallback(event: EventType, data?: BackendEvent) {
+		await this.fetch();
+		this.eventBus.dispatchEvent(new CustomEvent(event, { detail: data }));
 	}
 
 	async updateCard(card: MicroSDCard) {

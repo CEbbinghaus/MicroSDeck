@@ -14,7 +14,6 @@ use actix_web::{
 	Either, HttpResponse, HttpResponseBuilder, Responder, Result,
 };
 use futures::StreamExt;
-use log::debug;
 use serde::Deserialize;
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::broadcast::Sender;

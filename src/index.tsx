@@ -17,7 +17,7 @@ import { Logger } from "./Logging";
 import React from "react";
 import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
-import { MicroSDeckManager, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, MicroSDEntryType } from "../lib/src";
+import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 import { fetchUpdateCards } from "../lib/src/backend";
 
@@ -45,7 +45,7 @@ declare global {
 // 	)
 // }
 interface EditCardButtonProps {
-	microSDeckManager: MicroSDeckManager,
+	microSDeck: MicroSDeck,
 	currentCard: MicroSDCard | undefined,
 	cardAndGames: CardAndGames
 }
@@ -66,7 +66,7 @@ function EditCardButton(props: EditCardButtonProps) {
 }
 
 function Content() {
-	const { currentCardAndGames, cardsAndGames, microSDeckManager } = useMicroSDeckContext();
+	const { currentCardAndGames, cardsAndGames, microSDeck } = useMicroSDeckContext();
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
@@ -104,7 +104,7 @@ function Content() {
 		entry: ReorderableEntry<MicroSDCard>
 	}) {
 		const cardAndGames = cardsAndGames!.find(([card]) => card.uid == entry.data!.uid)!;
-		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeckManager }} />);
+		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeck: microSDeck }} />);
 	}
 
 	return (
@@ -164,7 +164,7 @@ function Content() {
 };
 
 declare global {
-	var MicroSDeck: MicroSDeckManager | undefined;
+	var MicroSDeck: MicroSDeck | undefined;
 }
 
 export default definePlugin((serverApi: ServerAPI) => {
@@ -175,7 +175,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	if (window.MicroSDeck) {
 		window.MicroSDeck.destruct();
 	}
-	window.MicroSDeck = new MicroSDeckManager({ url: API_URL, logger: Logger });
+	window.MicroSDeck = new MicroSDeck({ url: API_URL, logger: Logger });
 
 	DeckyAPI.SetApi(serverApi);
 
@@ -186,7 +186,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	return {
 		title: <div className={staticClasses.Title}>Example Plugin</div>,
 		content:
-			<MicroSDeckContextProvider microSDeckManager={window.MicroSDeck}>
+			<MicroSDeckContextProvider microSDeck={window.MicroSDeck}>
 				<Content />
 			</MicroSDeckContextProvider>,
 		icon: <FaSdCard />,

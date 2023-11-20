@@ -1,39 +1,39 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { MicroSDeckManager } from "../MicoSDeckManager.js";
+import { MicroSDeck } from "../MicoSDeck.js";
 import { CardAndGames, CardsAndGames } from "../types.js";
 
 const MicroSDeckContext = createContext<MicroSDeckContext>(null as any);
 export const useMicroSDeckContext = () => useContext(MicroSDeckContext);
 
 interface ProviderProps {
-	microSDeckManager: MicroSDeckManager
+	microSDeck: MicroSDeck
 }
 
-interface PublicMicroSDeckManager {
+interface PublicMicroSDeck {
 	currentCardAndGames: CardAndGames | undefined;
 	cardsAndGames: CardsAndGames;
 }
 
-interface MicroSDeckContext extends PublicMicroSDeckManager {
-	microSDeckManager: MicroSDeckManager
+interface MicroSDeckContext extends PublicMicroSDeck {
+	microSDeck: MicroSDeck
 }
 
-export function MicroSDeckContextProvider({ children, microSDeckManager }:  React.PropsWithChildren<ProviderProps>) {
-	const [publicState, setPublicState] = useState<PublicMicroSDeckManager>({
-		...microSDeckManager.getProps()
+export function MicroSDeckContextProvider({ children, microSDeck }:  React.PropsWithChildren<ProviderProps>) {
+	const [publicState, setPublicState] = useState<PublicMicroSDeck>({
+		...microSDeck.getProps()
 	});
 
 	useEffect(() => {
 		function onUpdate() {
 			setPublicState({
-				...microSDeckManager.getProps()
+				...microSDeck.getProps()
 			});
 		}
 
-		microSDeckManager.eventBus.addEventListener("update", onUpdate);
+		microSDeck.eventBus.addEventListener("update", onUpdate);
 
 		return () => {
-			microSDeckManager.eventBus.removeEventListener("update", onUpdate);
+			microSDeck.eventBus.removeEventListener("update", onUpdate);
 		}
 	}, []);
 
@@ -41,7 +41,7 @@ export function MicroSDeckContextProvider({ children, microSDeckManager }:  Reac
 		<MicroSDeckContext.Provider
 			value={{
 				...publicState,
-				microSDeckManager
+				microSDeck: microSDeck
 			}}
 		>
 			{children}

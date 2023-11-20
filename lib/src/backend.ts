@@ -32,16 +32,17 @@ async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promi
 	return undefined;
 }
 
+export type EventType = "start" | "close" | "abort" | "message" | "insert" | "remove" | "update" | "change";
 export type Event = {
-	event: string,
+	event: EventType,
 	data?: string,
 	id?: string
 }
 
-function decodeEvent(event: string): Event {
-	console.log(`Recieved event to process: [${event}]`);
+function decodeEvent(event: string, logger?: Logger): Event {
+	logger?.Debug(`Recieved event to process: [{event}]`, {event});
 
-	var result = { event: "message" };
+	var result = { event: "message" as EventType };
 	var lines = event.split('\n');
 
 	for (let line of lines) {
@@ -56,7 +57,7 @@ function decodeEvent(event: string): Event {
 	return result;
 }
 
-function eventDecodeStream() {
+function decodeStreamEvents(logger?: Logger) {
 	let buffer = "";
 	let pos = 0;
 	return new TransformStream<string, Event>({
@@ -73,60 +74,37 @@ function eventDecodeStream() {
 				pos = 0;
 
 				if (message) {
-					controller.enqueue(decodeEvent(message));
+					controller.enqueue(decodeEvent(message, logger));
 				}
 			}
 		}
 	})
 }
 
-
-
-function makeWriteableEventStream(eventTarget: EventTarget) {
+export type EventCallback = (event: EventType, data?: Event) => any;
+function makeCallbackEventStream(callback: EventCallback) {
 	return new WritableStream<Event>({
 		start() {
-			eventTarget.dispatchEvent(new Event('start'))
+			callback("start");
 		},
 		write(message) {
-			eventTarget.dispatchEvent(new CustomEvent(message.event, { detail: message }));
+			callback(message.event, message);
+			callback("change");
 		},
 		close() {
-			eventTarget.dispatchEvent(new CloseEvent('close'));
+			callback("close");
 		},
-		abort(reason) {
-			eventTarget.dispatchEvent(new CloseEvent('abort', { reason }));
+		abort() {
+			callback("abort");
 		}
 	})
 }
 
-export type EventCallback = (event: string, data: Event) => any;
-function makeCallbackEventStream(callback: EventCallback) {
-	return new WritableStream<Event>({
-		start() { },
-		write(message) {
-			callback(message.event, message);
-		},
-	})
-}
+export async function fetchEventTarget({url, logger, callback}: FetchProps & { callback: EventCallback }, init?: RequestInit) {
+	const eventDecoder = decodeStreamEvents(logger);
+	const outStream = makeCallbackEventStream(callback);
 
-type EventTargetSink = { target: EventTarget };
-type CallbackSink = { callback: EventCallback };
-
-function isEventTargetSink(sink: EventTargetSink | CallbackSink): sink is EventTargetSink {
-	return (sink as EventTargetSink).target !== undefined;
-  }
-
-function determineOutputSink(sink: EventTargetSink | CallbackSink) {
-	if(isEventTargetSink(sink)) {
-		return makeWriteableEventStream(sink.target);
-	} else {
-		return makeCallbackEventStream(sink.callback);
-	}
-}
-export async function fetchEventTarget(props: FetchProps & (EventTargetSink | CallbackSink), init?: RequestInit) {
-	const eventDecoder = eventDecodeStream()
-	const outStream = determineOutputSink(props);
-	await fetch(`${props.url}/listen`, {...init, keepalive: true})
+	await fetch(`${url}/listen`, {...init, keepalive: true})
 		.then(response => {
 			response.body?.pipeThrough(new TextDecoderStream())
 				.pipeThrough(eventDecoder)

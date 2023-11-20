@@ -1,12 +1,12 @@
 import { MenuItem, showModal, Menu, ConfirmModal } from "decky-frontend-lib"
-import { CardAndGames, MicroSDCard, MicroSDeckManager } from "../../lib/src"
+import { CardAndGames, MicroSDCard, MicroSDeck } from "../../lib/src"
 import { EditCardModal } from "../modals/EditCardModal";
 import { API_URL, UNAMED_CARD_NAME } from "../const";
 import { GamesOnCardModal } from '../modals/GamesOnCardModal';
 import { Logger } from '../Logging';
 
 interface CardActionsContextMenuProps {
-	microSDeckManager: MicroSDeckManager,
+	microSDeck: MicroSDeck,
 	currentCard: MicroSDCard | undefined,
 	cardAndGames: CardAndGames
 }
@@ -14,7 +14,7 @@ interface CardActionsContextMenuProps {
 /**
  * The context menu for Tab Actions.
  */
-export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeckManager }: CardActionsContextMenuProps) {
+export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeck }: CardActionsContextMenuProps) {
 	const [card, games] = cardAndGames;
 
 	return (
@@ -30,7 +30,7 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeckMa
 			<MenuItem onSelected={() => {
 				showModal(<EditCardModal
 					onConfirm={(card: MicroSDCard, nonSteamAdditions: string[], nonSteamDeletions: string[]) => {
-						microSDeckManager.updateCard(card);
+						microSDeck.updateCard(card);
 
 						//* probably want to move this into another method of microSDeckManager or combine it all into updateCard
 						nonSteamAdditions.forEach(async appId => {
@@ -72,14 +72,14 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeckMa
 			}}>
 				Edit
 			</MenuItem>
-			<MenuItem onSelected={() => microSDeckManager.hideCard(card)}>
+			<MenuItem onSelected={() => microSDeck.hideCard(card)}>
 				Hide
 			</MenuItem>
 			<MenuItem tone="destructive" disabled={card.uid == currentCard?.uid} onSelected={() => {
 				showModal(<ConfirmModal
 					bAllowFullSize
 					strTitle={`Are you sure you want to delete ${card.name || UNAMED_CARD_NAME}`}
-					onOK={() => microSDeckManager.deleteCard(card)}
+					onOK={() => microSDeck.deleteCard(card)}
 					strOKButtonText="Confirm">
 					This cannot be undone. If you insert the card it will be registered again but any changes you have made will be lost.
 				</ConfirmModal>);

@@ -3,7 +3,7 @@ name = "backend"
 version = "0.0.0"
 edition = "2021"
 license = "GPL-2.0"
-authors = ["Christopher-Robin Ebbinghaus <git@cebbinghaus.com>"]
+authors = ["Christopher-Robin <git@cebbinghaus.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

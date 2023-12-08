@@ -11,11 +11,8 @@
 		"dist"
 	],
 	"scripts": {
-		"prebuild": "node ../util/updateVersion.js",
 		"build": "tsc",
-		"postbuild": "node ../util/resetVersion.js",
-		"watch": "tsc -w",
-		"prepack": "node ../util/updateVersion.js"
+		"watch": "tsc -w"
 	},
 	"repository": {
 		"type": "git",

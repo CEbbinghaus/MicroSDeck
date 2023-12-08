@@ -14,6 +14,8 @@ has_sudo() {
 
 PluginName=$(basename "$PWD")
 
+node util/updateVersion.js package.json lib/package.json
+
 echo "Building plugin $PluginName..."
 
 mkdir -p build
@@ -43,3 +45,5 @@ if [[ "$*" != *"--skip-copy"* ]]; then
     sudo cp -r build/ /home/deck/homebrew/plugins/$PluginName
     sudo chmod 555 /home/deck/homebrew/plugins/$PluginName
 fi
+
+node util/resetVersion.js package.json lib/package.json

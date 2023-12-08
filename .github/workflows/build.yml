@@ -58,11 +58,16 @@ jobs:
     permissions:
       packages: write
       contents: read
+
     steps:
     - name: Checkout
       if: ${{ !env.ACT }}
       uses: actions/checkout@v4
-    
+
+    - name: Update Version
+      run: |
+        echo "-$(git rev-parse --short HEAD)" >> version
+
     - uses: actions/setup-node@v3
       with:
         node-version: 18

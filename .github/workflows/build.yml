@@ -73,10 +73,7 @@ jobs:
       env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
       run: |
-        echo "`jq \".version+=\\\"-$(git rev-parse --short HEAD)\\\"\" package.json`" > package.json && \
+        echo "-$(git rev-parse --short HEAD)" >> version && \
         pnpm install && \
         pnpm build && \
         pnpm publish --no-git-checks --tag prerelease
-     
-
-   

@@ -2,6 +2,11 @@ import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame
 import Logger from "lipe";
 import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
 
+import semverParse from "semver/functions/parse"
+import semverEq from "semver/functions/eq.js"
+
+import { version } from "../package.json"
+
 function sleep(ms: number): Promise<void> {
 	return new Promise(resolve => setTimeout(() => resolve(), ms));
 }
@@ -20,6 +25,36 @@ export type EventBus<K extends string, T extends Event> = {
 	removeEventListener(type: K, callback: EventBusListener<T> | EventBusListenerObject<T> | null, options?: boolean | EventListenerOptions | undefined): void;
 }
 
+export { version };
+
+/**
+ * Matches the current MicroSDeck version against the version provided.
+ * Returns true if the semver matches and compatibility is guaranteed. 
+ * @export
+ * @param {string} version1 his should be in valid semver notation of x.y.z
+ * @param {string} version2 This should be in valid semver notation of x.y.z
+ */
+export function IsMatchingSemver(version1: string, version2: string, strict: boolean = false): boolean {
+	const semVersion1 = semverParse(version1) ?? (() => {throw new Error("Current Version is not a valid Semver. (How did we get here?)")})();
+	const semVersion2 = semverParse(version2) ?? (() => {throw new Error("provided Version is not a valid Semver.")})();;
+
+	// the two major versions do not match. Not valid
+	if(semVersion1.major != semVersion2.major && semVersion1.major != 0) {
+		return false;
+	}
+
+	// The minor version can introduce breaking changes while <1.0
+	if(semVersion1.minor != semVersion2.minor &&  semVersion1.major == 0) {
+		return false;
+	}
+
+	if(!strict) {
+		return true;
+	}
+
+	return semverEq(semVersion1, semVersion2);
+}
+
 export class MicroSDeck {
 	private abortController = new AbortController();
 
@@ -28,11 +63,20 @@ export class MicroSDeck {
 
 	public eventBus = new EventTarget() as unknown as EventBus<EventType, Event | CustomEvent<BackendEvent>>;
 
+	public get Version() {
+		return version;
+	}
+
 	private enabled: boolean = false;
 	public get Enabled() {
 		return this.enabled;
 	}
-	private version: string | undefined;
+	
+	private backendVersion: string | undefined;
+	public get BackendVersion() {
+		return this.backendVersion;
+	}
+
 	private currentCardAndGames: CardAndGames | undefined;
 	public get CurrentCardAndGames() {
 		return this.currentCardAndGames;
@@ -62,18 +106,23 @@ export class MicroSDeck {
 	destruct() {
 		this.logger?.Debug("Deconstruct Called");
 		if (this.isDestructed) return;
-		this.isDestructed = true;
 		this.logger?.Log("Deinitializing MicroSDeck");
 		this.abortController.abort("destruct");
+		this.isDestructed = true;
 	}
 
 	async fetch() {
-		this.enabled = await fetchHealth(this.fetchProps);
-		this.version = await fetchVersion(this.fetchProps);
+		if(!await fetchHealth(this.fetchProps)) {
+			this.enabled = false;
+			this.logger?.Log("Fetch failed. Server is offline...");
+			return;
+		}
+		this.backendVersion = await fetchVersion(this.fetchProps);
 
 		await this.fetchCurrent();
 		await this.fetchCardsAndGames();
 		this.eventBus.dispatchEvent(new Event("update"));
+		this.enabled = true;
 	}
 
 	async fetchCurrent() {
@@ -86,7 +135,7 @@ export class MicroSDeck {
 	getProps() {
 		return {
 			enabled: this.enabled,
-			version: this.version,
+			version: this.backendVersion,
 			cardsAndGames: this.cardsAndGames,
 			currentCardAndGames: this.currentCardAndGames
 		}

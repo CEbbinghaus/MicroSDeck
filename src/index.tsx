@@ -17,9 +17,15 @@ import { Logger } from "./Logging";
 import React from "react";
 import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
-import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard } from "../lib/src";
+import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 import { fetchUpdateCards } from "../lib/src/backend";
+import { version as libVersion } from "../lib/src";
+import { version } from "../package.json";
+
+if (!IsMatchingSemver(libVersion, version)) {
+	throw new Error("How the hell did we get here???");
+}
 
 declare global {
 	let collectionStore: CollectionStore;
@@ -73,7 +79,7 @@ function Content() {
 	const isLoaded = !!cardsAndGames;
 
 	const entries = cardsAndGames?.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
-		const currentCardMark = card.uid === currentCard?.uid ? (<small style={{marginLeft: "0.5em"}}><FaStar size={12} /></small>) : "";
+		const currentCardMark = card.uid === currentCard?.uid ? (<small style={{ marginLeft: "0.5em" }}><FaStar size={12} /></small>) : "";
 
 		return {
 			label:
@@ -158,6 +164,9 @@ export default definePlugin((serverApi: ServerAPI) => {
 			</MicroSDeckContextProvider>,
 		icon: <FaSdCard />,
 		onDismount() {
+			window.MicroSDeck?.destruct();
+			window.MicroSDeck = undefined;
+			
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
 			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
 		},

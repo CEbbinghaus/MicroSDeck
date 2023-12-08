@@ -1,30 +1,34 @@
 {
-  "name": "@cebbinghaus/microsdeck",
-  "version": "0.9.7",
-  "description": "",
-  "keywords": [],
-  "author": "CEbbinghaus",
-  "license": "GPLv2",
-  
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CEbbinghaus/MicroSDeck.git",
-    "directory": "src/lib"
-  },
-  "devDependencies": {
-    "@types/react": "16.14.0",
-    "lipe": "^0.3.3"
-  },
-  "dependencies": {
-    "typescript": "^4.9.5"
-  }
+	"name": "@cebbinghaus/microsdeck",
+	"version": "0.0.0",
+	"description": "",
+	"keywords": [],
+	"author": "CEbbinghaus",
+	"license": "GPLv2",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"prebuild": "node ../util/updateVersion.js",
+		"build": "tsc",
+		"postbuild": "node ../util/resetVersion.js",
+		"watch": "tsc -w",
+		"prepack": "node ../util/updateVersion.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/CEbbinghaus/MicroSDeck.git",
+		"directory": "src/lib"
+	},
+	"devDependencies": {
+		"@types/react": "16.14.0",
+		"@types/semver": "^7.5.6",
+		"lipe": "^0.3.3",
+		"typescript": "^4.9.5"
+	},
+	"dependencies": {
+		"semver": "^7.5.4"
+	}
 }

@@ -1,11 +1,14 @@
+const { WriteVersionToPackage } = require("./common");
 const { readFileSync, writeFileSync } = require("fs");
-const { join } = require("path");
+const { resolve } = require("path");
 
-const packagePath = join(process.cwd(), "package.json");
-const version = readFileSync(join(__dirname, "../version"), {encoding: "utf8"});
+const args = process.argv.slice(2);
+
+const version = readFileSync(resolve(__dirname, "../version"), {encoding: "utf8"});
 
 console.log(`Updating Version to ${version}`);
 
-const package = JSON.parse(readFileSync(packagePath));
-package.version = version;
-writeFileSync(packagePath, JSON.stringify(package, null, "	"));
+for(let package of (args || ["package.json"])) {
+	const packagePath = resolve(package);
+	WriteVersionToPackage(packagePath, version);
+}

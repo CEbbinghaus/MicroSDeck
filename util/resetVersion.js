@@ -1,8 +1,9 @@
-const { readFileSync, writeFileSync } = require("fs");
-const { join } = require("path");
+const { WriteVersionToPackage } = require("./common");
+const { resolve } = require("path");
 
-const packagePath = join(process.cwd(), "package.json");
+const args = process.argv.slice(2);
 
-const package = JSON.parse(readFileSync(packagePath));
-package.version = "0.0.0";
-writeFileSync(packagePath, JSON.stringify(package, null, "	"));
+for(let package of (args || ["package.json"])) {
+	const packagePath = resolve(package);
+	WriteVersionToPackage(packagePath, "0.0.0");
+}

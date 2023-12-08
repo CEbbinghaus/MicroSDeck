@@ -16,6 +16,10 @@ jobs:
       with:
         version: 8.9.2
 
+    - name: Update Version
+      run: |
+        echo "-$(git rev-parse --short HEAD)" >> version
+
     - name: Download Decky CLI
       run: |
         mkdir /tmp/decky-cli
@@ -73,7 +77,6 @@ jobs:
       env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
       run: |
-        echo "-$(git rev-parse --short HEAD)" >> version && \
         pnpm install && \
         pnpm build && \
         pnpm publish --no-git-checks --tag prerelease

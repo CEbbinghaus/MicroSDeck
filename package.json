@@ -35,6 +35,7 @@
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
+		"@cebbinghaus/microsdeck": "./lib",
 		"@types/re-carousel": "^2.4.0",
 		"decky-frontend-lib": "^3.22.0",
 		"lipe": "^0.3.3",

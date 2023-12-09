@@ -19,7 +19,7 @@ import DocumentationPage from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
 import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
-import { fetchUpdateCards } from "../lib/src/backend";
+import { backend } from "../lib/src";
 import { version as libVersion } from "../lib/src";
 import { version } from "../package.json";
 
@@ -115,7 +115,7 @@ function Content() {
 							entries={entries!}
 							interactables={CardInteractables}
 							onSave={async (entries: ReorderableEntry<MicroSDCard>[]) => {
-								await fetchUpdateCards({
+								await backend.fetchUpdateCards({
 									url: API_URL, logger: Logger, cards: entries.map(v => {
 										v.data!.position = v.position;
 										return v.data!;

@@ -14,7 +14,8 @@
 	"license": "GPL-2.0",
 	"scripts": {
 		"build": "shx rm -rf dist && rollup -c",
-		"watch": "rollup -c -w"
+		"watch": "rollup -c -w",
+		"preinstall": "cd lib && pnpm i"
 	},
 	"bugs": {
 		"url": "https://github.com/CEbbinghaus/MicroSDeck/issues"

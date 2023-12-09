@@ -4,7 +4,7 @@ use std::path::Path;
 pub const PORT: u16 = 12412; // TODO replace with something unique
 
 pub const PACKAGE_NAME: &'static str = env!("CARGO_PKG_NAME");
-pub const PACKAGE_VERSION: &'static str = include_str!("../../version");
+pub const PACKAGE_VERSION: &'static str = include_str!("../version");
 pub const PACKAGE_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 const TEMPDIR: &'static str = "/tmp/MicroSDeck";

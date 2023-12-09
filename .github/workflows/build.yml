@@ -18,7 +18,7 @@ jobs:
 
     - name: Update Version
       run: |
-        echo -n "-$(git rev-parse --short HEAD)" >> version && \
+        echo -n "-$(git rev-parse --short HEAD)" >> backend/version && \
         node util/updateVersion.js package.json lib/package.json
 
     - name: Download Decky CLI
@@ -67,7 +67,7 @@ jobs:
 
     - name: Update Version
       run: |
-        echo -n "-$(git rev-parse --short HEAD)" >> version && \
+        echo -n "-$(git rev-parse --short HEAD)" >> backend/version && \
         node util/updateVersion.js package.json lib/package.json
 
     - uses: actions/setup-node@v3

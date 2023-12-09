@@ -1,6 +1,10 @@
 
 const { readFileSync, writeFileSync } = require("fs");
+const { resolve } = require("path");
 
+function ReadPackageVersion() {
+	return readFileSync(resolve(__dirname, "../backend/version"), {encoding: "utf8"});
+}
 
 function WriteVersionToPackage(file, version) {
 	const package = JSON.parse(readFileSync(file));
@@ -10,5 +14,6 @@ function WriteVersionToPackage(file, version) {
 }
 
 module.exports = {
-	WriteVersionToPackage
+	WriteVersionToPackage,
+	ReadPackageVersion
 };

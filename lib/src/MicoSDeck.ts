@@ -5,6 +5,7 @@ import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
 import semverParse from "semver/functions/parse"
 import semverEq from "semver/functions/eq.js"
 
+//@ts-ignore TS6059 The relative path will stay the same
 import { version } from "../package.json"
 
 function sleep(ms: number): Promise<void> {

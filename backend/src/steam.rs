@@ -11,6 +11,7 @@ pub struct LibraryFolder {
 #[derive(Deserialize)]
 pub struct AppState {
 	pub appid: String,
+	#[serde(alias = "Universe")]
 	pub universe: i32,
 	pub name: String,
 	#[serde(rename(deserialize = "StateFlags"))]

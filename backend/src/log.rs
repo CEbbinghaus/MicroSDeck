@@ -13,14 +13,14 @@ pub fn create_subscriber() {
 
 	file_writer.set_ansi(false);
 
-	let stdout_is_tty = unsafe { isatty(STDOUT_FILENO) };
-
 	let subscriber = tracing_subscriber::registry()
 		.with(
 			file_writer.with_filter(tracing_subscriber::filter::LevelFilter::from_level(CONFIG.log_level))
 		);
+		
 	if cfg!(debug_assertions) {
-		subscriber = subscriber.with(tracing_subscriber::fmt::layer().pretty())
+		subscriber.with(tracing_subscriber::fmt::layer().pretty()).init();
+	} else {
+		subscriber.init();
 	}
-	subscriber.init();
 }

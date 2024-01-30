@@ -62,6 +62,7 @@ pub(crate) struct EventBuilder {
 	data: Option<&'static str>,
 }
 
+#[allow(dead_code)]
 impl EventBuilder {
 	pub fn new() -> Self {
 		EventBuilder { id: None, event: None, data: None }

@@ -38,4 +38,7 @@ class Plugin:
                 case _code:
                     print("Program exited with exit code: " + _code)
                     break;
-                    
+         # Function used to clean up a plugin when it's told to unload by Decky-Loader
+    
+    async def _unload(self):
+        self.backend_proc.kill();

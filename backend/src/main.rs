@@ -1,4 +1,5 @@
 mod api;
+mod cfg;
 mod ds;
 mod dto;
 mod env;
@@ -8,35 +9,29 @@ mod log;
 mod sdcard;
 mod steam;
 mod watch;
-
-use crate::{api::config, dto::CardEvent};
+use crate::cfg::CONFIG;
 use crate::ds::Store;
 use crate::env::*;
-use crate::log::Logger;
 use crate::watch::start_watch;
-use ::log::{debug, error, info};
+use crate::{api::config, dto::CardEvent};
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
-use env::get_data_dir;
 use err::Error;
 use futures::{pin_mut, select, FutureExt};
-use once_cell::sync::Lazy;
-use simplelog::LevelFilter;
+use log::create_subscriber;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
 use tokio::sync::broadcast::{self, Sender};
+use tracing::{debug, error, info};
 
-static LOGGER: Lazy<Logger> = Lazy::new(|| Logger::new().expect("Logger to be created"));
-
-pub fn init() -> Result<(), ::log::SetLoggerError> {
-	::log::set_logger(&*LOGGER).map(|()| ::log::set_max_level(LevelFilter::Trace))
+pub fn init() {
+	create_subscriber();
 }
 
 type MainResult = Result<(), Error>;
 
 async fn run_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainResult {
-
 	info!("Starting HTTP server...");
 
 	HttpServer::new(move || {
@@ -54,7 +49,7 @@ async fn run_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainRes
 			.configure(config)
 	})
 	.workers(2)
-	.bind(("0.0.0.0", PORT))?
+	.bind(("0.0.0.0", CONFIG.port))?
 	.run()
 	.await
 	.map_err(|err| err.into())
@@ -66,22 +61,16 @@ async fn main() {
 		std::env::set_var("RUST_BACKTRACE", "1");
 	}
 
-	match init() {
-		Err(err) => {
-			error!("Unable to Initialize:\n{}", err);
-			return;
-		}
-		Ok(()) => debug!("Initialized..."),
-	}
-	
+	init();
+
 	info!(
 		"{}@{} by {}",
 		PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
 	);
 
 	let store_path = PathBuf::from(
-		&std::env::var("STORE_PATH").unwrap_or(
-			get_file_path_and_create_directory("store", &get_data_dir)
+		&std::env::var("STORE_PATH").map(PathBuf::from).unwrap_or(
+			get_file_path_and_create_directory(&CONFIG.store_file, &DATA_DIR)
 				.expect("should retrieve data directory"),
 		),
 	);

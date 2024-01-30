@@ -5,8 +5,6 @@ edition = "2021"
 license = "GPL-2.0"
 authors = ["Christopher-Robin <git@cebbinghaus.com>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 actix-cors = "0.6.4"
 actix-web = "4.4.0"
@@ -26,6 +24,11 @@ slotmap = { version = "1.0.6", features = ["serde"] }
 glob = "0.3.1"
 semver = { version = "1.0.20", features = ["serde"] }
 either = "1.9.0"
+toml = "0.8.8"
+anyhow = "1.0.79"
+lazy_static = "1.4.0"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }

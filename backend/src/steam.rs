@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use serde::Deserialize;
+use serde_alias::serde_alias;
 
 #[derive(Deserialize, Debug)]
 pub struct LibraryFolder {
@@ -8,16 +9,19 @@ pub struct LibraryFolder {
 	pub label: String,
 }
 
+#[serde_alias(
+	CamelCase,
+	PascalCase,
+	LowerCase,
+	SnakeCase
+)]
 #[derive(Deserialize)]
 pub struct AppState {
 	pub appid: String,
-	#[serde(alias = "Universe")]
 	pub universe: i32,
 	pub name: String,
-	#[serde(rename(deserialize = "StateFlags"))]
 	pub state_flags: Option<i32>,
 	pub installdir: String,
-	#[serde(rename(deserialize = "SizeOnDisk"))]
 	pub size_on_disk: u64,
 }
 

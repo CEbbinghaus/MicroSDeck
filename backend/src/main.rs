@@ -64,6 +64,7 @@ async fn main() {
 	init();
 
 	info!(
+		version = PACKAGE_VERSION,
 		"{}@{} by {}",
 		PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
 	);
@@ -100,17 +101,17 @@ async fn main() {
 	select! {
 		result = server_future => match result {
 			Ok(_) => info!("Server ran to completion..."),
-			Err(err) => error!(error = %err.to_string(), "Server exited with error")
+			Err(err) => error!(%err, "Server exited with error")
 		},
 		result = watch_future => match result {
 			Ok(_) => info!("Watch ran to completion.."),
-			Err(err) => error!(error = %err.to_string(), "Watch exited with error"),
+			Err(err) => error!(%err, "Watch exited with error"),
 		},
 	};
 
 	info!("Saving Database");
 	if let Err(err) = store.write_to_file() {
-		error!(error = %err.to_string(), "Failed to write datastore to file");
+		error!(%err, "Failed to write datastore to file");
 	}
 
 	info!("Exiting...");

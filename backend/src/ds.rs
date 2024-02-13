@@ -4,7 +4,7 @@ use crate::{
 	err::Error,
 	sdcard::get_steam_acf_files,
 };
-use log::error;
+use tracing::{error, instrument};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use slotmap::{DefaultKey, SlotMap};
@@ -75,18 +75,21 @@ pub struct StoreData {
 }
 
 impl StoreData {
+	#[instrument(skip(self))]
 	pub fn add_card(&mut self, id: String, card: MicroSDCard) {
 		self.node_ids
 			.entry(id)
 			.or_insert_with(|| self.nodes.insert(Node::from_card(card)));
 	}
 
+	#[instrument(skip(self))]
 	pub fn add_game(&mut self, id: String, game: Game) {
 		self.node_ids
 			.entry(id)
 			.or_insert_with(|| self.nodes.insert(Node::from_game(game)));
 	}
 
+	#[instrument(skip(self, func))]
 	pub fn update_card<F>(&mut self, card_id: &str, mut func: F) -> Result<(), Error>
 	where
 		F: FnMut(&mut MicroSDCard) -> Result<(), Error>,
@@ -106,6 +109,7 @@ impl StoreData {
 		Ok(())
 	}
 
+	#[instrument(skip(self))]
 	pub fn link(&mut self, a_id: &str, b_id: &str) -> Result<(), Error> {
 		let a_key = self.node_ids.get(a_id);
 		let b_key = self.node_ids.get(b_id);
@@ -119,6 +123,7 @@ impl StoreData {
 		Ok(())
 	}
 
+	#[instrument(skip(self))]
 	pub fn unlink(&mut self, a_id: &str, b_id: &str) -> Result<(), Error> {
 		let game_key = self.node_ids.get(a_id);
 		let card_key = self.node_ids.get(b_id);
@@ -132,6 +137,7 @@ impl StoreData {
 		Ok(())
 	}
 
+	#[instrument(skip(self))]
 	pub fn remove_item(&mut self, id: &str) -> Result<(), Error> {
 		let element_key = self
 			.node_ids
@@ -145,10 +151,12 @@ impl StoreData {
 		Ok(())
 	}
 
+	#[instrument(skip(self))]
 	pub fn contains_element(&self, card_id: &str) -> bool {
 		self.node_ids.contains_key(card_id)
 	}
 
+	#[instrument(skip(self))]
 	pub fn get_card(&self, card_id: &str) -> Result<MicroSDCard, Error> {
 		self.node_ids
 			.get(card_id)
@@ -160,6 +168,7 @@ impl StoreData {
 			})
 	}
 
+	#[instrument(skip(self))]
 	pub fn get_game(&self, game_id: &str) -> Result<Game, Error> {
 		self.node_ids
 			.get(game_id)
@@ -171,6 +180,7 @@ impl StoreData {
 			})
 	}
 
+	#[instrument(skip(self))]
 	pub fn get_card_and_games(&self, card_id: &str) -> Result<(MicroSDCard, Vec<Game>), Error> {
 		let card_key = self
 			.node_ids
@@ -192,6 +202,7 @@ impl StoreData {
 		Ok((card, games))
 	}
 
+	#[instrument(skip(self))]
 	pub fn get_games_on_card(&self, card_id: &str) -> Result<Vec<Game>, Error> {
 		let card_key = self
 			.node_ids
@@ -207,6 +218,7 @@ impl StoreData {
 		Ok(games)
 	}
 
+	#[instrument(skip(self))]
 	pub fn get_cards_for_game(&self, game_id: &str) -> Result<Vec<MicroSDCard>, Error> {
 		let game_key = self
 			.node_ids
@@ -222,6 +234,7 @@ impl StoreData {
 		Ok(cards)
 	}
 
+	#[instrument(skip(self))]
 	pub fn list_cards(&self) -> Vec<MicroSDCard> {
 		self.nodes
 			.iter()
@@ -229,6 +242,7 @@ impl StoreData {
 			.collect()
 	}
 
+	#[instrument(skip(self))]
 	pub fn list_games(&self) -> Vec<Game> {
 		self.nodes
 			.iter()
@@ -236,6 +250,7 @@ impl StoreData {
 			.collect()
 	}
 
+	#[instrument(skip(self))]
 	pub fn list_cards_with_games(&self) -> Vec<(MicroSDCard, Vec<Game>)> {
 		self.nodes
 			.iter()
@@ -347,7 +362,7 @@ impl Store {
 		}
 
 		if let Err(err) = self.write_to_file() {
-			error!("Unable to write datastore to file: {}", err);
+			error!(%err, "Unable to write datastore to file \"{}\"", err);
 		}
 	}
 
@@ -367,13 +382,14 @@ impl Store {
 
 			if dead_node_ids.len() > 0 {
 				result &= false;
-				error!("Found dead node_ids: {:?}", dead_node_ids);
+				error!(?dead_node_ids, "Found dead node_ids");
 			}
 		}
 
 		return result;
 	}
 
+	/// Removes any whitespace from the card uid
 	pub fn clean_up(&self) {
 		let mut data = self.data.write().unwrap();
 

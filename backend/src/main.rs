@@ -75,7 +75,7 @@ async fn main() {
 		),
 	);
 
-	debug!("Loading from store {:?}", store_path);
+	debug!(store_path = store_path.to_str(), "Loading from store");
 	let store: Arc<Store> =
 		Arc::new(Store::read_from_file(store_path.clone()).unwrap_or(Store::new(Some(store_path))));
 
@@ -100,17 +100,17 @@ async fn main() {
 	select! {
 		result = server_future => match result {
 			Ok(_) => info!("Server ran to completion..."),
-			Err(err) => error!("Server exited with error: {err}")
+			Err(err) => error!(error = %err.to_string(), "Server exited with error")
 		},
 		result = watch_future => match result {
 			Ok(_) => info!("Watch ran to completion.."),
-			Err(err) => error!("Watch exited with error: {err}"),
+			Err(err) => error!(error = %err.to_string(), "Watch exited with error"),
 		},
 	};
 
 	info!("Saving Database");
 	if let Err(err) = store.write_to_file() {
-		error!("Failed to write datastore to file {err}");
+		error!(error = %err.to_string(), "Failed to write datastore to file");
 	}
 
 	info!("Exiting...");

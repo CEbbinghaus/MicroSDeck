@@ -1,5 +1,4 @@
 use std::fs::File;
-
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
@@ -9,7 +8,8 @@ use crate::{get_file_path_and_create_directory, LOG_DIR};
 pub fn create_subscriber() {
 	let log_file_path = get_file_path_and_create_directory(&CONFIG.log_file, &LOG_DIR).expect("Log file to be created");
 	let file = File::create(log_file_path).expect("Log file to be created");
-	let mut file_writer = tracing_subscriber::fmt::layer().with_writer(file);
+
+	let mut file_writer = tracing_subscriber::fmt::layer().json().with_writer(file);
 
 	file_writer.set_ansi(false);
 

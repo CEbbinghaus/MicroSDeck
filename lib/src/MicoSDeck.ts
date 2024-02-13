@@ -32,7 +32,7 @@ export { version };
  * Matches the current MicroSDeck version against the version provided.
  * Returns true if the semver matches and compatibility is guaranteed. 
  * @export
- * @param {string} version1 his should be in valid semver notation of x.y.z
+ * @param {string} version1 This should be in valid semver notation of x.y.z
  * @param {string} version2 This should be in valid semver notation of x.y.z
  */
 export function IsMatchingSemver(version1: string, version2: string, strict: boolean = false): boolean {

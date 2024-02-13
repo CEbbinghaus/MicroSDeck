@@ -65,8 +65,7 @@ async fn main() {
 
 	info!(
 		version = PACKAGE_VERSION,
-		"{}@{} by {}",
-		PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
+		"{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
 	);
 
 	let store_path = PathBuf::from(

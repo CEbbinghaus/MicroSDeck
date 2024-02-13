@@ -4,7 +4,6 @@ use crate::{
 	err::Error,
 	sdcard::get_steam_acf_files,
 };
-use tracing::{error, instrument};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use slotmap::{DefaultKey, SlotMap};
@@ -16,6 +15,7 @@ use std::{
 	path::PathBuf,
 	sync::RwLock,
 };
+use tracing::{error, instrument};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) enum StoreElement {
@@ -66,7 +66,7 @@ fn default_version() -> Version {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StoreData {
-	#[serde(default="default_version")]
+	#[serde(default = "default_version")]
 	version: Version,
 	nodes: SlotMap<DefaultKey, Node>,
 	node_ids: HashMap<String, DefaultKey>,

@@ -30,7 +30,6 @@ pub fn get_file_path_and_create_directory(
 	file_name: &PathBuf,
 	base_dir: &PathBuf,
 ) -> Option<PathBuf> {
-
 	if let Err(_) = std::fs::create_dir_all(base_dir) {
 		return None;
 	}

@@ -7,18 +7,15 @@ use crate::{
 	sdcard::{get_card_cid, is_card_inserted},
 };
 use actix_web::{
-	delete, get,
-	http::StatusCode,
-	post,
-	web,
-	Either, HttpResponse, HttpResponseBuilder, Responder, Result,
+	delete, get, http::StatusCode, post, web, Either, HttpResponse, HttpResponseBuilder, Responder,
+	Result,
 };
 use futures::StreamExt;
 use serde::Deserialize;
-use tracing::{instrument, trace};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::broadcast::Sender;
 use tokio_stream::wrappers::BroadcastStream;
+use tracing::{instrument, trace};
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
 	cfg //

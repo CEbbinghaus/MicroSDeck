@@ -1,7 +1,7 @@
 use actix_web::web::Bytes;
 
-pub(crate) struct Event<T : EventTrait> {
-	val: T
+pub(crate) struct Event<T: EventTrait> {
+	val: T,
 }
 
 pub(crate) trait EventTrait {
@@ -22,18 +22,18 @@ impl<T: EventTrait> Event<T> {
 	}
 }
 
-impl<T : EventTrait> ToString for Event<T> {
-    fn to_string(&self) -> String {
-        let mut output = "".to_string();
+impl<T: EventTrait> ToString for Event<T> {
+	fn to_string(&self) -> String {
+		let mut output = "".to_string();
 
 		if let Some(value) = self.val.get_id() {
 			output += &format!("id: {}\n", value);
 		}
 		if let Some(value) = self.val.get_event() {
-			output +=  &format!("event: {}\n", value);
+			output += &format!("event: {}\n", value);
 		}
 		if let Some(value) = self.val.get_data() {
-			output +=  &format!("data: {}\n", value);
+			output += &format!("data: {}\n", value);
 		}
 
 		if output != "" {
@@ -45,15 +45,15 @@ impl<T : EventTrait> ToString for Event<T> {
 }
 
 impl<T: EventTrait> Into<Bytes> for Event<T> {
-    fn into(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
+	fn into(self) -> Bytes {
+		Bytes::from(self.to_string())
+	}
 }
 
 impl<T: EventTrait> From<T> for Event<T> {
-    fn from(value: T) -> Self {
-        Event { val: value }
-    }
+	fn from(value: T) -> Self {
+		Event { val: value }
+	}
 }
 
 pub(crate) struct EventBuilder {
@@ -65,7 +65,11 @@ pub(crate) struct EventBuilder {
 #[allow(dead_code)]
 impl EventBuilder {
 	pub fn new() -> Self {
-		EventBuilder { id: None, event: None, data: None }
+		EventBuilder {
+			id: None,
+			event: None,
+			data: None,
+		}
 	}
 	pub fn with_id(mut self, id: &'static str) -> Self {
 		self.id = Some(id);

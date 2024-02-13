@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 pub enum CardEvent {
 	Inserted,
 	Removed,
-	Updated
+	Updated,
 }
 
 impl EventTrait for CardEvent {
-    fn get_event(&self) -> Option<&'static str> {
-        Some(match self {
+	fn get_event(&self) -> Option<&'static str> {
+		Some(match self {
 			CardEvent::Inserted => "insert",
 			CardEvent::Removed => "remove",
 			CardEvent::Updated => "update",
 		})
-    }
+	}
 	// fn get_data(&self) -> Option<&'static str> {
 	// 	match self {
 	// 		CardEvent::Inserted => None,
@@ -33,7 +33,7 @@ fn default_true() -> bool {
 pub struct MicroSDCard {
 	pub uid: String,
 	pub libid: String,
-	
+
 	#[serde(default)]
 	pub mount: Option<String>,
 

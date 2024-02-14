@@ -38,7 +38,7 @@ fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), E
 	let current_games = datastore.get_games_on_card(&cid)?;
 	for deleted_game in current_games
 		.iter()
-		.filter(|v| !games.iter().any(|g| g.appid == v.uid))
+		.filter(|v| v.is_steam && !games.iter().any(|g| g.appid == v.uid))
 	{
 		datastore.unlink(&deleted_game.uid, &cid)?
 	}

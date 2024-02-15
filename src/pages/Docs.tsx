@@ -12,7 +12,7 @@ const mdIt = new MarkDownIt({
 //@ts-ignore This gets codegenerated at build time 
 import docs from './docs.codegen';
 
-// The docs constant as they are baked into the bundle.
+// The docs are constant as they are baked into the bundle.
 // This is more efficient since it precalculates the markdown and doesn't have to do it at every render
 const docPages = docs.map(({ path, content }) => {
 	return {

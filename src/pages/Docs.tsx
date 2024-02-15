@@ -6,7 +6,7 @@ import MarkDownIt from "markdown-it";
 import { DOCUMENTATION_PATH } from "../const";
 
 const mdIt = new MarkDownIt({
-	html: true
+	html: true,
 });
 
 //@ts-ignore This gets codegenerated at build time 
@@ -16,7 +16,7 @@ import docs from './docs.codegen';
 // This is more efficient since it precalculates the markdown and doesn't have to do it at every render
 const docPages = docs.map(({ path, content }) => {
 	return {
-		title: path,
+		title: (path == "index.md" ? "Main" : path.replace(".md", "")).trim(),
 		content: <DocPage content={<div dangerouslySetInnerHTML={{ __html: mdIt.render(content) }} />} />,
 		route: `${DOCUMENTATION_PATH}/${path.toLowerCase().replace(/ /g, "-")}`,
 		icon: <FaBook />,

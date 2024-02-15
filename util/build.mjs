@@ -2,7 +2,7 @@
 import { execSync, spawnSync } from 'child_process';
 import { join, resolve } from 'path';
 import { existsSync, mkdirSync, copyFileSync, statfsSync } from 'fs';
-import { ReadPackageVersion, UpdateVersion, ResetVersion } from './versioning.mjs';
+import { Version, UpdateVersion, ResetVersion } from './versioning.mjs';
 import { Logger } from './log.mjs';
 import { exit } from 'process';
 
@@ -29,9 +29,8 @@ async function importJson(file) {
 }
 
 const { name: PluginName } = await importJson(join(basePath, "plugin.json"));
-const pluginVersion = ReadPackageVersion();
 
-Logger.Log(`Building plugin ${PluginName}@${pluginVersion}`);
+Logger.Log(`Building plugin ${PluginName}@${Version}`);
 
 if (!existsSync('plugin.json')) {
 	console.error('Build script must be run from the root of the repository.');

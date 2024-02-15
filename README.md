@@ -1,4 +1,4 @@
-![image](Logo.png)
+![image](./assets/Logo.png)
 
 # MicroSDeck
 Manage your MicroSD Cards and view which card each game is on.

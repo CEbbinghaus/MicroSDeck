@@ -15,7 +15,7 @@ import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
 import React from "react";
-import DocumentationPage from "./pages/Docs";
+import Docs from "./pages/Docs";
 import { DeckyAPI } from "./lib/DeckyApi";
 import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
@@ -153,7 +153,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	
 	const patch = PatchAppScreen(serverApi);
 
-	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, DocumentationPage, {
+	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, Docs, {
 		exact: true,
 	});
 

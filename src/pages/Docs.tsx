@@ -9,20 +9,19 @@ import { DOCUMENTATION_PATH } from "../const";
 //@ts-ignore This gets codegenerated at build time 
 import docs from './docs.codegen';
 
-const renderedDocs = docs.map(v => { return { ...v, content: (<Markdown>{v.content}</Markdown>) } });
+// The docs constant as they are baked into the bundle.
+// This is more efficient since it precalculates the markdown and doesn't have to do it at every render
+const docPages = docs.map(({ path, content }) => {
+	return {
+		title: path,
+		content: <DocPage content={<Markdown>{content}</Markdown>} />,
+		route: `${DOCUMENTATION_PATH}/${path.toLowerCase().replace(/ /g, "-")}`,
+		icon: <FaBook />,
+		hideTitle: true
+	};
+});
 
-
-export default function DocumentationPage(): ReactElement {
-	const docPages = renderedDocs.map(({ path, content }) => {
-		return {
-			title: path,
-			content: <DocPage content={content} />,
-			route: `${DOCUMENTATION_PATH}/${path.toLowerCase().replace(/ /g, "-")}`,
-			icon: <FaBook />,
-			hideTitle: true
-		};
-	});
-
+export default function Docs(): ReactElement {
 	return (
 		<SidebarNavigation
 			title="TabMaster Docs"

@@ -7,7 +7,7 @@ import { defineConfig } from 'rollup';
 import importAssets from 'rollup-plugin-import-assets';
 import codegen from 'rollup-plugin-codegen';
 
-import { name } from "./plugin.json";
+import plugin from "./plugin.json" assert {type: "json"};
 
 export default defineConfig({
 	input: './src/index.tsx',
@@ -20,9 +20,9 @@ export default defineConfig({
 			preventAssignment: false,
 			'process.env.NODE_ENV': JSON.stringify('production'),
 		}),
-		codegen(),
+		codegen.default(),
 		importAssets({
-			publicPath: `http://127.0.0.1:1337/plugins/${name}/`
+			publicPath: `http://127.0.0.1:1337/plugins/${plugin.name}/`
 		})
 	],
 	context: 'window',

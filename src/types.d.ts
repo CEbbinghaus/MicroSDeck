@@ -14,7 +14,7 @@ declare module "*.jpg" {
 }
 
 
-type DocFile = { path: string, content: JSX.Element }
+type DocFile = { name: string, content: JSX.Element }
 
 declare module "*/docs.codegen" {
 	const content: DocFile[];

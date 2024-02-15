@@ -39,9 +39,10 @@
 	},
 	"dependencies": {
 		"@cebbinghaus/microsdeck": "link:lib",
+		"@mdx-js/react": "^3.0.1",
+		"@mdx-js/rollup": "^3.0.1",
 		"decky-frontend-lib": "^3.24.5",
 		"lipe": "^0.3.3",
-		"markdown-it": "^14.0.0",
 		"react": "^18.2.0",
 		"react-icons": "^4.12.0"
 	},

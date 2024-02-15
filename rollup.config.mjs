@@ -6,21 +6,23 @@ import typescript from '@rollup/plugin-typescript';
 import { defineConfig } from 'rollup';
 import importAssets from 'rollup-plugin-import-assets';
 import codegen from 'rollup-plugin-codegen';
+import mdx from '@mdx-js/rollup'
 
 import plugin from "./plugin.json" assert {type: "json"};
 
 export default defineConfig({
 	input: './src/index.tsx',
 	plugins: [
-		commonjs(),
 		nodeResolve({ browser: true }),
+		codegen.default(),
+		mdx({providerImportSource: '@mdx-js/react'}),
+		commonjs(),
 		typescript(),
 		json(),
 		replace({
 			preventAssignment: false,
 			'process.env.NODE_ENV': JSON.stringify('production'),
 		}),
-		codegen.default(),
 		importAssets({
 			publicPath: `http://127.0.0.1:1337/plugins/${plugin.name}/`
 		})

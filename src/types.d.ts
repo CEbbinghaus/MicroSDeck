@@ -12,3 +12,11 @@ declare module "*.jpg" {
 	const content: string;
 	export default content;
 }
+
+
+type DocFile = { name: string, content: JSX.Element }
+
+declare module "*/docs.codegen" {
+	const content: DocFile[];
+	export = content;
+}

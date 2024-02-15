@@ -27,9 +27,11 @@
 		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@rollup/plugin-typescript": "^8.5.0",
+		"@types/markdown-it": "^13.0.7",
 		"@types/react": "16.14.0",
 		"@types/webpack": "^5.28.5",
 		"rollup": "^2.79.1",
+		"rollup-plugin-codegen": "^1.0.0",
 		"rollup-plugin-import-assets": "^1.1.1",
 		"shx": "^0.3.4",
 		"tslib": "^2.6.2",
@@ -37,8 +39,11 @@
 	},
 	"dependencies": {
 		"@cebbinghaus/microsdeck": "link:lib",
+		"@mdx-js/react": "^3.0.1",
+		"@mdx-js/rollup": "^3.0.1",
 		"decky-frontend-lib": "^3.24.5",
 		"lipe": "^0.3.3",
+		"react": "^18.2.0",
 		"react-icons": "^4.12.0"
 	},
 	"pnpm": {

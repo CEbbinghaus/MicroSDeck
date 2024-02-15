@@ -51,3 +51,6 @@ yalc.lock
 
 #ignore output directory
 /build
+
+#ignore deploy config
+deploy.json

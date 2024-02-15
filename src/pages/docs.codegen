@@ -1,0 +1,54 @@
+// @ts-nocheck
+const { readdirSync, readFileSync, fil } = require('fs');
+const { parse, join } = require('path');
+
+const docsDir = join(__dirname, '../../docs');
+
+const docs = readdirSync(docsDir);
+
+const keyedDocs = docs.map(() => `_${Math.random().toString(36).slice(2) }`);
+
+const importStatements = docs.map((docPath, i) => {
+	return `import ${keyedDocs[i]} from "${join(docsDir, docPath)}";`
+})
+const exportDeclarations = docs.map((docPath, i) => {
+	return `{name: "${parse(docPath).name}", content: ${keyedDocs[i]}}`
+})
+
+module.exports = function () {
+	return `//@ts-nocheck
+${importStatements.join("\n")}
+export default [${exportDeclarations.join(", ")}];
+	`;
+};
+
+//NOTE: Kept for future possibilities of creating nested pages
+// function walk(dir) {
+// 	let results = [], err = null, i = 0, list = [];
+
+// 	try {
+// 		list = readdirSync(dir)
+// 	} catch (e) {
+// 		return e.toString();
+// 	}
+
+// 	function next() {
+// 		let entry = list[i++];
+
+// 		if (!entry)
+// 			return results;
+
+// 		entry = path.resolve(dir, entry);
+// 		let stat = statSync(entry);
+
+// 		if (stat && stat.isDirectory()) {
+// 			results = results.concat(walk(entry));
+// 			return next();
+// 		}
+
+// 		results.push(entry);
+// 		return next();
+// 	};
+
+// 	return next();
+// };

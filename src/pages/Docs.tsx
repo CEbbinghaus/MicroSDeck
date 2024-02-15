@@ -2,9 +2,12 @@ import { ReactElement } from "react";
 import { FaBook } from "react-icons/fa";
 import { SidebarNavigation } from "decky-frontend-lib";
 import { DocPage } from "../components/DocPage";
-//@ts-ignore typescript being dumb, watch out for a rollup warning complatining about react/jsx-runtime
-import Markdown from "react-markdown";
+import MarkDownIt from "markdown-it";
 import { DOCUMENTATION_PATH } from "../const";
+
+const mdIt = new MarkDownIt({
+	html: true
+});
 
 //@ts-ignore This gets codegenerated at build time 
 import docs from './docs.codegen';
@@ -14,7 +17,7 @@ import docs from './docs.codegen';
 const docPages = docs.map(({ path, content }) => {
 	return {
 		title: path,
-		content: <DocPage content={<Markdown>{content}</Markdown>} />,
+		content: <DocPage content={<div dangerouslySetInnerHTML={{ __html: mdIt.render(content) }} />} />,
 		route: `${DOCUMENTATION_PATH}/${path.toLowerCase().replace(/ /g, "-")}`,
 		icon: <FaBook />,
 		hideTitle: true
@@ -24,7 +27,7 @@ const docPages = docs.map(({ path, content }) => {
 export default function Docs(): ReactElement {
 	return (
 		<SidebarNavigation
-			title="TabMaster Docs"
+			title="MicroSDeck Docs"
 			showTitle
 			pages={docPages}
 		/>

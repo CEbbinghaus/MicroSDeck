@@ -1,0 +1,5 @@
+{
+	"host": "steamdeck",
+	"user": "deck",
+	"keyfile": "~/.ssh/id_rsa"
+}

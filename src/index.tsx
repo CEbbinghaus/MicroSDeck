@@ -153,9 +153,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	
 	const patch = PatchAppScreen(serverApi);
 
-	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, Docs, {
-		exact: true,
-	});
+	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, Docs);
 
 	return {
 		title: <div className={staticClasses.Title}>MicroSDeck</div>,

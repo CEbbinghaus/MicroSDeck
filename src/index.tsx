@@ -141,9 +141,6 @@ declare global {
 }
 
 export default definePlugin((serverApi: ServerAPI) => {
-	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, DocumentationPage, {
-		exact: true,
-	});
 
 	if (window.MicroSDeck) {
 		window.MicroSDeck.destruct();
@@ -152,9 +149,13 @@ export default definePlugin((serverApi: ServerAPI) => {
 
 	DeckyAPI.SetApi(serverApi);
 
+	Logger.Log("Started MicroSDeck");
+	
 	const patch = PatchAppScreen(serverApi);
 
-	Logger.Log("Started MicroSDeck");
+	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, DocumentationPage, {
+		exact: true,
+	});
 
 	return {
 		title: <div className={staticClasses.Title}>MicroSDeck</div>,

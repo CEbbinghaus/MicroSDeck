@@ -5,6 +5,7 @@ import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 import { defineConfig } from 'rollup';
 import importAssets from 'rollup-plugin-import-assets';
+import codegen from 'rollup-plugin-codegen';
 
 import { name } from "./plugin.json";
 
@@ -16,11 +17,12 @@ export default defineConfig({
 	typescript(),
     json(),
     replace({
-      preventAssignment: false,
-      'process.env.NODE_ENV': JSON.stringify('production'),
+		preventAssignment: false,
+		'process.env.NODE_ENV': JSON.stringify('production'),
     }),
+	codegen(),
     importAssets({
-      publicPath: `http://127.0.0.1:1337/plugins/${name}/`
+		publicPath: `http://127.0.0.1:1337/plugins/${name}/`
     })
   ],
   context: 'window',

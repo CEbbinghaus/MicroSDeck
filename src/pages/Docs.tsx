@@ -1,5 +1,7 @@
 import React from "react";
+//@ts-ignore This gets codegenerated at build time 
+import docs from './docs.codegen';
 
 export default function DocumentationPage() {
-	return (<>Hello, World!</>)
+	return (<>{JSON.stringify(docs)}</>)
 };

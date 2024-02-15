@@ -1,0 +1,43 @@
+// @ts-nocheck
+var fs = require('fs');
+var path = require('path');
+
+
+function walk(dir) {
+	let results = [], err = null, i = 0, list = [];
+
+	try {
+		list = fs.readdirSync(dir)
+	} catch (e) {
+		return e.toString();
+	}
+
+	function next() {
+		let entry = list[i++];
+
+		if (!entry)
+			return results;
+
+		entry = path.resolve(dir, entry);
+		let stat = fs.statSync(entry);
+
+		if (stat && stat.isDirectory()) {
+			results = results.concat(walk(entry));
+			return next();
+		}
+
+		results.push(entry);
+		return next();
+	};
+
+	return next();
+};
+
+
+const docsDir = path.join(__dirname, '../../docs');
+
+const docs = walk(docsDir).map(file => { return { path: `${path.relative(docsDir, file)}`, content: fs.readFileSync(file, "utf-8") } });
+
+module.exports = function () {
+	return `export default ${JSON.stringify(docs)}`;
+};

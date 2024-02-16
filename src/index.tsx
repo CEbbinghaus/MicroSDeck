@@ -150,10 +150,13 @@ export default definePlugin((serverApi: ServerAPI) => {
 	DeckyAPI.SetApi(serverApi);
 
 	Logger.Log("Started MicroSDeck");
-	
+
 	const patch = PatchAppScreen(serverApi);
 
-	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, Docs);
+	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, () => (
+		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>
+			<Docs />
+		</MicroSDeckContextProvider>));
 
 	return {
 		title: <div className={staticClasses.Title}>MicroSDeck</div>,
@@ -165,7 +168,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 		onDismount() {
 			window.MicroSDeck?.destruct();
 			window.MicroSDeck = undefined;
-			
+
 			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
 			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
 		},

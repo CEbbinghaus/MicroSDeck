@@ -52,6 +52,7 @@ pub(crate) async fn version() -> impl Responder {
 	HttpResponse::Ok().body(PACKAGE_VERSION)
 }
 
+#[allow(clippy::async_yields_async)]
 #[get("/health")]
 #[instrument]
 pub(crate) async fn health() -> impl Responder {
@@ -291,6 +292,7 @@ pub(crate) async fn list_games(datastore: web::Data<Arc<Store>>) -> impl Respond
 	web::Json(datastore.list_games())
 }
 
+#[allow(clippy::async_yields_async)]
 #[post("/games")]
 #[instrument]
 pub(crate) async fn create_games(
@@ -345,7 +347,7 @@ pub(crate) async fn create_links(
 ) -> Result<impl Responder> {
 	let data = body.into_inner();
 	for game_id in data.game_ids.iter() {
-		datastore.link(&game_id, &data.card_id)?;
+		datastore.link(game_id, &data.card_id)?;
 	}
 
 	trace!("Sending Updated event");
@@ -376,7 +378,7 @@ pub(crate) async fn delete_links(
 ) -> Result<impl Responder> {
 	let data = body.into_inner();
 	for game_id in data.game_ids.iter() {
-		datastore.unlink(&game_id, &data.card_id)?;
+		datastore.unlink(game_id, &data.card_id)?;
 	}
 
 	trace!("Sending Updated event");

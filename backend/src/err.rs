@@ -37,8 +37,8 @@ impl fmt::Display for Error {
 	}
 }
 
-impl Into<Box<dyn std::error::Error>> for Error {
-	fn into(self) -> Box<dyn std::error::Error> {
+impl From<Error> for Box<dyn std::error::Error> {
+	fn from(_: Error) -> Self {
 		Box::new(StdErr)
 	}
 }

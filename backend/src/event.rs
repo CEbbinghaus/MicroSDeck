@@ -36,17 +36,17 @@ impl<T: EventTrait> ToString for Event<T> {
 			output += &format!("data: {}\n", value);
 		}
 
-		if output != "" {
+		if !output.is_empty() {
 			output += "\n";
 		}
 
-		return output;
+		output
 	}
 }
 
-impl<T: EventTrait> Into<Bytes> for Event<T> {
-	fn into(self) -> Bytes {
-		Bytes::from(self.to_string())
+impl<T: EventTrait> From<Event<T>> for Bytes {
+	fn from(val: Event<T>) -> Self {
+		Bytes::from(val.to_string())
 	}
 }
 

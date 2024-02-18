@@ -19,6 +19,7 @@ lazy_static! {
 	});
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Serialize, Deserialize)]
 #[serde(remote = "Level")]
 pub enum LogLevel {

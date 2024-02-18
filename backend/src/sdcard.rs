@@ -43,7 +43,6 @@ pub fn get_steam_acf_files(
 		"/run/media/{}/steamapps/",
 		mount.clone().unwrap_or(DEFAULT_MOUNT.into())
 	))?
-	.into_iter()
 	.filter_map(Result::ok)
 	.filter(|f| f.path().extension().unwrap_or_default().eq("acf")))
 }

@@ -333,8 +333,8 @@ impl Store {
 	}
 
 	pub fn read_from_file(file: PathBuf) -> Result<Self, Error> {
-		let contents = read_to_string(&file).map_err(|e| Error::from(e))?;
-		let store_data: StoreData = serde_json::from_str(&contents).map_err(|e| Error::from(e))?;
+		let contents = read_to_string(&file).map_err(Error::from)?;
+		let store_data: StoreData = serde_json::from_str(&contents).map_err(Error::from)?;
 		Ok(Store {
 			data: RwLock::new(store_data),
 			file: Some(file),
@@ -380,13 +380,13 @@ impl Store {
 				}
 			}
 
-			if dead_node_ids.len() > 0 {
+			if !dead_node_ids.is_empty() {
 				result &= false;
 				error!(?dead_node_ids, "Found dead node_ids");
 			}
 		}
 
-		return result;
+		result
 	}
 
 	/// Removes any whitespace from the card uid

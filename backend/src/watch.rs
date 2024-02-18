@@ -17,8 +17,20 @@ fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), E
 	);
 
 	let games: Vec<AppState> = get_steam_acf_files(mount)?
-		.filter_map(|f| fs::read_to_string(f.path()).ok())
-		.filter_map(|s| keyvalues_serde::from_str(s.as_str()).ok())
+		.filter_map(|f| match fs::read_to_string(f.path()) {
+			Ok(value) => Some(value),
+			Err(err) => {
+				error!(%err, path=?f.path(), "Unable to read Steam ACF file {:?}", f.path());
+				None
+			}
+		})
+		.filter_map(|s| match keyvalues_serde::from_str(s.as_str()) {
+			Ok(value) => Some(value),
+			Err(err) => {
+				error!(%err, contents=s.as_str(), "Unable to Deserialize Steam ACF file");
+				None
+			}
+		})
 		.collect();
 
 	debug!(
@@ -136,10 +148,10 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 			);
 			debug!("trying to automatically determine mount point");
 
-			if mount == None {
+			if mount.is_none() {
 				// Try and retrieve the mount from the database
-				if let Some(card) = datastore.get_card(&cid).ok() {
-					if card.mount != None {
+				if let Ok(card) = datastore.get_card(&cid) {
+					if card.mount.is_some() {
 						debug!(
 							mount = card.mount,
 							"MicroSD card had preexisting mount saved. Reusing that."
@@ -150,7 +162,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 			}
 
 			// Whatever we loaded did not work.
-			if mount != None && !has_libraryfolder(&mount) {
+			if mount.is_some() && !has_libraryfolder(&mount) {
 				warn!(
 					mount = mount,
 					"loaded mount does not resolve library. Resetting mount"
@@ -158,7 +170,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 				mount = None;
 			}
 
-			if mount == None {
+			if mount.is_none() {
 				trace!("No mount found. Trying to determine mount point");
 
 				for entry in Path::new("/dev/disk/by-label")

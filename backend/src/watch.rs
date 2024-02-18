@@ -1,3 +1,4 @@
+use crate::cfg::CONFIG;
 use crate::{ds::Store, dto::*, err::Error, sdcard::*, steam::*};
 use std::borrow::Borrow;
 use std::path::{Path, PathBuf};
@@ -93,7 +94,7 @@ fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), E
 }
 
 pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Result<(), Error> {
-	let mut interval = interval(Duration::from_secs(1));
+	let mut interval = interval(Duration::from_millis(CONFIG.scan_interval));
 
 	let mut card_inserted = false;
 

@@ -443,7 +443,7 @@ impl Store {
 	}
 
 	pub fn remove_element(&self, id: &str) -> Result<(), Error> {
-		// these two operations have to happen within a single scope otherwise the try_write_to_file causes a deadlock
+		// these two operations have to happen within a single lock otherwise the try_write_to_file causes a deadlock
 		{
 			let mut lock = self.data.write().unwrap();
 			lock.remove_item(id)?;

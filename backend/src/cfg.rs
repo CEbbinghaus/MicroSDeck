@@ -33,6 +33,7 @@ pub enum LogLevel {
 #[derive(Serialize, Deserialize)]
 pub struct Config {
 	pub port: u16,
+	pub scan_interval: u64,
 	pub store_file: PathBuf,
 	pub log_file: PathBuf,
 	#[serde(with = "LogLevel")]
@@ -43,6 +44,7 @@ impl Config {
 	pub fn new() -> Self {
 		Config {
 			port: 12412,
+			scan_interval: 5000,
 			log_file: "microsdeck.log".into(),
 			store_file: "store".into(),
 			log_level: Level::INFO,

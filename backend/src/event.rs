@@ -1,8 +1,6 @@
 use actix_web::web::Bytes;
 
-pub(crate) struct Event<T: EventTrait> {
-	val: T,
-}
+pub(crate) struct Event<T: EventTrait>(T);
 
 pub(crate) trait EventTrait {
 	fn get_id(&self) -> Option<&'static str> {
@@ -18,7 +16,7 @@ pub(crate) trait EventTrait {
 
 impl<T: EventTrait> Event<T> {
 	pub fn new(val: T) -> Self {
-		Event { val }
+		Event(val)
 	}
 }
 
@@ -26,13 +24,13 @@ impl<T: EventTrait> ToString for Event<T> {
 	fn to_string(&self) -> String {
 		let mut output = "".to_string();
 
-		if let Some(value) = self.val.get_id() {
+		if let Some(value) = self.0.get_id() {
 			output += &format!("id: {}\n", value);
 		}
-		if let Some(value) = self.val.get_event() {
+		if let Some(value) = self.0.get_event() {
 			output += &format!("event: {}\n", value);
 		}
-		if let Some(value) = self.val.get_data() {
+		if let Some(value) = self.0.get_data() {
 			output += &format!("data: {}\n", value);
 		}
 
@@ -52,7 +50,7 @@ impl<T: EventTrait> From<Event<T>> for Bytes {
 
 impl<T: EventTrait> From<T> for Event<T> {
 	fn from(value: T) -> Self {
-		Event { val: value }
+		Event(value)
 	}
 }
 

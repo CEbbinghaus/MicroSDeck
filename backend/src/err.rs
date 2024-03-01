@@ -4,13 +4,13 @@ use actix_web::ResponseError;
 use std::fmt;
 
 #[derive(Debug)]
-struct StdErr;
+struct StdErr(String);
 
 impl std::error::Error for StdErr {}
 
 impl fmt::Display for StdErr {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "StdErr")
+		write!(f, "{}", self)
 	}
 }
 
@@ -38,8 +38,8 @@ impl fmt::Display for Error {
 }
 
 impl From<Error> for Box<dyn std::error::Error> {
-	fn from(_: Error) -> Self {
-		Box::new(StdErr)
+	fn from(err: Error) -> Self {
+		Box::new(StdErr(err.to_string()))
 	}
 }
 

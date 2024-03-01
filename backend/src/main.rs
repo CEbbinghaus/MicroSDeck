@@ -31,7 +31,7 @@ pub fn init() {
 
 type MainResult = Result<(), Error>;
 
-async fn run_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainResult {
+async fn run_web_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainResult {
 	info!("Starting HTTP server...");
 
 	HttpServer::new(move || {
@@ -91,7 +91,7 @@ async fn main() {
 
 	let (txtx, _) = broadcast::channel::<CardEvent>(1);
 
-	let server_future = run_server(store.clone(), txtx.clone()).fuse();
+	let server_future = run_web_server(store.clone(), txtx.clone()).fuse();
 
 	let watch_future = start_watch(store.clone(), txtx.clone()).fuse();
 

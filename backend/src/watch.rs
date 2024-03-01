@@ -7,7 +7,7 @@ use tokio::sync::broadcast::Sender;
 use tokio::time::interval;
 use tracing::{debug, error, info, span, trace, warn};
 
-fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), Error> {
+fn read_microsd_steam_dir(datastore: &Store, mount: &Option<String>) -> Result<(), Error> {
 	let cid = get_card_cid().ok_or(Error::from_str("Unable to retrieve CID from MicroSD card"))?;
 
 	let library: LibraryFolder = keyvalues_serde::from_str(&read_libraryfolder(mount)?)?;
@@ -93,6 +93,22 @@ fn read_msd_directory(datastore: &Store, mount: &Option<String>) -> Result<(), E
 	Ok(())
 }
 
+fn find_mount_name() -> Result<Option<String>, Error> {
+	for entry in Path::new("/dev/disk/by-label")
+		.read_dir()?
+		.filter_map(|dir| dir.ok())
+	{
+		trace!(path = ?entry.path().canonicalize()?, "testing label for mount point of MicroSD Card");
+		if entry.path().canonicalize()? == PathBuf::from("/dev/mmcblk0p1") {
+			let label = entry.file_name();
+			info!(label = ?label, "Found MicroSD Card label");
+			return Ok(Some(label.to_string_lossy().to_string()));
+		}
+	}
+
+	Ok(None)
+}
+
 pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Result<(), Error> {
 	let mut interval = interval(Duration::from_millis(CONFIG.scan_interval));
 
@@ -100,6 +116,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 
 	info!("Starting Watcher...");
 
+	// Small cache for optimization purposes
 	let mut mount: Option<String> = None;
 
 	loop {
@@ -132,7 +149,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 
 		let cid = match get_card_cid() {
 			Some(v) => {
-				trace!(card_id = v, "{}", v);
+				trace!(card_id = v, "Loaded card CID: {}", v);
 				v
 			}
 			None => {
@@ -171,20 +188,11 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 				mount = None;
 			}
 
+			// We cannot find the library & the mount in the database (if it even exists) is wrong.
+			// Time to use udev to determine what mount name the microsd card uses
 			if mount.is_none() {
 				trace!("No mount found. Trying to determine mount point");
-
-				for entry in Path::new("/dev/disk/by-label")
-					.read_dir()?
-					.filter_map(|dir| dir.ok())
-				{
-					trace!(path = ?entry.path().canonicalize()?, "testing label for mount point of MicroSD Card");
-					if entry.path().canonicalize()? == PathBuf::from("/dev/mmcblk0p1") {
-						let label = entry.file_name();
-						info!(label = ?label, "Found MicroSD Card label");
-						mount = Some(label.to_string_lossy().to_string());
-					}
-				}
+				mount = find_mount_name()?;
 			}
 
 			debug!(mount = mount, "Updating card's mount point");
@@ -192,8 +200,13 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 				card.mount = mount.clone();
 				Ok(())
 			});
-
-			continue;
+			
+			// All has failed. We have no clue how to get to the libary of this MicroSD card.
+			// Lets hope it somehow magically fixes itself the next time around
+			if !has_libraryfolder(&mount) {
+				error!("Unable to determine the mount point for the MicroSD card. Nothing worked :(");
+				continue
+			}
 		}
 
 		// Do we have changes in the steam directory. This should only occur when something has been added/deleted
@@ -208,7 +221,7 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 		info!(hash = hash, "Watcher Detected update");
 
 		// Something went wrong during parsing. Not great
-		if let Err(err) = read_msd_directory(datastore.borrow(), &mount) {
+		if let Err(err) = read_microsd_steam_dir(datastore.borrow(), &mount) {
 			error!(%err, "Failed to read MicroSD card library data, Reason: \"{}\"", err);
 			continue;
 		}

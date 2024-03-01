@@ -200,12 +200,12 @@ pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Re
 				card.mount = mount.clone();
 				Ok(())
 			});
-			
+
 			// All has failed. We have no clue how to get to the libary of this MicroSD card.
 			// Lets hope it somehow magically fixes itself the next time around
 			if !has_libraryfolder(&mount) {
-				error!("Unable to determine the mount point for the MicroSD card. Nothing worked :(");
-				continue
+				error!("Unable to determine the mount point for the MicroSD card");
+				continue;
 			}
 		}
 

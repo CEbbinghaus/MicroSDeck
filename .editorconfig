@@ -1,8 +1,11 @@
 root = true
 charset = utf-8
-insert_final_newline = true
 end_of_line = lf
+insert_final_newline = true
 
 [*.{json,js,ts,tsx,rs,codegen}]
 indent_size = 4
 indent_style = tab
+
+[version]
+insert_final_newline = false

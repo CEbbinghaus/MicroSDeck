@@ -1,8 +1,6 @@
 use actix_web::web::Bytes;
 
-pub(crate) struct Event<T : EventTrait> {
-	val: T
-}
+pub(crate) struct Event<T: EventTrait>(T);
 
 pub(crate) trait EventTrait {
 	fn get_id(&self) -> Option<&'static str> {
@@ -18,42 +16,42 @@ pub(crate) trait EventTrait {
 
 impl<T: EventTrait> Event<T> {
 	pub fn new(val: T) -> Self {
-		Event { val }
+		Event(val)
 	}
 }
 
-impl<T : EventTrait> ToString for Event<T> {
-    fn to_string(&self) -> String {
-        let mut output = "".to_string();
+impl<T: EventTrait> ToString for Event<T> {
+	fn to_string(&self) -> String {
+		let mut output = "".to_string();
 
-		if let Some(value) = self.val.get_id() {
+		if let Some(value) = self.0.get_id() {
 			output += &format!("id: {}\n", value);
 		}
-		if let Some(value) = self.val.get_event() {
-			output +=  &format!("event: {}\n", value);
+		if let Some(value) = self.0.get_event() {
+			output += &format!("event: {}\n", value);
 		}
-		if let Some(value) = self.val.get_data() {
-			output +=  &format!("data: {}\n", value);
+		if let Some(value) = self.0.get_data() {
+			output += &format!("data: {}\n", value);
 		}
 
-		if output != "" {
+		if !output.is_empty() {
 			output += "\n";
 		}
 
-		return output;
+		output
 	}
 }
 
-impl<T: EventTrait> Into<Bytes> for Event<T> {
-    fn into(self) -> Bytes {
-        Bytes::from(self.to_string())
-    }
+impl<T: EventTrait> From<Event<T>> for Bytes {
+	fn from(val: Event<T>) -> Self {
+		Bytes::from(val.to_string())
+	}
 }
 
 impl<T: EventTrait> From<T> for Event<T> {
-    fn from(value: T) -> Self {
-        Event { val: value }
-    }
+	fn from(value: T) -> Self {
+		Event(value)
+	}
 }
 
 pub(crate) struct EventBuilder {
@@ -62,9 +60,14 @@ pub(crate) struct EventBuilder {
 	data: Option<&'static str>,
 }
 
+#[allow(dead_code)]
 impl EventBuilder {
 	pub fn new() -> Self {
-		EventBuilder { id: None, event: None, data: None }
+		EventBuilder {
+			id: None,
+			event: None,
+			data: None,
+		}
 	}
 	pub fn with_id(mut self, id: &'static str) -> Self {
 		self.id = Some(id);

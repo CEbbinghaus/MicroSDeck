@@ -1,18 +1,16 @@
 #![allow(dead_code)]
 
-
+use actix_web::ResponseError;
 use std::fmt;
 
-use actix_web::ResponseError;
-
 #[derive(Debug)]
-struct StdErr;
+struct StdErr(String);
 
-impl std::error::Error for StdErr{}
+impl std::error::Error for StdErr {}
 
 impl fmt::Display for StdErr {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "StdErr")
+		write!(f, "{}", self)
 	}
 }
 
@@ -35,14 +33,14 @@ impl Error {
 
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "Error: {}", &self.0)
+		write!(f, "{}", &self.0)
 	}
 }
 
-impl Into<Box<dyn std::error::Error>> for Error {
-    fn into(self) -> Box<dyn std::error::Error> {
-        Box::new(StdErr)
-    }
+impl From<Error> for Box<dyn std::error::Error> {
+	fn from(err: Error) -> Self {
+		Box::new(StdErr(err.to_string()))
+	}
 }
 
 impl<T: std::error::Error + Send + Sync + 'static> From<T> for Error {

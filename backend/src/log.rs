@@ -1,82 +1,33 @@
-use chrono;
-use log::{Level, Metadata, Record};
-use std::env;
-use std::fs::{File, OpenOptions};
-use std::io::prelude::*;
-use std::str::FromStr;
+use crate::cfg::CONFIG;
+use crate::{get_file_path_and_create_directory, LOG_DIR};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::Layer;
 
-use crate::env::{get_file_path_and_create_directory, get_log_dir};
-use crate::err::Error;
+pub fn create_subscriber() {
+	let log_file_path = get_file_path_and_create_directory(&CONFIG.log_file, &LOG_DIR)
+		.expect("Log file to be created");
 
-pub struct Logger {
-	file: File,
-	max_level: Level,
-}
+	let file = std::fs::OpenOptions::new()
+		.create(true)
+		.append(true)
+		.open(log_file_path)
+		.expect("Log file to be created");
 
-impl Logger {
-	pub fn to_file(&self) -> &File {
-		&self.file
+	let file_writer = tracing_subscriber::fmt::layer()
+		.json()
+		.with_writer(file)
+		.with_filter(tracing_subscriber::filter::LevelFilter::from_level(
+			CONFIG.log_level,
+		));
+
+	let subscriber = tracing_subscriber::registry().with(file_writer);
+
+	if cfg!(debug_assertions) {
+		subscriber
+			.with(tracing_subscriber::fmt::layer().pretty())
+			.init();
+	} else {
+		subscriber.init();
 	}
-
-	pub fn new() -> Option<Logger> {
-		let file_path = get_file_path_and_create_directory("backend.log", &get_log_dir)
-			.expect("to retrieve the log file path");
-
-		let file = OpenOptions::new()
-			.write(true)
-			.append(true)
-			.create(true)
-			.open(&file_path)
-			.ok()?;
-
-		let max_level = env::var("LOG_LEVEL")
-			.map_err(Error::from)
-			.and_then(|v| Level::from_str(&v).map_err(Error::from))
-			.unwrap_or({
-				if cfg!(debug_assertions) {
-					Level::Debug
-				} else {
-					Level::Info
-				}
-			});
-
-		println!("Logging enabled to {file_path} with level {max_level}");
-
-		Some(Logger { file, max_level })
-	}
-}
-
-impl log::Log for Logger {
-	fn enabled(&self, metadata: &Metadata) -> bool {
-		metadata.level() <= self.max_level //  && metadata.target() != "tracing::span"
-	}
-
-	fn log(&self, record: &Record) {
-		if self.enabled(record.metadata()) {
-			let current_time = chrono::offset::Local::now();
-
-			println!(
-				"{} {}: {}",
-				current_time.format("%H:%M:%S"),
-				record.level(),
-				record.args()
-			);
-
-			let message = format!(
-				"{} {} @ {}:{} {} \"{}\"",
-				current_time.naive_utc(),
-				record.level(),
-				record.file().unwrap_or("UNKNOWN"),
-				record.line().unwrap_or(0),
-				record.metadata().target(),
-				record.args()
-			);
-
-			if let Err(e) = writeln!(self.to_file(), "{message}") {
-				eprintln!("Couldn't write to file: {}", e);
-			}
-		}
-	}
-
-	fn flush(&self) {}
 }

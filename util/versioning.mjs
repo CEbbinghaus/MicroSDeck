@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 
 export const Version = ReadPackageVersion();
 function ReadPackageVersion() {
-	return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../backend/version"), { encoding: "utf8" });
+	return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../backend/version"), { encoding: "utf8" }).trim();
 }
 
 function WriteVersionToPackage(file, version) {

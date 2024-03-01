@@ -9,12 +9,7 @@ pub struct LibraryFolder {
 	pub label: String,
 }
 
-#[serde_alias(
-	CamelCase,
-	PascalCase,
-	LowerCase,
-	SnakeCase
-)]
+#[serde_alias(CamelCase, PascalCase, LowerCase, SnakeCase)]
 #[derive(Deserialize)]
 pub struct AppState {
 	pub appid: String,

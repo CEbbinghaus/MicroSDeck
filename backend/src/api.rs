@@ -4,7 +4,7 @@ use crate::{
 	env::PACKAGE_VERSION,
 	err::Error,
 	event::Event,
-	sdcard::{get_card_cid, is_card_inserted},
+	sdcard::{get_card_cid, is_card_inserted}, ws::ws,
 };
 use actix_web::{
 	delete, get, http::StatusCode, post, web, Either, HttpResponse, HttpResponseBuilder, Responder,
@@ -19,6 +19,7 @@ use tracing::{instrument, trace};
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig) {
 	cfg //
+		.service(ws)
 		.service(health)
 		.service(version)
 		.service(listen)

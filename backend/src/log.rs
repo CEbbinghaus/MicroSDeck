@@ -25,7 +25,9 @@ pub fn create_subscriber() {
 
 	if cfg!(debug_assertions) {
 		subscriber
-			.with(tracing_subscriber::fmt::layer().pretty())
+			.with(tracing_subscriber::fmt::layer().pretty().with_filter(
+				tracing_subscriber::filter::LevelFilter::from_level(CONFIG.log_level),
+			))
 			.init();
 	} else {
 		subscriber.init();

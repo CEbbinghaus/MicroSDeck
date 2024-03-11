@@ -1,8 +1,20 @@
 import { CurrentCard } from "./components/CurrentCard";
+import { CheckList } from "./components/QuickStart/CheckList";
 
-# Hello, World!
+> ## Under Construction ⚠️🚧👷
+> The docs are still under construction, There will be some inaccurate information for the time being
 
-This is the beginning of the docs, Unfortunately they are still under construction ⚠️🚧👷
+
+# Quick Start
+
+<CheckList items={[
+	{body: mdx`Has Inserted a Card **bold** *italic* Stuff`, check: (cardsAndGames) => cardsAndGames.length > 0},
+	{body: mdx`Has Installed a Game`, check: (cardsAndGames) => cardsAndGames.filter(([_, games]) => games.length > 0).length > 0},
+	{body: mdx`Has Named a Card`, check: (cardsAndGames) => cardsAndGames.filter(([card]) => card.name != "").length > 0},
+	{body: mdx`Has Added a Non Steam Game`, check: (cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam) > 0).length > 0}
+]}/>
+
+
 
 Here is a little demo of why my 20 hour investment into this doc engine was totally worth it:
 

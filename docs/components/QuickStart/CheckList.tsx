@@ -7,21 +7,17 @@ type CheckListItem = {
 	body: any
 }
 
-export function CheckList({ items }: { items: CheckListItem[] }): ReactElement {
+export function CheckListItem({ children, check }: React.PropsWithChildren<{ check: (cardsAndGames: CardsAndGames) => boolean }>): ReactElement {
 	const { cardsAndGames } = useMicroSDeckContext();
-
-	const item_completions = items.map(v => { return { body: v.body, is_completed: v.check(cardsAndGames) } });
 
 	return (
 		<>
-			{
-				item_completions.map(v =>
-					<>
-						{v.is_completed ? <FaQuestionCircle/> : <FaCheckCircle/>}
-						{v.body}
-					</>
-				)
-			}
+			{check(cardsAndGames) ? <FaQuestionCircle /> : <FaCheckCircle />}
+			{children}
 		</>
-	)
+	);
+}
+
+export function CheckList({ children }: React.PropsWithChildren<{}>): ReactElement {
+	return (<>{children}</>);
 }

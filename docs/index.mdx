@@ -1,5 +1,5 @@
 import { CurrentCard } from "./components/CurrentCard";
-import { CheckList } from "./components/QuickStart/CheckList";
+import { CheckList, CheckListItem } from "./components/QuickStart/CheckList";
 
 > ## Under Construction ⚠️🚧👷
 > The docs are still under construction, There will be some inaccurate information for the time being
@@ -7,12 +7,20 @@ import { CheckList } from "./components/QuickStart/CheckList";
 
 # Quick Start
 
-<CheckList items={[
-	{body: mdx`Has Inserted a Card **bold** *italic* Stuff`, check: (cardsAndGames) => cardsAndGames.length > 0},
-	{body: mdx`Has Installed a Game`, check: (cardsAndGames) => cardsAndGames.filter(([_, games]) => games.length > 0).length > 0},
-	{body: mdx`Has Named a Card`, check: (cardsAndGames) => cardsAndGames.filter(([card]) => card.name != "").length > 0},
-	{body: mdx`Has Added a Non Steam Game`, check: (cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam) > 0).length > 0}
-]}/>
+<CheckList>
+	<CheckListItem check={(cardsAndGames) => cardsAndGames.length > 0}>
+		Has Inserted a Card **bold** *italic* Stuff
+	</CheckListItem>
+	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.length > 0).length > 0}>
+		Has Installed a Game
+	</CheckListItem>
+	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([card]) => card.name != "").length > 0}>
+		Has Named a Card
+	</CheckListItem>
+	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam) > 0).length > 0}>
+		Has Added a Non Steam Game
+	</CheckListItem>
+</CheckList>
 
 
 

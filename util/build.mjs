@@ -6,6 +6,30 @@ import { Version, UpdateVersion, ResetVersion } from './versioning.mjs';
 import { Logger } from './log.mjs';
 import { exit } from 'process';
 
+
+if (process.argv.includes('-h') || process.argv.includes('--help')) {
+	console.log(
+`  __  __ _            ___ ___         _     ___      _ _    _ 
+ |  \\/  (_)__ _ _ ___/ __|   \\ ___ __| |__ | _ )_  _(_) |__| |
+ | |\\/| | / _| '_/ _ \\__ \\ |) / -_) _| / / | _ \\ || | | / _\` |
+ |_|  |_|_\\__|_| \\___/___/___/\\___\\__|_\\_\\ |___/\\_,_|_|_\\__,_|
+
+ by @CEbbinghaus
+ `);
+
+	console.log(`
+Basic Usage: ./build [flags]
+
+     -h, --help: Prints this help dialogue
+ --skip-backend: Skips building the backend
+--skip-frontend: Skips building the frontend
+ --skip-collect: Skips copying all the assets into the built output
+    --skip-copy: Skips copying the build output to plugin directory (must be run on steamdeck itself)
+       --upload: Uploads the build output to the steamdeck. (requires a deploy.json in the root repo directory)
+	`)
+	process.exit(0);
+}
+
 const basePath = resolve(process.cwd());
 
 /**

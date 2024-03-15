@@ -1,24 +1,53 @@
+import { Navigation, SideMenu } from "decky-frontend-lib";
 import { CurrentCard } from "./components/CurrentCard";
 import { CheckList, CheckListItem } from "./components/QuickStart/CheckList";
+import { FaPlug } from "react-icons/fa"
+import { FaGear } from "react-icons/fa6";
+import { IoGridSharp } from "react-icons/io5";
 
-> ## Under Construction ⚠️🚧👷
-> The docs are still under construction, There will be some inaccurate information for the time being
+> ## Under Construction 🚧👷
+> The docs are still under construction. There will be incomplete, missing or inaccurate information for the time being
 
 
 # Quick Start
 
 <CheckList>
-	<CheckListItem check={(cardsAndGames) => cardsAndGames.length > 0}>
-		Has Inserted a Card **bold** *italic* Stuff
+	<CheckListItem title="Registered a Card" check={(cardsAndGames) => cardsAndGames.length > 0}>
+		To Register a MicroSD card with MicroSDeck it simply has to be formatted by Steam and inserted.
+
+		To Format the MicroSD card navigate into the <FaGear/> <button onClick={() => Navigation.OpenMainMenu()}>Settings</button> menu and click Format under `System > SystemSettings > Format SD Card`.
+
+		> ℹ️ **Note:**
+		> It can take some time to format the MicroSD Card. Be patient.
+		> If it still doesn't work, try unplugging and replugging the MicroSD card **After** Steam has finished formatting it.
+
 	</CheckListItem>
-	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.length > 0).length > 0}>
-		Has Installed a Game
+	<CheckListItem title="Installed a Game" check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.length > 0).length > 0}>
+		Now that you have your MicroSD Card registered with MicroSDeck its time to install a game to it. 
+		
+		For this simply Head on over to your <IoGridSharp/> <button onClick={() => Navigation.NavigateToLibraryTab()}>Library</button> and install any game. Make sure to install it to the MicroSD Card and not the Internal Drive.
+
+		MicroSDeck should automatically pick up on the game after it has finished installing. This can take a few seconds...
 	</CheckListItem>
-	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([card]) => card.name != "").length > 0}>
-		Has Named a Card
+	<CheckListItem title="Named a Card" check={(cardsAndGames) => cardsAndGames.filter(([card]) => card.name != "").length > 0}>
+		Wonderful, Now that you have both Registered a MicroSD Card and Installed a game on it, it is now time to name the card. This aids in quickly finding the Card that you have installed the specified game to.
+
+		For this just open the <button onClick={() => Navigation.OpenSideMenu(SideMenu.QuickAccess)}>Quick Access</button> menu (the `...` button on the right hand side of the steamdeck) and navigate to the MicroSDeck Plugin by tabbing down to the <FaPlug/> Decky Plugins section. Under the plugin list you should find MicroSDeck.
+
+		Here are listed the Cards that are registered with MicroSDeck. You can rename any of them by clicking the `...` button and hitting **Edit** in the popup. 
+
+		Giving your MicroSD card a meaningful name is half the battle. Try and come up with a system to easily label your cards. Some examples are:
+
+		* With many different MicroSD card vendors it might be possible to just use the vendor name (e.g Sandisk, Samsung, ADATA)
+		* Using small stickers (they have to be very thin) or Using pens, Little icons can be drawn onto the SD Cards (Emoji names are supported)
+		* Some MicroSD card cases are numbered or lettered
+
+		But you can get as creative as you want in naming the cards as you want. As long as you know which physical card belongs to which digital name.
 	</CheckListItem>
-	<CheckListItem check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam) > 0).length > 0}>
-		Has Added a Non Steam Game
+	<CheckListItem title="Added Non Steam Game"check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam).length > 0).length > 0}>
+		The last step is to add a Non-Steam Game. This is also achieved via the same popup menu as renaming a card.
+
+		Under the TextBox to set the card name there is a dropdown to allow toggling which Non-Steam Games should be considered "installed" on this card. 
 	</CheckListItem>
 </CheckList>
 
@@ -27,3 +56,5 @@ import { CheckList, CheckListItem } from "./components/QuickStart/CheckList";
 Here is a little demo of why my 20 hour investment into this doc engine was totally worth it:
 
 > <CurrentCard/>
+
+

@@ -1,0 +1,35 @@
+
+const { execSync } = require('child_process');
+const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim();
+const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
+
+const tags = Object.fromEntries(tagLog.split('\n').map(line => {
+	const [hash, tag] = line.split(' ');
+	return [hash, tag];
+}));
+
+const commits = commitLog.split('\n').map(line => {
+	const [hash, author, email, ...message] = line.split(' ');
+	return { hash, author, email, message: message.join(' ') };
+});
+
+const taggedCommits = [];
+
+for (let i = 0; i < commits.length;) {
+	let taggedCommit = { tag: tags[commits[i].hash], commits: []};
+
+	do {
+		taggedCommit.commits.push(commits[i]);
+	} 
+	while (++i < commits.length && !tags[commits[i].hash]);
+
+	taggedCommits.push(taggedCommit);
+}
+
+
+module.exports = function () {
+	return `
+//@ts-nocheck
+export default ${JSON.stringify(taggedCommits)};
+	`;
+};

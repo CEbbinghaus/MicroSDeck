@@ -3,16 +3,18 @@ import React from "react";
 
 function TagWithCommits({ tag, commits }: { tag: string, commits: Commit[] }): ReactElement {
 	return (
-		<>
-			{tag || "Prerelease"}
+		<div style={{margin: "6px auto"}}>
+			<h3 style={{fontWeight: "bolder"}}>{tag || "Prerelease"}</h3>
+			<ul>
 			{
 				commits.map(v => (
-					<>
-						* {v.message}<br />
-					</>
+					<li>
+						{v.message}
+					</li>
 				))
 			}
-		</>
+			</ul>
+		</div>
 	)
 }
 

@@ -20,3 +20,21 @@ declare module "*/docs.codegen" {
 	const content: DocFile[];
 	export = content;
 }
+
+type Commit = {
+	hash: string,
+	tag: string,
+	author: string,
+	email: string,
+	message: string,
+}
+
+type TaggedCommits = {
+	tag: string,
+	commits: Commit[]
+}
+
+declare module "*/changelog.codegen" {
+	const content: TaggedCommits[];
+	export = content;
+}

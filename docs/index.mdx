@@ -11,6 +11,8 @@ import { IoGridSharp } from "react-icons/io5";
 
 # Quick Start
 
+Here is a little checklist you can use to get you started with MicroSDeck
+
 <CheckList>
 	<CheckListItem title="Registered a Card" check={(cardsAndGames) => cardsAndGames.length > 0}>
 		To Register a MicroSD card with MicroSDeck it simply has to be formatted by Steam and inserted.
@@ -39,10 +41,10 @@ import { IoGridSharp } from "react-icons/io5";
 		Giving your MicroSD card a meaningful name is half the battle. Try and come up with a system to easily label your cards. Some examples are:
 
 		* With many different MicroSD card vendors it might be possible to just use the vendor name (e.g Sandisk, Samsung, ADATA)
-		* Using small stickers (they have to be very thin) or Using pens, Little icons can be drawn onto the SD Cards (Emoji names are supported)
-		* Some MicroSD card cases are numbered or lettered
+		* Using small stickers (they have to be very thin) or Using pens, Little icons can be applied to the SD Cards (Emoji names are supported in MicroSDeck)
+		* Some MicroSD card cases are numbered or lettered allowing you identify the cards theycontain
 
-		But you can get as creative as you want in naming the cards as you want. As long as you know which physical card belongs to which digital name.
+		But you can get as creative as you want. As long as you know which physical card belongs to which digital name.
 	</CheckListItem>
 	<CheckListItem title="Added Non Steam Game"check={(cardsAndGames) => cardsAndGames.filter(([_, games]) => games.filter(v => !v.is_steam).length > 0).length > 0}>
 		The last step is to add a Non-Steam Game. This is also achieved via the same popup menu as renaming a card.
@@ -51,10 +53,5 @@ import { IoGridSharp } from "react-icons/io5";
 	</CheckListItem>
 </CheckList>
 
-
-
-Here is a little demo of why my 20 hour investment into this doc engine was totally worth it:
-
-> <CurrentCard/>
 
 

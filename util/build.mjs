@@ -52,7 +52,7 @@ if (!process.argv.includes('--skip-frontend')) {
 	}
 
 	Logger.Log('Building frontend');
-	runCommand('pnpm run build');
+	runCommand('pnpm run bundle');
 }
 
 if (!process.argv.includes('--skip-collect')) {

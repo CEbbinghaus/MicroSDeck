@@ -3,6 +3,7 @@ import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { API_URL, UNAMED_CARD_NAME } from '../const';
 import { useCardsForGame } from "../../lib/src"
+import { findModule } from "decky-frontend-lib"
 
 const logger = Logger.Child({ module: "patching" });
 
@@ -16,22 +17,42 @@ export default function LibraryModal({ appId: gameId }: { appId: string }): Reac
 	const [top, setTop] = useState<number>(210);
 
 	useEffect(() => {
+		if(!cards) {
+			return;
+		}
+		
 		logger.Debug("Processing Bounds");
+
 		if (!ref || !ref.current) {
 			logger.Debug("Couldn't get reference to HTML element");
 			return;
 		}
+		
 		const element = (ref.current as unknown as HTMLElement);
 		const doc = element.getRootNode() as Document;
 
-		// const playButton = document.querySelector("[class^='appactionbutton_PlayButton']");
+		const module = findModule(
+			(mod) => typeof mod === 'object' && mod?.Header && mod?.AppDetailsOverviewPanel
+		);
 
-		const imageWindow = doc.querySelector("[class^='appdetails_Header']");
+		const className = module.Header;
+		logger.Debug("Found Header Class under {className}", {className});
+
+		const imageWindow = doc.querySelector(`[class^='${className}']`);
+
+		if (!imageWindow)
+		{
+			logger.Warn("Unable to retrieve the Header under class \"{className}\"", {className});
+			return;
+		}
+
 		const imageWindowBounds = imageWindow?.getBoundingClientRect();
 		const elementBounds = element.getBoundingClientRect()
 
-		if (!imageWindowBounds || !elementBounds)
+		if (!imageWindowBounds || !elementBounds) {
+			logger.Debug("Couldn't calculate bounds of image or element\nimage: {imageWindowBounds}\nelement: {elementBounds}", {imageWindowBounds, elementBounds});
 			return;
+		}
 
 
 		const topOffset = imageWindowBounds.height - elementBounds.height - bottomMargin;

@@ -13,7 +13,7 @@
 	"author": "Christopher-Robin <git@cebbinghaus.com>",
 	"license": "GPL-2.0",
 	"scripts": {
-		"prebuild": "exec node --no-warnings=ExperimentalWarning util/versioning.mjs update",
+		"prebuild": "exec node --no-warnings=ExperimentalWarning util/versioning.mjs update package.json lib/package.json",
 		"build": "shx rm -rf dist && rollup -c",
 		"bundle": "shx rm -rf dist && rollup -c",
 		"watch": "rollup -c -w",

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, truncateSync } from "fs";
+import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, ftruncateSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -17,7 +17,7 @@ function WriteVersionToPackage(file, version) {
 		var value = readFileSync(fd, { encoding: "utf-8", flag: "r" });
 		const pkg = JSON.parse(value);
 		pkg.version = version;
-		truncateSync(fd, 0);
+		ftruncateSync(fd);
 		writeFileSync(fd, JSON.stringify(pkg, null, "	"));
 	} finally {
 		closeSync(fd);

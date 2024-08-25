@@ -114,17 +114,15 @@ if (!process.argv.includes('--skip-collect') && only.includes('collect')) {
 
 const is_local = existsSync('/home/deck/homebrew');
 
-if (!is_local) {
-	Logger.Info('Not running on steamdeck');
-}
-
 if (is_local && (!process.argv.includes('--skip-copy') && only.includes('copy'))) {
 	Logger.Log('Copying build folder to local plugin directory');
 	execSync(`sudo rm -rf /home/deck/homebrew/plugins/${PluginName}`);
 	execSync(`sudo cp -r build/ /home/deck/homebrew/plugins/${PluginName}`);
 	execSync(`sudo chmod 555 /home/deck/homebrew/plugins/${PluginName}`);
 } else {
-	if (!process.argv.includes('--skip-copy') || only.includes('copy'))
+	if (!is_local) {
+		Logger.Info('Not running on steamdeck');
+	} else if (!process.argv.includes('--skip-copy') && only.includes('copy'))
 		Logger.Log('Skipping copying build folder to local plugin directory');
 }
 

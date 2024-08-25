@@ -1,4 +1,4 @@
-import { Focusable, ModalPosition, ScrollPanelGroup, SimpleModal, gamepadDialogClasses, quickAccessControlsClasses } from "decky-frontend-lib";
+import { Focusable, ModalPosition, ScrollPanelGroup, SimpleModal, gamepadDialogClasses, quickAccessControlsClasses } from "@decky/ui";
 import { Fragment, VFC } from "react";
 import { Game, MicroSDCard } from '../../lib/src';
 

@@ -8,7 +8,7 @@ import {
 	ToggleField,
 	quickAccessControlsClasses,
 	showModal
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import React, { CSSProperties, Fragment, useMemo } from "react";
 import { useState, VFC, useEffect, } from "react";
 import { BiSolidDownArrow } from "react-icons/bi";

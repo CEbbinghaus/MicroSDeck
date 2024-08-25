@@ -6,10 +6,10 @@ import {
 	PanelSection,
 	ReorderableEntry,
 	ReorderableList,
-	ServerAPI,
 	showContextMenu,
 	staticClasses,
-} from "decky-frontend-lib";
+} from "@decky/ui";
+import { routerHook } from '@decky/api';
 import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNAMED_CARD_NAME } from "./const";
@@ -31,25 +31,6 @@ declare global {
 	let collectionStore: CollectionStore;
 }
 
-// function RenderCard({ data }: { data: CardAndGames }) {
-// 	Logger.Log("Rendering Card");
-// 	const [card, games] = data;
-
-// 	const [name, setName] = useState<string>(card.name);
-
-// 	function onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-// 		setName(e?.target.value);
-// 	}
-
-// 	return (
-// 		<div>
-// 			<TextField tooltip="The name the MicroSD card should be displayed as" value={name} onChange={onNameChange} />
-// 			<ScrollPanel>
-// 				{games.map(v => (<div>{v.name}</div>))}
-// 			</ScrollPanel>
-// 		</div>
-// 	)
-// }
 interface EditCardButtonProps {
 	microSDeck: MicroSDeck,
 	currentCard: MicroSDCard | undefined,
@@ -140,20 +121,18 @@ declare global {
 	var MicroSDeck: MicroSDeck | undefined;
 }
 
-export default definePlugin((serverApi: ServerAPI) => {
+export default definePlugin(() => {
 
 	if (window.MicroSDeck) {
 		window.MicroSDeck.destruct();
 	}
 	window.MicroSDeck = new MicroSDeck({ url: API_URL, logger: Logger });
 
-	DeckyAPI.SetApi(serverApi);
-
 	Logger.Log("Started MicroSDeck");
 
-	const patch = PatchAppScreen(serverApi);
+	const patch = PatchAppScreen();
 
-	serverApi.routerHook.addRoute(DOCUMENTATION_PATH, () => (
+	routerHook.addRoute(DOCUMENTATION_PATH, () => (
 		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>
 			<Docs />
 		</MicroSDeckContextProvider>));
@@ -169,8 +148,8 @@ export default definePlugin((serverApi: ServerAPI) => {
 			window.MicroSDeck?.destruct();
 			window.MicroSDeck = undefined;
 
-			serverApi.routerHook.removeRoute(DOCUMENTATION_PATH);
-			patch && serverApi.routerHook.removePatch('/library/app/:appid', patch);
+			routerHook.removeRoute(DOCUMENTATION_PATH);
+			patch && routerHook.removePatch('/library/app/:appid', patch);
 		},
 	};
 });

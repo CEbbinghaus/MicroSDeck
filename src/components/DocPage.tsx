@@ -1,4 +1,4 @@
-import { Focusable, ModalPosition, ScrollPanelGroup, gamepadDialogClasses } from "decky-frontend-lib";
+import { Focusable, ModalPosition, ScrollPanelGroup, gamepadDialogClasses } from "@decky/ui";
 import React, { ReactElement } from "react";
 
 export function DocPage({ content }: { content: JSX.Element }): ReactElement {

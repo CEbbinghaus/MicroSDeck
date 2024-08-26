@@ -1,90 +1,72 @@
 import {
 	afterPatch,
-	ServerAPI,
-	wrapReactType,
+	createReactTreePatcher,
 	findInReactTree,
 	appDetailsClasses
-} from 'decky-frontend-lib'
+} from '@decky/ui'
 import { ReactElement } from 'react'
+import { routerHook } from '@decky/api';
 import LibraryModal from '../components/LibraryModal';
 import { Logger } from '../Logging';
 
-function PatchAppScreen(serverAPI: ServerAPI) {
-
+function PatchLibraryApp() {
+	
 	const path = '/library/app/:appid';
 	Logger.Log("Patching {path}", { path });
 
-	return serverAPI.routerHook.addPatch(
+	return routerHook.addPatch(
 		path,
-		(props?: { path?: string; children?: ReactElement }) => {
-			if (!props?.children?.props?.renderFunc) {
-				return props
-			}
+		(tree: any) => {			
+			Logger.Log("starting patch...", { tree });
+			const routeProps = findInReactTree(tree, (x: any) => x?.renderFunc);
+			
+			if (routeProps) {
 
-			Logger.Log("patching...", { props });
+				Logger.Log("Found Props", { tree });
+				
+				const patchHandler = createReactTreePatcher([
+					(tree: any) => findInReactTree(tree, (x: any) => x?.props?.children?.props?.overview)?.props?.children
+				], (_: Array<Record<string, unknown>>, element?: ReactElement) => {
+					const appId  = findInReactTree(element, (x: any) => x?.appid)?.appid;
 
-			afterPatch(
-				props.children.props,
-				'renderFunc',
-				(_: Record<string, unknown>[], element?: ReactElement) => {
-					if (!element?.props?.children?.type?.type) {
+					
+					Logger.Log("Found AppId", { appId });
+
+					if (!appId) {
+						return element;
+					}
+
+
+					const container = findInReactTree(
+						element,
+						(x: ReactElement) =>
+							Array.isArray(x?.props?.children) &&
+							x?.props?.className?.includes(
+								appDetailsClasses.InnerContainer
+							)
+					)
+
+					if (typeof container !== 'object') {
 						return element
 					}
 
-					return PatchRootElement(element);
-				}
-			)
-			return props
-		}
-	)
-}
+					Logger.Log("Found Appropriate location to patch.", { element, container, appId });
 
-function PatchRootElement(root: any): any {
-
-	wrapReactType(root.props.children)
-
-	const appDetails = root?.props?.children?.props?.overview || {};
-
-	afterPatch(
-		root.props.children.type,
-		'type',
-		(_2: Record<string, unknown>[], element?: ReactElement) => {
-			// window.rootEl = element;
-
-			// const container = findInReactTree(element, v => v.type?.prototype?.onGameInfoToggle); 
-
-			// if (typeof container !== 'object') {
-			//     return element
-			// }
-
-			// PatchPanelElement(container);
-
-			const container = findInReactTree(
-				element,
-				(x: ReactElement) =>
-					Array.isArray(x?.props?.children) &&
-					x?.props?.className?.includes(
-						appDetailsClasses.InnerContainer
+					container.props.children.splice(
+						1,
+						0,
+						<LibraryModal appId={appId}/>
 					)
-			)
 
-			if (typeof container !== 'object') {
-				return element
+					return element
+				});
+
+				afterPatch(routeProps, "renderFunc", patchHandler);
 			}
 
-			Logger.Log("Found Appropriate location to patch.", { root, element, container, appDetails });
-
-			container.props.children.splice(
-				1,
-				0,
-				<LibraryModal appId={appDetails?.appid?.toString()} />
-			)
-
-			return element;
+			return tree;
 		}
 	)
-
-	return root;
 }
 
-export default PatchAppScreen;
+export default PatchLibraryApp

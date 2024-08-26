@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import { FaBook } from "react-icons/fa";
-import { SidebarNavigation } from "decky-frontend-lib";
+import { SidebarNavigation } from "@decky/ui";
 import { DocPage } from "../components/DocPage";
 import { DOCUMENTATION_PATH } from "../const";
 

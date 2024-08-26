@@ -1,4 +1,4 @@
-import { MenuItem, showModal, Menu, ConfirmModal } from "decky-frontend-lib"
+import { MenuItem, showModal, Menu, ConfirmModal } from "@decky/ui"
 import { CardAndGames, MicroSDCard, MicroSDeck } from "../../lib/src"
 import { EditCardModal } from "../modals/EditCardModal";
 import { API_URL, UNAMED_CARD_NAME } from "../const";

@@ -3,7 +3,7 @@ import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { API_URL, UNAMED_CARD_NAME } from '../const';
 import { useCardsForGame } from "../../lib/src"
-import { findModule } from "decky-frontend-lib"
+import { findModule } from "@decky/ui"
 
 const logger = Logger.Child({ module: "patching" });
 

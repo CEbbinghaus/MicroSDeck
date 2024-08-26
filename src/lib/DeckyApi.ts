@@ -1,15 +1,9 @@
-import { ServerAPI } from "decky-frontend-lib";
+import { toaster, ToastNotification } from "@decky/api"
 
 export class DeckyAPI {
-	private static api: ServerAPI;
-
-	public static SetApi(api: ServerAPI) {
-		DeckyAPI.api = api;
-	}
-
-	public static Toast(title: string, message: string) {
+	public static Toast(title: string, message: string): ToastNotification | void {
 		try {
-			return DeckyAPI.api.toaster.toast({
+			return toaster.toast({
 				title: title,
 				body: message,
 				duration: 8000,

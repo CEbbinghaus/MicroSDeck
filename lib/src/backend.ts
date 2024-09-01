@@ -41,7 +41,7 @@ export type Event = {
 }
 
 function decodeEvent(message: string, logger?: Logger): Event {
-	logger?.Debug(`Received event to process: [{event}]`, {event: message});
+	logger?.Debug(`Received event to process: [{message}]`, { message });
 
 	var result: Event = { event: "message" };
 

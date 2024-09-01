@@ -1,5 +1,5 @@
 import Logger from 'lipe';
-import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js";
+import { CardAndGames, CardsAndGames, Game, MicroSDCard } from "./types.js";
 
 export type FetchProps = {
 	url: string,
@@ -34,21 +34,21 @@ async function wrapFetch({ url, logger }: FetchProps, init?: RequestInit): Promi
 
 export type EventType = "start" | "close" | "abort" | "message" | "insert" | "remove" | "update" | "change";
 export type Event = {
+	[key: string]: string | undefined,
 	event: EventType,
 	data?: string,
 	id?: string
 }
 
-function decodeEvent(event: string, logger?: Logger): Event {
-	logger?.Debug(`Recieved event to process: [{event}]`, {event});
+function decodeEvent(message: string, logger?: Logger): Event {
+	logger?.Debug(`Received event to process: [{event}]`, {event: message});
 
-	var result = { event: "message" as EventType };
-	var lines = event.split('\n');
+	var result: Event = { event: "message" };
 
-	for (let line of lines) {
+	for (let line of message.split('\n')) {
 		let [key, value] = line.split(":").map(v => v.trim());
 		if (!key) {
-			throw new Error("No key was present for event " + event);
+			throw new Error("No key was present for event " + message);
 		}
 
 		result[key] = value;
@@ -69,7 +69,10 @@ function decodeStreamEvents(logger?: Logger) {
 					++pos
 					continue;
 				}
+				// extract the full message out of the buffer
 				const message = buffer.substring(0, pos).trim();
+
+				// Remove the message from the buffer and reset the index
 				buffer = buffer.substring(pos + 2);
 				pos = 0;
 
@@ -150,4 +153,44 @@ export async function fetchCardsAndGames({ url, logger }: FetchProps): Promise<C
 
 export async function fetchCardsForGame({ url, logger, gameId }: FetchProps & { gameId: string }): Promise<MicroSDCard[] | undefined> {
 	return await wrapFetch({ url: `${url}/list/cards/${gameId}`, logger });
+}
+
+export async function fetchCreateGame({ url, logger, game}: FetchProps & { game: Game }) {
+	await wrapFetch({ url: `${url}/game`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify({game}),
+	});
+}
+
+export async function fetchLinkCardAndGame({ url, logger, card_id, game_id}: FetchProps & { card_id: string, game_id: string }) {
+	await wrapFetch({ url: `${url}/link`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify({card_id, game_id}),
+	});
+}
+
+export async function fetchLinkCardAndManyGames({ url, logger, card_id, game_ids}: FetchProps & { card_id: string, game_ids: string[] }) {
+	await wrapFetch({ url: `${url}/linkmany`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify({card_id, game_ids}),
+	});
+}
+
+export async function fetchUnlinkCardAndGame({ url, logger, card_id, game_id}: FetchProps & { card_id: string, game_id: string }) {
+	await wrapFetch({ url: `${url}/unlink`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify({card_id, game_id}),
+	});
+}
+
+export async function fetchUnlinkCardAndManyGames({ url, logger, card_id, game_ids}: FetchProps & { card_id: string, game_ids: string[] }) {
+	await wrapFetch({ url: `${url}/unlinkmany`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify({card_id, game_ids}),
+	});
 }

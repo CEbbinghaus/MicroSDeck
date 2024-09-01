@@ -7,4 +7,4 @@ export const API_URL: string = `${PROTOCOL}://${HOST}${PORT ? (":" + PORT) : ""}
 export const CONFIGURATION_PATH = "/microsdeck/config";
 export const DOCUMENTATION_PATH = "/microsdeck/docs";
 
-export const UNAMED_CARD_NAME = "Unamed Card";
+export const UNNAMED_CARD_NAME = "Unnamed Card";

@@ -9,6 +9,7 @@
 		"jsxFragmentFactory": "React.Fragment",
 		"allowJs": true,
 		"declaration": true,
+		"emitDeclarationOnly": true,
 		"moduleResolution": "Node",
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,

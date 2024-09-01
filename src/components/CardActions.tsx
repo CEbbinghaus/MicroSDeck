@@ -1,7 +1,7 @@
 import { MenuItem, showModal, Menu, ConfirmModal } from "@decky/ui"
 import { CardAndGames, MicroSDCard, MicroSDeck } from "../../lib/src"
 import { EditCardModal } from "../modals/EditCardModal";
-import { API_URL, UNAMED_CARD_NAME } from "../const";
+import { UNNAMED_CARD_NAME } from "../const";
 import { GamesOnCardModal } from '../modals/GamesOnCardModal';
 import { Logger } from '../Logging';
 
@@ -29,42 +29,19 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeck }
 			</MenuItem>
 			<MenuItem onSelected={() => {
 				showModal(<EditCardModal
-					onConfirm={(card: MicroSDCard, nonSteamAdditions: string[], nonSteamDeletions: string[]) => {
+					onConfirm={async (card: MicroSDCard, nonSteamAdditions: string[], nonSteamDeletions: string[]) => {
 						microSDeck.updateCard(card);
 
-						//* probably want to move this into another method of microSDeckManager or combine it all into updateCard
-						nonSteamAdditions.forEach(async appId => {
+						await Promise.all(nonSteamAdditions.map(appId => {
+							const appName = collectionStore.deckDesktopApps?.apps.get(parseInt(appId))?.display_name ?? "Unknown Game";
 
-							//* might wanna tweak this to check responses are good before continuing
-							const res1 = await fetch(`${API_URL}/game/${appId}`, {
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								//* i think the collection is only null if user has no shortcuts (non-steam games)
-								//* so if we just got the shorcut ids then i think we're good to assert that the collection and the specific game exist here
-								body: JSON.stringify({ uid: appId, name: collectionStore.deckDesktopApps!.apps.get(parseInt(appId))!.display_name, is_steam: false, size: 0 }),
-							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
+							return microSDeck.createGame({ uid: appId, name: appName, is_steam: false, size: 0 })
+								.catch(Error => Logger.Error("There was a critical error creating game: \"{Error}\"", { Error }));
+						}));
 
-							const res2 = await fetch(`${API_URL}/link`, {
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify({ card_id: card.uid, game_id: appId }),
-							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
-						});
+						microSDeck.linkMany(card, nonSteamAdditions);
 
-						nonSteamDeletions.forEach(async appId => {
-							//* api call to remove game from card
-							await fetch(`${API_URL}/unlink`, {
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify({ card_id: card.uid, game_id: appId }),
-							}).catch(Error => Logger.Error("There was a critical error: \"{Error}\"", { Error }));
-						});
+						await microSDeck.unlinkMany(card, nonSteamDeletions);
 					}}
 					card={{ ...card }}
 					games={games}
@@ -78,7 +55,7 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeck }
 			<MenuItem tone="destructive" disabled={card.uid == currentCard?.uid} onSelected={() => {
 				showModal(<ConfirmModal
 					bAllowFullSize
-					strTitle={`Are you sure you want to delete ${card.name || UNAMED_CARD_NAME}`}
+					strTitle={`Are you sure you want to delete ${card.name || UNNAMED_CARD_NAME}`}
 					onOK={() => microSDeck.deleteCard(card)}
 					strOKButtonText="Confirm">
 					This cannot be undone. If you insert the card it will be registered again but any changes you have made will be lost.

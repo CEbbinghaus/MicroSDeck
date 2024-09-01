@@ -11,10 +11,10 @@ jobs:
     - name: Checkout
       if: ${{ !env.ACT }}
       uses: actions/checkout@v3
-    
-    - uses: pnpm/action-setup@v2
+
+    - uses: jdx/mise-action@v2
       with:
-        version: 8.9.2
+        mise_toml: .mise.yml
 
     - name: Update Version
       run: |
@@ -65,19 +65,14 @@ jobs:
       if: ${{ !env.ACT }}
       uses: actions/checkout@v4
 
+    - uses: jdx/mise-action@v2
+      with:
+        mise_toml: .mise.yml
+
     - name: Update Version
       run: |
         echo -n "-$(git rev-parse --short HEAD)" >> backend/version && \
         node util/versioning.mjs update package.json lib/package.json
-
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        registry-url: 'https://registry.npmjs.org'
-
-    - uses: pnpm/action-setup@v2
-      with:
-        version: 8.9.2
 
     - name: Install, Build & Publish
       working-directory: lib    

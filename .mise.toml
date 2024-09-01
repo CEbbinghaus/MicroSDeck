@@ -1,0 +1,39 @@
+[tools]
+# specify single or multiple versions
+pnpm = 'latest'
+node = 'lts'
+rust = '1.79.0'
+
+
+[tasks."build"]
+depends = ["build:*"]
+description = 'Build the CLI'
+
+[tasks."build:backend"]
+description = 'Build the Backend'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o backend"
+sources = ['backend/Cargo.toml', 'backend/src/**/*.rs']
+outputs = ['build/bin/backend']
+
+[tasks."build:frontend"]
+description = 'Build the Frontend'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o frontend"
+sources = ['package.json', 'lib/package.json', '{src,lib}/**/*.{ts,tsx,codegen}']
+outputs = ['dist/index.js']
+
+[tasks."build:collect"]
+depends = ["build:backend", "build:frontend"]
+description = 'Collect the build artifacts'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o collect"
+sources = ['backend/target/release/backend', 'dist/index.js', 'main.py', 'package.json', 'plugin.json', 'README.md']
+outputs = ['build/**/*.*']
+
+[tasks."copy"]
+depends = ["build"]
+description = 'Copy MicroSDeck to the SteamDeck Plugins'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o copy"
+
+[tasks."upload"]
+depends = ["build"]
+description = 'Upload MicroSDeck to the SteamDeck'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o upload"

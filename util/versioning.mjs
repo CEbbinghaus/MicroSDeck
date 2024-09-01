@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, ftruncateSync, stat, statSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -8,9 +8,15 @@ function ReadPackageVersion() {
 }
 
 function WriteVersionToPackage(file, version) {
-	const pkg = JSON.parse(readFileSync(file));
-	pkg.version = version;
+	// Get last modified time of file
+	const { atime, mtime } = statSync(file);
+
+	var value = readFileSync(file, { encoding: "utf-8" });
+	const pkg = {...JSON.parse(value), version };
 	writeFileSync(file, JSON.stringify(pkg, null, "	"));
+
+	// update file so it doesn't get marked as changed
+	utimesSync(file, atime, mtime);
 }
 
 /**
@@ -34,6 +40,8 @@ export function UpdateVersion(...packages) {
 		WriteVersionToPackage(packagePath, Version);
 	}
 }
+
+// If this file is being run rather than imported as a module
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	// The script was run directly.
 

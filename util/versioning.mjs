@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, ftruncateSync } from "fs";
+import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, ftruncateSync, stat, statSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -8,20 +8,12 @@ function ReadPackageVersion() {
 }
 
 function WriteVersionToPackage(file, version) {
-	const fd = openSync(file, 'a+');
 	// Get last modified time of file
-	const { atime, mtime } = fstatSync(fd);
+	const { atime, mtime } = statSync(file);
 
-	try {
-		
-		var value = readFileSync(fd, { encoding: "utf-8", flag: "r" });
-		const pkg = JSON.parse(value);
-		pkg.version = version;
-		ftruncateSync(fd);
-		writeFileSync(fd, JSON.stringify(pkg, null, "	"));
-	} finally {
-		closeSync(fd);
-	}
+	var value = readFileSync(file, { encoding: "utf-8" });
+	const pkg = {...JSON.parse(value), version };
+	writeFileSync(file, JSON.stringify(pkg, null, "	"));
 
 	// update file so it doesn't get marked as changed
 	utimesSync(file, atime, mtime);

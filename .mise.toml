@@ -28,6 +28,11 @@ run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o collect"
 sources = ['backend/target/release/backend', 'dist/index.js', 'main.py', 'package.json', 'plugin.json', 'README.md']
 outputs = ['build/**/*.*']
 
+[tasks."copy"]
+depends = ["build"]
+description = 'Copy MicroSDeck to the SteamDeck Plugins'
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o copy"
+
 [tasks."upload"]
 depends = ["build"]
 description = 'Upload MicroSDeck to the SteamDeck'

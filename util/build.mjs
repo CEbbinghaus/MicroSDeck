@@ -30,7 +30,7 @@ Basic Usage: ./build [flags]
 	process.exit(0);
 }
 
-const only = [];
+const tasks = [];
 if (process.argv.includes('-o') || process.argv.includes('--only')) {
 	let [opt0, opt1] = [process.argv.indexOf('-o'), process.argv.indexOf('--only')];
 	
@@ -43,12 +43,29 @@ if (process.argv.includes('-o') || process.argv.includes('--only')) {
 	for (let i = index + 1; i < process.argv.length; i++) {
 		let arg = process.argv[i];
 		if(arg.startsWith('-')) break;
-		only.push(arg);
+		tasks.push(arg);
 	}
 }
 
-if (only.length == 0) {
-	only.push('backend', 'frontend', 'collect', 'copy', 'upload');
+if (tasks.length == 0) {
+	tasks.push('backend', 'frontend', 'collect', 'copy');
+}
+
+const mapped = {
+	"--skip-backend": "backend",
+	"--skip-frontend": "frontend",
+	"--skip-collect": "collect",
+	"--skip-copy": "copy",
+}
+
+for(let arg of process.argv) {
+	if (mapped[arg]) {
+		tasks.splice(tasks.indexOf(mapped[arg]), 1);
+	}
+}
+
+if (process.argv.includes('--upload') && !tasks.includes('upload')) {
+	tasks.push('upload');
 }
 
 const basePath = resolve(process.cwd());
@@ -70,7 +87,7 @@ function runCommand(command, directory = "") {
 }
 
 async function importJson(file) {
-	return (await import(file, { assert: { type: "json" } })).default;
+	return (await import(file, { with: { type: "json" } })).default;
 }
 
 const { name: PluginName } = await importJson(join(basePath, "plugin.json"));
@@ -84,13 +101,13 @@ if (!existsSync('plugin.json')) {
 
 UpdateVersion("package.json", "lib/package.json");
 
-if (!process.argv.includes('--skip-backend') && only.includes('backend')) {
+if (tasks.includes('backend')) {
 	Logger.Log('Building backend');
 
 	runCommand('cargo build --release', 'backend');
 }
 
-if (!process.argv.includes('--skip-frontend') && only.includes('frontend')) {
+if (tasks.includes('frontend')) {
 	if (!process.argv.includes('--skip-dependencies')) {
 		Logger.Log('Installing dependencies');
 		runCommand('pnpm install');
@@ -100,7 +117,7 @@ if (!process.argv.includes('--skip-frontend') && only.includes('frontend')) {
 	runCommand('pnpm run bundle');
 }
 
-if (!process.argv.includes('--skip-collect') && only.includes('collect')) {
+if (tasks.includes('collect')) {
 	Logger.Log('Collecting outputs into /build folder');
 	mkdirSync('build/dist', { recursive: true });
 	mkdirSync('build/bin', { recursive: true });
@@ -114,19 +131,20 @@ if (!process.argv.includes('--skip-collect') && only.includes('collect')) {
 
 const is_local = existsSync('/home/deck/homebrew');
 
-if (is_local && (!process.argv.includes('--skip-copy') && only.includes('copy'))) {
+if (is_local && tasks.includes('copy')) {
 	Logger.Log('Copying build folder to local plugin directory');
 	execSync(`sudo rm -rf /home/deck/homebrew/plugins/${PluginName}`);
 	execSync(`sudo cp -r build/ /home/deck/homebrew/plugins/${PluginName}`);
 	execSync(`sudo chmod 555 /home/deck/homebrew/plugins/${PluginName}`);
 } else {
-	if (!is_local) {
-		Logger.Info('Not running on steamdeck');
-	} else if (!process.argv.includes('--skip-copy') && only.includes('copy'))
+	if (!tasks.includes('copy')) {	
 		Logger.Log('Skipping copying build folder to local plugin directory');
+	} else if (!is_local) {
+		Logger.Info('Not running on steamdeck');
+	}
 }
 
-if (process.argv.includes('--upload') || only.includes('upload')) {
+if (tasks.includes('upload')) {
 	Logger.Log("Uploading plugin to SteamDeck");
 
 	try {

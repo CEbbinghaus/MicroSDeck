@@ -11,7 +11,7 @@ import deckyPlugin from "@decky/rollup";
 import externalGlobals from 'rollup-plugin-external-globals';
 import { merge } from 'merge-anything';
 
-import plugin from "./plugin.json" assert {type: "json"};
+import plugin from "./plugin.json" with { type: "json" };
 
 export default defineConfig(merge(
 	deckyPlugin(),

@@ -65,6 +65,11 @@ jobs:
 
     - uses: jdx/mise-action@v2
 
+    - name: create .npmrc
+      run: |
+        echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}} \
+        @cebbinghaus:registry=https://registry.npmjs.com" > ~/.npmrc
+
     - name: Update Version
       run: |
         echo -n "-$(git rev-parse --short HEAD)" >> backend/version && \

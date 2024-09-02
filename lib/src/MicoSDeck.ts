@@ -1,6 +1,6 @@
-import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchUpdateCard, fetchVersion } from "./backend.js";
+import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame, fetchCreateGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchLinkCardAndGame, fetchLinkCardAndManyGames, fetchUnlinkCardAndGame, fetchUnlinkCardAndManyGames, fetchUpdateCard, fetchVersion } from "./backend.js";
 import Logger from "lipe";
-import { CardAndGames, CardsAndGames, MicroSDCard } from "./types.js"
+import { CardAndGames, CardsAndGames, Game, MicroSDCard } from "./types.js"
 
 import semverParse from "semver/functions/parse"
 import semverEq from "semver/functions/eq.js"
@@ -127,10 +127,10 @@ export class MicroSDeck {
 	}
 
 	async fetchCurrent() {
-		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps);
+		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps) || this.currentCardAndGames;
 	}
 	async fetchCardsAndGames() {
-		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || [];
+		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || this.cardsAndGames || [];
 	}
 
 	getProps() {
@@ -200,11 +200,30 @@ export class MicroSDeck {
 
 	async hideCard(card: MicroSDCard) {
 		card.hidden = true;
-		//TODO: Implement
+		this.updateCard(card);
 		this.logger?.Log("Card {uid} was supposed to be hidden", card);
 	}
 
 	async fetchCardsForGame(gameId: string) {
 		return await fetchCardsForGame({ ...this.fetchProps, gameId })
+	}
+
+	async createGame(game: Game) {
+		return await fetchCreateGame({...this.fetchProps, game});
+	}
+
+	async link(card: MicroSDCard, gameId: string) {
+		return await fetchLinkCardAndGame({...this.fetchProps, card_id: card.uid, game_id: gameId});
+	}
+
+	async linkMany(card: MicroSDCard, gameIds: string[]) {
+		return await fetchLinkCardAndManyGames({...this.fetchProps, card_id: card.uid, game_ids: gameIds});
+	}
+
+	async unlink(card: MicroSDCard, gameId: string) {
+		return await fetchUnlinkCardAndGame({...this.fetchProps, card_id: card.uid, game_id: gameId});
+	}
+	async unlinkMany(card: MicroSDCard, gameIds: string[]) {
+		return await fetchUnlinkCardAndManyGames({...this.fetchProps, card_id: card.uid, game_ids: gameIds});
 	}
 }

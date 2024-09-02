@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
-import { API_URL, UNAMED_CARD_NAME } from '../const';
+import { API_URL, UNNAMED_CARD_NAME } from '../const';
 import { useCardsForGame } from "../../lib/src"
 import { findModule } from "@decky/ui"
 
@@ -82,7 +82,7 @@ export default function LibraryModal({ appId: gameId }: { appId: string }): Reac
 				<FaSdCard size={18} />
 			</div>
 			<div style={{ marginLeft: "1.4rem", lineHeight: "18px", fontSize: 18, fontWeight: "bold" }} className="tab-label">
-				{cards.map(v => v.name || UNAMED_CARD_NAME).join(", ")}
+				{cards.map(v => v.name || UNNAMED_CARD_NAME).join(", ")}
 			</div>
 		</div>
 	)

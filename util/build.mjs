@@ -6,6 +6,9 @@ import { Version, UpdateVersion, ResetVersion } from './versioning.mjs';
 import { Logger } from './log.mjs';
 import { exit } from 'process';
 
+import { name as PluginName } from "../plugin.json" with { type: "json" };
+import deploy from "../deploy.json" with { type: "json" };
+
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
 	console.log(
 `  __  __ _            ___ ___         _     ___      _ _    _ 
@@ -86,12 +89,6 @@ function runCommand(command, directory = "") {
 	return output;
 }
 
-async function importJson(file) {
-	return (await import(file, { with: { type: "json" } })).default;
-}
-
-const { name: PluginName } = await importJson(join(basePath, "plugin.json"));
-
 Logger.Log(`Building plugin ${PluginName}@${Version}`);
 
 if (!existsSync('plugin.json')) {
@@ -154,7 +151,7 @@ if (tasks.includes('upload')) {
 		exit(1);
 	}
 
-	const { host, user, keyfile } = await importJson(join(basePath, "deploy.json"));
+	const { host, user, keyfile } = deploy;
 
 	const deployPath = `/home/${user}/homebrew/plugins/${PluginName}`;
 

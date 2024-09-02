@@ -15,7 +15,7 @@ import { BiSolidDownArrow } from "react-icons/bi";
 import { DeckyAPI } from "../lib/DeckyApi";
 import { Game, MicroSDCard } from "../../lib/src";
 import { Logger } from "../Logging";
-import { UNAMED_CARD_NAME } from "../const";
+import { UNNAMED_CARD_NAME } from "../const";
 import { GamesOnCardModal } from './GamesOnCardModal';
 import { GamepadUIAudio } from '../lib/GamepadUIAudio';
 
@@ -75,7 +75,7 @@ export const EditCardModal: VFC<EditCardProps> = ({ card, games, onConfirm, clos
 			bAllowFullSize
 			onCancel={closeModal}
 			onEscKeypress={closeModal}
-			strTitle={`Editing Card: "${(card.name ?? UNAMED_CARD_NAME)}"`}
+			strTitle={`Editing Card: "${(card.name ?? UNNAMED_CARD_NAME)}"`}
 			onOK={onSave}
 			strOKButtonText="Save">
 			<Field description={

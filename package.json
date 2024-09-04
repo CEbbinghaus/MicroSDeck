@@ -1,6 +1,6 @@
 {
 	"name": "microsdeck",
-	"version": "0.0.0",
+	"version": "0.10.5",
 	"description": "A SteamDeck plugin to track games across MicroSD cards",
 	"type": "module",
 	"keywords": [
@@ -31,16 +31,16 @@
 		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@rollup/plugin-typescript": "^8.5.0",
-		"@types/markdown-it": "^13.0.7",
+		"@types/markdown-it": "^13.0.9",
 		"@types/react": "16.14.0",
 		"@types/webpack": "^5.28.5",
+		"merge-anything": "^6.0.2",
 		"rollup": "^2.79.1",
 		"rollup-plugin-codegen": "^1.0.0",
-		"rollup-plugin-import-assets": "^1.1.1",
 		"rollup-plugin-external-globals": "^0.11.0",
-		"merge-anything": "^6.0.2",
+		"rollup-plugin-import-assets": "^1.1.1",
 		"shx": "^0.3.4",
-		"tslib": "^2.6.2",
+		"tslib": "^2.7.0",
 		"typescript": "^4.9.5"
 	},
 	"dependencies": {
@@ -49,8 +49,8 @@
 		"@decky/rollup": "^1.0.1",
 		"@mdx-js/react": "^3.0.1",
 		"@mdx-js/rollup": "^3.0.1",
-		"lipe": "^0.3.3",
-		"react": "^18.2.0",
+		"lipe": "^0.3.4",
+		"react": "^18.3.1",
 		"react-icons": "^4.12.0"
 	},
 	"pnpm": {

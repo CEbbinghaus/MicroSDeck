@@ -1,7 +1,19 @@
 on:
+  workflow_dispatch:
   pull_request:
+    paths: 
+      - 'lib/**'
+      - 'backend/**'
+      - 'src/**'
+      - 'docs/**'
+      - 'util/**'
   push:
     branches: master
+    paths: 
+      - 'lib/**'
+      - 'backend/**'
+      - 'src/**'
+      - 'docs/**'
 
 jobs:
   build:
@@ -47,38 +59,3 @@ jobs:
       with:
         name: "MicroSDeck"
         path: release/*
-
-  deploy:
-    if: github.ref == 'refs/heads/master'
-    needs: build
-    name: Deploy Package
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - uses: jdx/mise-action@v2
-
-    - name: create .npmrc
-      run: |
-        echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}
-        registry=https://registry.npmjs.org/
-        always-auth=true" > ~/.npmrc
-
-    - name: Update Version
-      run: |
-        echo -n "-$(git rev-parse --short HEAD)" >> backend/version && \
-        node util/versioning.mjs update package.json lib/package.json
-
-    - name: Install, Build & Publish
-      working-directory: lib    
-      env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-      run: |
-        pnpm install && \
-        pnpm build && \
-        pnpm publish --no-git-checks --tag prerelease

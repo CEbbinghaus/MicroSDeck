@@ -6,7 +6,9 @@ import { Version, UpdateVersion, ResetVersion } from './versioning.mjs';
 import { Logger } from './log.mjs';
 import { exit } from 'process';
 
-import { name as PluginName } from "../plugin.json" with { type: "json" };
+import plugin from "../plugin.json" with { type: "json" };
+const { name: PluginName } = plugin;
+
 import deploy from "../deploy.json" with { type: "json" };
 
 if (process.argv.includes('-h') || process.argv.includes('--help')) {

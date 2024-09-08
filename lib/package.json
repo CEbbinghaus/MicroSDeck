@@ -5,7 +5,6 @@
 	"keywords": [],
 	"author": "CEbbinghaus",
 	"license": "GPLv2",
-	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"files": [
 		"dist"

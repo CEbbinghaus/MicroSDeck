@@ -112,6 +112,7 @@ impl Config {
 
 
 // TODO: Turn this Impl into a macro that generates the get and set functions
+// Possibly using https://github.com/0xDEADFED5/set_field as the base
 impl Config {
 	pub fn get_property(&self, name: &'_ str) -> Result<String, Error> {
 		let parts: Vec<&str> = name.split(":").collect();

@@ -3,6 +3,7 @@ on:
     branches: [master]
     paths: 
       - 'lib/**'
+      - 'backend/version'
 
 jobs:
   deploy:

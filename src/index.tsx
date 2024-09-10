@@ -87,7 +87,7 @@ function Content() {
 		<>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
 				<div style={{ margin: "5px", marginTop: "0px" }}>
-					Rename, Reorder or Remove MicroSD Cards
+					Edit MicroSD Cards
 				</div>
 				<PanelSection title="Cards">
 					{isLoaded ? (
@@ -115,10 +115,6 @@ function Content() {
 		</>
 	);
 };
-
-declare global {
-	var MicroSDeck: MicroSDeck | undefined;
-}
 
 export default definePlugin(() => {
 

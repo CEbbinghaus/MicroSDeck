@@ -56,6 +56,10 @@ export function IsMatchingSemver(version1: string, version2: string, strict: boo
 	return semverEq(semVersion1, semVersion2);
 }
 
+declare global {
+	var MicroSDeck: MicroSDeck | undefined;
+}
+
 export class MicroSDeck {
 	private abortController = new AbortController();
 

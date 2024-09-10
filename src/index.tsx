@@ -97,8 +97,10 @@ function Content() {
 					<div>
 						<h3 style={{margin: "0px"}}>Check out the new Docs!</h3>
 						Open them using 
-						<div style={{backgroundColor: "black", borderRadius: "100px"}}>
-							<GiHamburgerMenu />
+						<div style={{display: "inline-block", marginLeft: ".2em"}}>
+							<div style={{backgroundColor: "black", borderRadius: "100px", display: "flex", justifyContent: "center", width: "40px"}}>
+								<GiHamburgerMenu />
+							</div>
 						</div>
 					</div>
 					<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
@@ -118,7 +120,7 @@ function Content() {
 	}
 
 	return (
-		<>
+		<div style={{scrollPadding: "48px 0px" }}>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
 				{docs_card}
 				<div style={{ margin: "5px", marginTop: "0px" }}>
@@ -147,7 +149,7 @@ function Content() {
 					)}
 				</PanelSection>
 			</Focusable>
-		</>
+		</div>
 	);
 };
 

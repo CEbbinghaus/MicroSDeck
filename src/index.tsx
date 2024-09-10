@@ -116,10 +116,6 @@ function Content() {
 	);
 };
 
-declare global {
-	var MicroSDeck: MicroSDeck | undefined;
-}
-
 export default definePlugin(() => {
 
 	if (window.MicroSDeck) {

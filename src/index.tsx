@@ -1,6 +1,7 @@
 import {
 	definePlugin,
 	DialogButton,
+	DialogCheckbox,
 	Focusable,
 	Navigation,
 	PanelSection,
@@ -15,7 +16,7 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
-import React from "react";
+import React, { useState } from "react";
 import Docs from "./pages/Docs";
 import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
@@ -54,7 +55,9 @@ function EditCardButton(props: EditCardButtonProps) {
 }
 
 function Content() {
-	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings } = useMicroSDeckContext();
+	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings, refresh } = useMicroSDeckContext();
+
+	const [dismiss_docs, setDismissDocs] = useState(frontendSettings?.dismissed_docs || false);
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
@@ -89,22 +92,34 @@ function Content() {
 
 	if (frontendSettings && frontendSettings.dismissed_docs === false) {
 		docs_card = (
-			<PanelSection title="Docs">
-				<div style={{ margin: "5px", marginTop: "0px" }}>
-					Open the documentation to learn how to use this plugin, For this use the context button <GiHamburgerMenu />
+			<div style={{backgroundColor: "#577ca8", width: "100%", paddingBottom: "8px"}}>
+				<div style={{padding: "5px", width: "80%", margin: "auto"}}>
+					<div>
+						<h3 style={{margin: "0px"}}>Check out the new Docs!</h3>
+						Open them using 
+						<div style={{backgroundColor: "black", borderRadius: "100px"}}>
+							<GiHamburgerMenu />
+						</div>
+					</div>
+					<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
+					<DialogButton
+						style={{ width: "100%" }}
+						onOKButton={() => { 
+							if (dismiss_docs) {
+								refresh();
+								fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: dismiss_docs });
+							}
+							Navigation.Navigate(DOCUMENTATION_PATH);
+						}}
+						onOKActionDescription="Dismiss Docs Reminder">Open Docs</DialogButton>
 				</div>
-				<DialogButton
-					style={{ width: "100%" }}
-					onOKButton={() => { fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: true }); }}
-					onOKActionDescription="Dismiss Docs Reminder">Dismiss</DialogButton>
-			</PanelSection>
+			</div>
 		);
 	}
 
 	return (
 		<>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
-				<div style={{marginTop: "25px"}} ></div>
 				{docs_card}
 				<div style={{ margin: "5px", marginTop: "0px" }}>
 					Edit MicroSD Cards

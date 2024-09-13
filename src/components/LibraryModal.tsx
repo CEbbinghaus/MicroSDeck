@@ -9,7 +9,7 @@ const logger = Logger.Child({ module: "patching" });
 
 export default function LibraryModal({ appId: gameId }: { appId: string }): ReactElement {
 	const { cards } = useCardsForGame({ url: API_URL, logger: Logger, gameId });
-	const { currentCardAndGames } = useMicroSDeckContext() || {};
+	const { currentCardAndGames } = useMicroSDeckContext();
 	const [ currentCard ] = (currentCardAndGames || [undefined]);
 
 	var ref = useRef();

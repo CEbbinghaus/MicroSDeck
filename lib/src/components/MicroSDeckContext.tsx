@@ -3,7 +3,7 @@ import { MicroSDeck } from "../MicoSDeck.js";
 import { CardAndGames, CardsAndGames } from "../types.js";
 
 const MicroSDeckContext = createContext<MicroSDeckContext>(null as any);
-export const useMicroSDeckContext = () => useContext(MicroSDeckContext);
+export const useMicroSDeckContext = () => useContext(MicroSDeckContext) || {};
 
 interface ProviderProps {
 	microSDeck: MicroSDeck

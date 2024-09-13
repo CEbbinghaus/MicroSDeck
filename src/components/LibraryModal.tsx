@@ -2,18 +2,19 @@ import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { API_URL, UNNAMED_CARD_NAME } from '../const';
-import { useCardsForGame } from "../../lib/src"
+import { useCardsForGame, useMicroSDeckContext } from "../../lib/src"
 import { findModule } from "@decky/ui"
 
 const logger = Logger.Child({ module: "patching" });
 
 export default function LibraryModal({ appId: gameId }: { appId: string }): ReactElement {
 	const { cards } = useCardsForGame({ url: API_URL, logger: Logger, gameId });
+	const { currentCardAndGames } = useMicroSDeckContext();
+	const [ currentCard ] = (currentCardAndGames || [undefined]);
 
 	var ref = useRef();
 
-	const bottomMargin = 8;
-	const height = 20;
+	const bottomMargin = 4;
 	const [top, setTop] = useState<number>(210);
 
 	useEffect(() => {
@@ -71,18 +72,27 @@ export default function LibraryModal({ appId: gameId }: { appId: string }): Reac
 		return (<></>);
 	}
 
+
 	return (
 		<div
 			//@ts-ignore
 			ref={ref}
 			className="microsdeck-app-modal"
-			style={{ padding: "0.4em", borderRadius: "6px", backgroundColor: "#0c131b", position: 'absolute', height, top, left: '20px' }}
+			style={{ position: 'absolute', height: 30, top, left: '20px', display: "flex", flexDirection: "row", gap: "8px", flexWrap: "nowrap", justifyContent: "flex-start"}}
 		>
+			{cards.map(card => (<CardLabel cardName={card.name || UNNAMED_CARD_NAME} isCurrent={card.uid == currentCard?.uid}/>))}
+		</div>
+	);
+}
+
+function CardLabel({ cardName, isCurrent }: { cardName: string, isCurrent: boolean }): ReactElement {
+	return (
+		<div style={{ padding: "0.4em", borderRadius: "6px", backgroundColor: isCurrent ? "#51bd5c" : "#0c131b"}}>
 			<div style={{ float: "left" }}>
 				<FaSdCard size={18} />
 			</div>
 			<div style={{ marginLeft: "1.4rem", lineHeight: "18px", fontSize: 18, fontWeight: "bold" }} className="tab-label">
-				{cards.map(v => v.name || UNNAMED_CARD_NAME).join(", ")}
+				{cardName}
 			</div>
 		</div>
 	)

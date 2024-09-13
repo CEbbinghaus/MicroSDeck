@@ -131,7 +131,7 @@ export class MicroSDeck {
 	}
 
 	async fetchCurrent() {
-		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps) || this.currentCardAndGames;
+		this.currentCardAndGames = await fetchCurrentCardAndGames(this.fetchProps);
 	}
 	async fetchCardsAndGames() {
 		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || this.cardsAndGames || [];

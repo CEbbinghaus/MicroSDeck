@@ -8,8 +8,9 @@ import { ReactElement } from 'react'
 import { routerHook } from '@decky/api';
 import LibraryModal from '../components/LibraryModal';
 import { Logger } from '../Logging';
+import { MicroSDeck, MicroSDeckContextProvider } from '../../lib/src';
 
-function PatchLibraryApp() {
+function PatchLibraryApp(microSDeck: MicroSDeck) {
 	
 	const path = '/library/app/:appid';
 	Logger.Log("Patching {path}", { path });
@@ -55,7 +56,9 @@ function PatchLibraryApp() {
 					container.props.children.splice(
 						1,
 						0,
-						<LibraryModal appId={appId}/>
+						<MicroSDeckContextProvider microSDeck={microSDeck}>
+							<LibraryModal appId={appId}/>
+						</MicroSDeckContextProvider>,
 					)
 
 					return element

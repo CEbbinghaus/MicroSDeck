@@ -125,7 +125,7 @@ export default definePlugin(() => {
 
 	Logger.Log("Started MicroSDeck");
 
-	const patch = PatchAppScreen();
+	const patch = PatchAppScreen(window.MicroSDeck);
 
 	routerHook.addRoute(DOCUMENTATION_PATH, () => (
 		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>

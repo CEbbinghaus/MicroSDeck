@@ -123,9 +123,6 @@ function Content() {
 		<div style={{scrollPadding: "48px 0px" }}>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
 				{docs_card}
-				<div style={{ margin: "5px", marginTop: "0px" }}>
-					Edit MicroSD Cards
-				</div>
 				<PanelSection title="Cards">
 					{isLoaded ? (
 						<ReorderableList<MicroSDCard>

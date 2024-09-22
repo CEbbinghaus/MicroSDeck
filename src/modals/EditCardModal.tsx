@@ -129,7 +129,7 @@ interface NonSteamPanelProps {
 const NonSteamPanel: VFC<NonSteamPanelProps> = ({ checkedIds, idsOnCard, numAdditions, numDeletions, style, onChange }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [query, setQuery] = useState("");
-	const idNamePairs: [number, string][] = useMemo(() => collectionStore.deckDesktopApps ? collectionStore.deckDesktopApps.allApps.map(appOverview => [appOverview.appid, appOverview.display_name]) : [], [collectionStore.deckDesktopApps?.allApps.length]);
+	const idNamePairs: [number, string][] = useMemo(() => collectionStore.deckDesktopApps ? collectionStore.deckDesktopApps.allApps.map(appOverview => [appOverview.appid, appOverview.display_name]) : [], [...(collectionStore.deckDesktopApps?.allApps.map(v => v.appid) ?? [])]);
 	const [filteredPairs, setFilteredPairs] = useState(idNamePairs);
 
 	useEffect(() => {

@@ -30,17 +30,24 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeck }
 			<MenuItem onSelected={() => {
 				showModal(<EditCardModal
 					onConfirm={async (card: MicroSDCard, nonSteamAdditions: string[], nonSteamDeletions: string[]) => {
-						microSDeck.updateCard(card);
+						Logger.Debug("Creating Card");
+						await microSDeck.updateCard(card);
 
 						await Promise.all(nonSteamAdditions.map(appId => {
-							const appName = collectionStore.deckDesktopApps?.apps.get(parseInt(appId))?.display_name ?? "Unknown Game";
+							Logger.Debug(`Creating Non-Steam Game ${appId}`);
+							
+							const appName = collectionStore.deckDesktopApps?.allApps.find(v => v.appid == parseInt(appId))?.display_name ?? "Unknown Game";
 
 							return microSDeck.createGame({ uid: appId, name: appName, is_steam: false, size: 0 })
 								.catch(Error => Logger.Error("There was a critical error creating game: \"{Error}\"", { Error }));
 						}));
-
-						microSDeck.linkMany(card, nonSteamAdditions);
-
+						
+						Logger.Debug("Created Non-Steam Games");
+						
+						Logger.Debug("Linking Many");
+						await microSDeck.linkMany(card, nonSteamAdditions);
+						
+						Logger.Debug("Unlinking Many");
 						await microSDeck.unlinkMany(card, nonSteamDeletions);
 					}}
 					card={{ ...card }}

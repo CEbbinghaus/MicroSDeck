@@ -156,10 +156,10 @@ export async function fetchCardsForGame({ url, logger, gameId }: FetchProps & { 
 }
 
 export async function fetchCreateGame({ url, logger, game}: FetchProps & { game: Game }) {
-	await wrapFetch({ url: `${url}/game`, logger }, {
+	await wrapFetch({ url: `${url}/game/${game.uid}`, logger }, {
 		method: "POST",
 		...ApplicationJsonHeaders,
-		body: JSON.stringify({game}),
+		body: JSON.stringify(game),
 	});
 }
 

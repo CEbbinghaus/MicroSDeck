@@ -74,14 +74,18 @@ pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpR
 
 #[get("/setting/{name}")]
 #[instrument]
-pub(crate) async fn get_setting_by_name(name: web::Path<String>, datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+pub(crate) async fn get_setting_by_name(name: web::Path<String>) -> Result<impl Responder> {
+	trace!("HTTP GET /setting/{name}");
+
 	let result = CONFIG.read().await.get_property(&name)?;
 	Ok(result)
 }
 
 #[post("/setting/{name}")]
 #[instrument]
-pub(crate) async fn set_setting_by_name(body: Bytes, name: web::Path<String>, datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+pub(crate) async fn set_setting_by_name(body: Bytes, name: web::Path<String>) -> Result<impl Responder> {
+	trace!("HTTP POST /setting/{name}");
+
     let value = String::from_utf8(body.to_vec()).map_err(|_| Error::from_str("Unable to decode body as utf8"))?;
 	CONFIG.write().await.set_property(&name, &value)?;
 	Ok(HttpResponse::Ok())

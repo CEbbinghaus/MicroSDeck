@@ -56,12 +56,16 @@ pub(crate) async fn version() -> impl Responder {
 #[get("/health")]
 #[instrument]
 pub(crate) async fn health() -> impl Responder {
+	trace!("HTTP GET /health");
+
 	HttpResponse::Ok()
 }
 
 #[get("/listen")]
 #[instrument]
 pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpResponse> {
+	trace!("HTTP GET /listen");
+	
 	let event_stream = BroadcastStream::new(sender.subscribe()).map(|res| match res {
 		Err(_) => Err(Error::from_str("Subscriber Closed")),
 		Ok(value) => Ok(Event::new(value).into()),
@@ -72,17 +76,21 @@ pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpR
 }
 
 #[get("/list")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn list_cards_with_games(datastore: web::Data<Arc<Store>>) -> impl Responder {
+	trace!("HTTP GET /list");
+
 	web::Json(datastore.list_cards_with_games())
 }
 
 #[get("/list/games/{card_id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn list_games_for_card(
 	card_id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP GET /list/games/{card_id}");
+
 	match datastore.get_games_on_card(&card_id) {
 		Ok(value) => Ok(web::Json(value)),
 		Err(err) => Err(actix_web::Error::from(err)),
@@ -90,11 +98,13 @@ pub(crate) async fn list_games_for_card(
 }
 
 #[get("/list/cards/{game_id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn list_cards_for_game(
 	game_id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP GET /list/cards/{game_id}");
+
 	match datastore.get_cards_for_game(&game_id) {
 		Ok(value) => Ok(web::Json(value)),
 		Err(err) => Err(actix_web::Error::from(err)),
@@ -102,10 +112,12 @@ pub(crate) async fn list_cards_for_game(
 }
 
 #[get("/current")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn get_current_card_and_games(
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<Either<impl Responder, impl Responder>> {
+	trace!("HTTP GET /current");
+
 	if !is_card_inserted() {
 		return Ok(Either::Right(
 			HttpResponseBuilder::new(StatusCode::NO_CONTENT)
@@ -125,8 +137,10 @@ pub(crate) async fn get_current_card_and_games(
 }
 
 #[get("/current/card")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+	trace!("HTTP GET /current/card");
+
 	if !is_card_inserted() {
 		return Err(Error::from_str("No card is inserted").into());
 	}
@@ -139,6 +153,8 @@ pub(crate) async fn get_current_card(datastore: web::Data<Arc<Store>>) -> Result
 #[get("/current/id")]
 #[instrument]
 pub(crate) async fn get_current_card_id() -> Result<impl Responder> {
+	trace!("HTTP GET /current/id");
+
 	if !is_card_inserted() {
 		return Err(Error::from_str("No card is inserted").into());
 	}
@@ -147,10 +163,12 @@ pub(crate) async fn get_current_card_id() -> Result<impl Responder> {
 }
 
 #[get("/current/games")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn get_games_on_current_card(
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP GET /current/games");
+
 	if !is_card_inserted() {
 		return Err(Error::from_str("No card is inserted").into());
 	}
@@ -164,13 +182,15 @@ pub(crate) async fn get_games_on_current_card(
 }
 
 #[post("/card/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn create_card(
 	id: web::Path<String>,
 	body: web::Json<MicroSDCard>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /card/{id}");
+
 	if *id != body.uid {
 		return Err(Error::from_str("uid did not match id provided").into());
 	}
@@ -185,18 +205,18 @@ pub(crate) async fn create_card(
 		false => datastore.add_card(id.into_inner(), body.into_inner()),
 	}
 
-	trace!("Sending Updated event");
 	_ = sender.send(CardEvent::Updated);
 	Ok(HttpResponse::Ok())
 }
 
 #[delete("/card/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn delete_card(
 	id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP DELETE /card/{id}");
 	datastore.remove_element(&id)?;
 
 	trace!("Sending Updated event");
@@ -205,21 +225,24 @@ pub(crate) async fn delete_card(
 }
 
 #[get("/card/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn get_card(
 	id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP GET /card/{id}");
 	Ok(web::Json(datastore.get_card(&id)?))
 }
 
 #[post("/cards")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn update_cards(
 	body: web::Json<Vec<MicroSDCard>>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /cards");
+
 	for card in body.iter() {
 		let card = card.to_owned();
 
@@ -240,18 +263,21 @@ pub(crate) async fn update_cards(
 }
 
 #[get("/cards")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn list_cards(datastore: web::Data<Arc<Store>>) -> impl Responder {
+	trace!("HTTP GET /cards");
 	web::Json(datastore.list_cards())
 }
 
 #[post("/game/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn create_game(
 	id: web::Path<String>,
 	body: web::Json<Game>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /game/{id}");
+
 	if *id != body.uid {
 		return Err(Error::from_str("uid did not match id provided").into());
 	}
@@ -267,38 +293,43 @@ pub(crate) async fn create_game(
 }
 
 #[delete("/game/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn delete_game(
 	id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP DELETE /game/{id}");
 	datastore.remove_element(&id)?;
 
 	Ok(HttpResponse::Ok())
 }
 
 #[get("/game/{id}")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn get_game(
 	id: web::Path<String>,
 	datastore: web::Data<Arc<Store>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP GET /game/{id}");
 	Ok(web::Json(datastore.get_game(&id)?))
 }
 
 #[get("/games")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn list_games(datastore: web::Data<Arc<Store>>) -> impl Responder {
+	trace!("HTTP GET /games");
 	web::Json(datastore.list_games())
 }
 
 #[allow(clippy::async_yields_async)]
 #[post("/games")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn create_games(
 	body: web::Json<Vec<Game>>,
 	datastore: web::Data<Arc<Store>>,
 ) -> impl Responder {
+	trace!("HTTP POST /games");
+
 	for game in body.iter() {
 		let mut game = game.to_owned();
 
@@ -325,12 +356,14 @@ pub struct ManyLinkBody {
 }
 
 #[post("/link")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn create_link(
 	body: web::Json<LinkBody>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /link");
+
 	datastore.link(&body.game_id, &body.card_id)?;
 
 	trace!("Sending Updated event");
@@ -339,12 +372,14 @@ pub(crate) async fn create_link(
 }
 
 #[post("/linkmany")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn create_links(
 	body: web::Json<ManyLinkBody>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /linkmany");
+
 	let data = body.into_inner();
 	for game_id in data.game_ids.iter() {
 		datastore.link(game_id, &data.card_id)?;
@@ -356,12 +391,14 @@ pub(crate) async fn create_links(
 }
 
 #[post("/unlink")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn delete_link(
 	body: web::Json<LinkBody>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /unlink");
+
 	datastore.unlink(&body.game_id, &body.card_id)?;
 
 	trace!("Sending Updated event");
@@ -370,12 +407,14 @@ pub(crate) async fn delete_link(
 }
 
 #[post("/unlinkmany")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn delete_links(
 	body: web::Json<ManyLinkBody>,
 	datastore: web::Data<Arc<Store>>,
 	sender: web::Data<Sender<CardEvent>>,
 ) -> Result<impl Responder> {
+	trace!("HTTP POST /unlinkmany");
+
 	let data = body.into_inner();
 	for game_id in data.game_ids.iter() {
 		datastore.unlink(game_id, &data.card_id)?;
@@ -387,8 +426,10 @@ pub(crate) async fn delete_links(
 }
 
 #[post("/save")]
-#[instrument]
+#[instrument(skip(datastore))]
 pub(crate) async fn save(datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+	trace!("HTTP POST /save");
+
 	datastore.write_to_file()?;
 
 	Ok(HttpResponse::Ok())

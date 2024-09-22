@@ -1,13 +1,8 @@
 use crate::{
-	ds::Store,
-	dto::{CardEvent, Game, MicroSDCard},
-	env::PACKAGE_VERSION,
-	err::Error,
-	event::Event,
-	sdcard::{get_card_cid, is_card_inserted},
+	cfg::CONFIG, ds::Store, dto::{CardEvent, Game, MicroSDCard}, env::PACKAGE_VERSION, err::Error, event::Event, sdcard::{get_card_cid, is_card_inserted}
 };
 use actix_web::{
-	delete, get, http::StatusCode, post, web, Either, HttpResponse, HttpResponseBuilder, Responder,
+	delete, get, http::StatusCode, post, web::{self, Bytes}, Either, HttpResponse, HttpResponseBuilder, Responder,
 	Result,
 };
 use futures::StreamExt;
@@ -23,6 +18,8 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig) {
 		.service(version)
 		.service(listen)
 		.service(save)
+		.service(get_setting_by_name)
+		.service(set_setting_by_name)
 		.service(get_current_card)
 		.service(get_current_card_id)
 		.service(get_current_card_and_games)
@@ -73,6 +70,21 @@ pub(crate) async fn listen(sender: web::Data<Sender<CardEvent>>) -> Result<HttpR
 	Ok(HttpResponse::Ok()
 		.content_type("text/event-stream")
 		.streaming(event_stream))
+}
+
+#[get("/setting/{name}")]
+#[instrument]
+pub(crate) async fn get_setting_by_name(name: web::Path<String>, datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+	let result = CONFIG.read().await.get_property(&name)?;
+	Ok(result)
+}
+
+#[post("/setting/{name}")]
+#[instrument]
+pub(crate) async fn set_setting_by_name(body: Bytes, name: web::Path<String>, datastore: web::Data<Arc<Store>>) -> Result<impl Responder> {
+    let value = String::from_utf8(body.to_vec()).map_err(|_| Error::from_str("Unable to decode body as utf8"))?;
+	CONFIG.write().await.set_property(&name, &value)?;
+	Ok(HttpResponse::Ok())
 }
 
 #[get("/list")]

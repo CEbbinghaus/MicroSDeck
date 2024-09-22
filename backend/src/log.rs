@@ -43,7 +43,7 @@ pub fn create_subscriber() {
 				tracing_subscriber::fmt::layer()
 					.pretty()
 					.with_filter(tracing_subscriber::filter::LevelFilter::from_level(
-						log_level,
+						CONFIG.log_level,
 					))
 					.with_filter(filter::filter_fn(|metadata| {
 						metadata

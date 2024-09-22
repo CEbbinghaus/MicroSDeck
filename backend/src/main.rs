@@ -25,14 +25,14 @@ use std::sync::Arc;
 use tokio::sync::broadcast::{self, Sender};
 use tracing::{debug, error, info};
 
-pub fn init() {
-	create_subscriber();
+pub async fn init() {
+	create_subscriber().await;
 }
 
 type MainResult = Result<(), Error>;
 
-async fn run_web_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainResult {
-	info!("Starting HTTP server...");
+async fn run_web_server(port: u16, datastore: Arc<Store>, sender: Sender<CardEvent>) -> MainResult {
+	info!("Starting HTTP server on port {port}...");
 
 	HttpServer::new(move || {
 		let cors = Cors::default()
@@ -49,7 +49,7 @@ async fn run_web_server(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Mai
 			.configure(config)
 	})
 	.workers(2)
-	.bind(("0.0.0.0", CONFIG.port))?
+	.bind(("0.0.0.0", port))?
 	.run()
 	.await
 	.map_err(|err| err.into())
@@ -61,16 +61,26 @@ async fn main() {
 		std::env::set_var("RUST_BACKTRACE", "1");
 	}
 
-	init();
+	init().await;
 
 	info!(
 		version = PACKAGE_VERSION,
 		"{}@{} by {}", PACKAGE_NAME, PACKAGE_VERSION, PACKAGE_AUTHORS
 	);
 
+	let (store_file, skip_clean, skip_validate, port) = {
+		let config = CONFIG.read().await;
+		(
+			config.backend.store_file.clone(),
+			config.backend.startup.skip_clean,
+			config.backend.startup.skip_validate,
+			config.backend.port,
+		)
+	};
+
 	let store_path = PathBuf::from(
 		&std::env::var("STORE_PATH").map(PathBuf::from).unwrap_or(
-			get_file_path_and_create_directory(&CONFIG.store_file, &DATA_DIR)
+			get_file_path_and_create_directory(&store_file, &DATA_DIR)
 				.expect("should retrieve data directory"),
 		),
 	);
@@ -79,9 +89,12 @@ async fn main() {
 	let store: Arc<Store> =
 		Arc::new(Store::read_from_file(store_path.clone()).unwrap_or(Store::new(Some(store_path))));
 
-	store.clean_up();
+	if !skip_clean {
+		store.clean_up();
+	}
 
-	if !store.validate() {
+
+	if !skip_validate && !store.validate() {
 		error!("Validity of the data is not guaranteed. Cannot run backend...");
 		exit(1);
 	}
@@ -91,7 +104,7 @@ async fn main() {
 
 	let (txtx, _) = broadcast::channel::<CardEvent>(1);
 
-	let server_future = run_web_server(store.clone(), txtx.clone()).fuse();
+	let server_future = run_web_server(port, store.clone(), txtx.clone()).fuse();
 
 	let watch_future = start_watch(store.clone(), txtx.clone()).fuse();
 

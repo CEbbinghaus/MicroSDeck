@@ -13,9 +13,14 @@ const IGNORED_MODULES: [&'static str; 6] = [
 	"mio::poll",
 ];
 
-pub fn create_subscriber() {
-	let log_file_path = get_file_path_and_create_directory(&CONFIG.log_file, &LOG_DIR)
-		.expect("Log file to be created");
+pub async fn create_subscriber() {
+	let (log_file, log_level) = {
+		let config = CONFIG.read().await;
+		(config.backend.log_file.clone(), config.backend.log_level)
+	};
+
+	let log_file_path =
+		get_file_path_and_create_directory(&log_file, &LOG_DIR).expect("Log file to be created");
 
 	let file = std::fs::OpenOptions::new()
 		.create(true)
@@ -27,7 +32,7 @@ pub fn create_subscriber() {
 		.json()
 		.with_writer(file)
 		.with_filter(tracing_subscriber::filter::LevelFilter::from_level(
-			CONFIG.log_level,
+			log_level,
 		))
 		.with_filter(filter::filter_fn(|metadata| {
 			metadata
@@ -43,7 +48,7 @@ pub fn create_subscriber() {
 				tracing_subscriber::fmt::layer()
 					.pretty()
 					.with_filter(tracing_subscriber::filter::LevelFilter::from_level(
-						CONFIG.log_level,
+						log_level,
 					))
 					.with_filter(filter::filter_fn(|metadata| {
 						metadata

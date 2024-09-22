@@ -128,13 +128,15 @@ if (tasks.includes('collect')) {
 	copyFileSync('package.json', 'build/package.json');
 }
 
-const is_local = existsSync('/home/deck/homebrew');
+const current_user = execSync("whoami").toString().trim();
+
+const is_local = existsSync(`/home/${current_user}/homebrew`);
 
 if (is_local && tasks.includes('copy')) {
 	Logger.Log('Copying build folder to local plugin directory');
-	execSync(`sudo rm -rf /home/deck/homebrew/plugins/${PluginName}`);
-	execSync(`sudo cp -r build/ /home/deck/homebrew/plugins/${PluginName}`);
-	execSync(`sudo chmod 555 /home/deck/homebrew/plugins/${PluginName}`);
+	execSync(`sudo rm -rf /home/${current_user}/homebrew/plugins/${PluginName}`);
+	execSync(`sudo cp -r build/ /home/${current_user}/homebrew/plugins/${PluginName}`);
+	execSync(`sudo chmod 555 /home/${current_user}/homebrew/plugins/${PluginName}`);
 } else {
 	if (!tasks.includes('copy')) {	
 		Logger.Log('Skipping copying build folder to local plugin directory');

@@ -22,7 +22,7 @@ importers:
         version: 3.0.1(@types/react@16.14.0)(react@18.3.1)
       '@mdx-js/rollup':
         specifier: ^3.0.1
-        version: 3.0.1(rollup@2.79.1)
+        version: 3.0.1(rollup@3.29.5)
       lipe:
         specifier: ^0.3.4
         version: 0.3.4(@babel/core@7.25.2)(babel-jest@27.5.1(@babel/core@7.25.2))(typescript@4.9.5)
@@ -38,19 +38,19 @@ importers:
         version: 4.7.1
       '@rollup/plugin-commonjs':
         specifier: ^21.1.0
-        version: 21.1.0(rollup@2.79.1)
+        version: 21.1.0(rollup@3.29.5)
       '@rollup/plugin-json':
         specifier: ^4.1.0
-        version: 4.1.0(rollup@2.79.1)
+        version: 4.1.0(rollup@3.29.5)
       '@rollup/plugin-node-resolve':
         specifier: ^13.3.0
-        version: 13.3.0(rollup@2.79.1)
+        version: 13.3.0(rollup@3.29.5)
       '@rollup/plugin-replace':
         specifier: ^4.0.0
-        version: 4.0.0(rollup@2.79.1)
+        version: 4.0.0(rollup@3.29.5)
       '@rollup/plugin-typescript':
         specifier: ^8.5.0
-        version: 8.5.0(rollup@2.79.1)(tslib@2.7.0)(typescript@4.9.5)
+        version: 8.5.0(rollup@3.29.5)(tslib@2.7.0)(typescript@4.9.5)
       '@types/markdown-it':
         specifier: ^13.0.9
         version: 13.0.9
@@ -64,17 +64,17 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       rollup:
-        specifier: ^2.79.1
-        version: 2.79.1
+        specifier: ^3.29.5
+        version: 3.29.5
       rollup-plugin-codegen:
         specifier: ^1.0.0
         version: 1.0.0
       rollup-plugin-external-globals:
         specifier: ^0.11.0
-        version: 0.11.0(rollup@2.79.1)
+        version: 0.11.0(rollup@3.29.5)
       rollup-plugin-import-assets:
         specifier: ^1.1.1
-        version: 1.1.1(rollup@2.79.1)
+        version: 1.1.1(rollup@3.29.5)
       shx:
         specifier: ^0.3.4
         version: 0.3.4
@@ -2116,9 +2116,9 @@ packages:
   rollup-pluginutils@2.8.2:
     resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
 
-  rollup@2.79.1:
-    resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
-    engines: {node: '>=10.0.0'}
+  rollup@3.29.5:
+    resolution: {integrity: sha512-GVsDdsbJzzy4S/v3dqWPJ7EfvZJfCHiDqe80IyrF59LYuP+e6U1LJoUqeuqRbwAWoMNoXivMNeNAOf5E22VA1w==}
+    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
 
   rollup@4.21.2:
@@ -2312,8 +2312,8 @@ packages:
   throat@6.0.2:
     resolution: {integrity: sha512-WKexMoJj3vEuK0yFEapj8y64V0A6xcuPuK9Gt1d0R+dzCSJc0lHqQytAbSB4cDAK0dWh4T0E2ETkoLE2WZ41OQ==}
 
-  timer@https://codeload.github.com/CEbbinghaus/timer/tar.gz/38d27cc5157b5e44d06eae8fd0ffb8f778821d51:
-    resolution: {tarball: https://codeload.github.com/CEbbinghaus/timer/tar.gz/38d27cc5157b5e44d06eae8fd0ffb8f778821d51}
+  timer@git+https://git@github.com:CEbbinghaus/timer.git#38d27cc5157b5e44d06eae8fd0ffb8f778821d51:
+    resolution: {commit: 38d27cc5157b5e44d06eae8fd0ffb8f778821d51, repo: git@github.com:CEbbinghaus/timer.git, type: git}
     version: 0.0.3
 
   tmpl@1.0.5:
@@ -3035,11 +3035,11 @@ snapshots:
       '@types/react': 16.14.0
       react: 18.3.1
 
-  '@mdx-js/rollup@3.0.1(rollup@2.79.1)':
+  '@mdx-js/rollup@3.0.1(rollup@3.29.5)':
     dependencies:
       '@mdx-js/mdx': 3.0.1
-      '@rollup/pluginutils': 5.1.0(rollup@2.79.1)
-      rollup: 2.79.1
+      '@rollup/pluginutils': 5.1.0(rollup@3.29.5)
+      rollup: 3.29.5
       source-map: 0.7.4
       vfile: 6.0.3
     transitivePeerDependencies:
@@ -3060,16 +3060,16 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@rollup/plugin-commonjs@21.1.0(rollup@2.79.1)':
+  '@rollup/plugin-commonjs@21.1.0(rollup@3.29.5)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
+      '@rollup/pluginutils': 3.1.0(rollup@3.29.5)
       commondir: 1.0.1
       estree-walker: 2.0.2
       glob: 7.2.3
       is-reference: 1.2.1
       magic-string: 0.25.9
       resolve: 1.22.8
-      rollup: 2.79.1
+      rollup: 3.29.5
 
   '@rollup/plugin-commonjs@26.0.1(rollup@4.21.2)':
     dependencies:
@@ -3082,10 +3082,10 @@ snapshots:
     optionalDependencies:
       rollup: 4.21.2
 
-  '@rollup/plugin-json@4.1.0(rollup@2.79.1)':
+  '@rollup/plugin-json@4.1.0(rollup@3.29.5)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
-      rollup: 2.79.1
+      '@rollup/pluginutils': 3.1.0(rollup@3.29.5)
+      rollup: 3.29.5
 
   '@rollup/plugin-json@6.1.0(rollup@4.21.2)':
     dependencies:
@@ -3093,15 +3093,15 @@ snapshots:
     optionalDependencies:
       rollup: 4.21.2
 
-  '@rollup/plugin-node-resolve@13.3.0(rollup@2.79.1)':
+  '@rollup/plugin-node-resolve@13.3.0(rollup@3.29.5)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
+      '@rollup/pluginutils': 3.1.0(rollup@3.29.5)
       '@types/resolve': 1.17.1
       deepmerge: 4.3.1
       is-builtin-module: 3.2.1
       is-module: 1.0.0
       resolve: 1.22.8
-      rollup: 2.79.1
+      rollup: 3.29.5
 
   '@rollup/plugin-node-resolve@15.2.3(rollup@4.21.2)':
     dependencies:
@@ -3114,11 +3114,11 @@ snapshots:
     optionalDependencies:
       rollup: 4.21.2
 
-  '@rollup/plugin-replace@4.0.0(rollup@2.79.1)':
+  '@rollup/plugin-replace@4.0.0(rollup@3.29.5)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
+      '@rollup/pluginutils': 3.1.0(rollup@3.29.5)
       magic-string: 0.25.9
-      rollup: 2.79.1
+      rollup: 3.29.5
 
   '@rollup/plugin-replace@5.0.7(rollup@4.21.2)':
     dependencies:
@@ -3136,29 +3136,29 @@ snapshots:
       rollup: 4.21.2
       tslib: 2.7.0
 
-  '@rollup/plugin-typescript@8.5.0(rollup@2.79.1)(tslib@2.7.0)(typescript@4.9.5)':
+  '@rollup/plugin-typescript@8.5.0(rollup@3.29.5)(tslib@2.7.0)(typescript@4.9.5)':
     dependencies:
-      '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
+      '@rollup/pluginutils': 3.1.0(rollup@3.29.5)
       resolve: 1.22.8
-      rollup: 2.79.1
+      rollup: 3.29.5
       typescript: 4.9.5
     optionalDependencies:
       tslib: 2.7.0
 
-  '@rollup/pluginutils@3.1.0(rollup@2.79.1)':
+  '@rollup/pluginutils@3.1.0(rollup@3.29.5)':
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.3.1
-      rollup: 2.79.1
+      rollup: 3.29.5
 
-  '@rollup/pluginutils@5.1.0(rollup@2.79.1)':
+  '@rollup/pluginutils@5.1.0(rollup@3.29.5)':
     dependencies:
       '@types/estree': 1.0.5
       estree-walker: 2.0.2
       picomatch: 2.3.1
     optionalDependencies:
-      rollup: 2.79.1
+      rollup: 3.29.5
 
   '@rollup/pluginutils@5.1.0(rollup@4.21.2)':
     dependencies:
@@ -4708,7 +4708,7 @@ snapshots:
     optionalDependencies:
       chalk: 4.1.2
       moment: 2.30.1
-      timer: https://codeload.github.com/CEbbinghaus/timer/tar.gz/38d27cc5157b5e44d06eae8fd0ffb8f778821d51(@babel/core@7.25.2)(babel-jest@27.5.1(@babel/core@7.25.2))(typescript@4.9.5)
+      timer: git+https://git@github.com:CEbbinghaus/timer.git#38d27cc5157b5e44d06eae8fd0ffb8f778821d51(@babel/core@7.25.2)(babel-jest@27.5.1(@babel/core@7.25.2))(typescript@4.9.5)
     transitivePeerDependencies:
       - '@babel/core'
       - babel-jest
@@ -5326,13 +5326,13 @@ snapshots:
     dependencies:
       del: 5.1.0
 
-  rollup-plugin-external-globals@0.11.0(rollup@2.79.1):
+  rollup-plugin-external-globals@0.11.0(rollup@3.29.5):
     dependencies:
-      '@rollup/pluginutils': 5.1.0(rollup@2.79.1)
+      '@rollup/pluginutils': 5.1.0(rollup@3.29.5)
       estree-walker: 3.0.3
       is-reference: 3.0.2
       magic-string: 0.30.11
-      rollup: 2.79.1
+      rollup: 3.29.5
 
   rollup-plugin-external-globals@0.11.0(rollup@4.21.2):
     dependencies:
@@ -5342,9 +5342,9 @@ snapshots:
       magic-string: 0.30.11
       rollup: 4.21.2
 
-  rollup-plugin-import-assets@1.1.1(rollup@2.79.1):
+  rollup-plugin-import-assets@1.1.1(rollup@3.29.5):
     dependencies:
-      rollup: 2.79.1
+      rollup: 3.29.5
       rollup-pluginutils: 2.8.2
       url-join: 4.0.1
 
@@ -5358,7 +5358,7 @@ snapshots:
     dependencies:
       estree-walker: 0.6.1
 
-  rollup@2.79.1:
+  rollup@3.29.5:
     optionalDependencies:
       fsevents: 2.3.3
 
@@ -5569,7 +5569,7 @@ snapshots:
   throat@6.0.2:
     optional: true
 
-  timer@https://codeload.github.com/CEbbinghaus/timer/tar.gz/38d27cc5157b5e44d06eae8fd0ffb8f778821d51(@babel/core@7.25.2)(babel-jest@27.5.1(@babel/core@7.25.2))(typescript@4.9.5):
+  timer@git+https://git@github.com:CEbbinghaus/timer.git#38d27cc5157b5e44d06eae8fd0ffb8f778821d51(@babel/core@7.25.2)(babel-jest@27.5.1(@babel/core@7.25.2))(typescript@4.9.5):
     dependencies:
       chalk: 4.1.2
       npm: 7.24.2

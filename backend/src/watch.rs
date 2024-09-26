@@ -103,11 +103,17 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 			continue;
 		}
 
-		let mount = entry.file_name();
+		let mount: String = match entry.file_name().to_str() {
+			Some(v) => v.to_owned(),
+			None => {
+				error!("Failed to convert mount point to string");
+				return Ok(None);
+			}
+		};
 		info!(mount = ?mount, "Found MicroSD Card mount label");
 
 		// apparently the label will occasionally contain ascii escape characters like \x20
-		let unescaped = match unescaper::unescape(mount) {
+		let unescaped = match unescaper::unescape(&mount) {
 			Ok(v) => v,
 			Err(err) => {
 				error!(%err, "Failed to unescape mount point");
@@ -115,7 +121,7 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 			}
 		};
 
-		if !has_libraryfolder(Some(mount)) {
+		if !has_libraryfolder(&Some(mount)) {
 			warn!(
 				mount = unescaped,
 				"Mount point does not resolve library folder"

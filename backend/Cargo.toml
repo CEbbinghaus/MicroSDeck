@@ -28,6 +28,7 @@ lazy_static = "1.4.0"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["json"] }
 tracing-appender = "0.2.3"
+unescaper = "0.1.5"
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }

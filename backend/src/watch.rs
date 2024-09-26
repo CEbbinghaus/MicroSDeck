@@ -99,11 +99,38 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 		.filter_map(|dir| dir.ok())
 	{
 		trace!(path = ?entry.path().canonicalize()?, "testing label for mount point of MicroSD Card");
-		if entry.path().canonicalize()? == PathBuf::from("/dev/mmcblk0p1") {
-			let label = entry.file_name();
-			info!(label = ?label, "Found MicroSD Card label");
-			return Ok(Some(label.to_string_lossy().to_string()));
+		if entry.path().canonicalize()? != PathBuf::from("/dev/mmcblk0p1") {
+			continue;
 		}
+
+		let raw_mount_name: String = match entry.file_name().to_str() {
+			Some(v) => v.to_owned(),
+			None => {
+				error!("Failed to convert mount point to string");
+				return Ok(None);
+			}
+		};
+
+		// apparently the label will occasionally contain ascii escape characters like \x20
+		let mount_name = match unescaper::unescape(&raw_mount_name) {
+			Ok(v) => v,
+			Err(err) => {
+				error!(%err, "Failed to unescape mount point");
+				return Ok(None);
+			}
+		};
+
+		info!(mount = mount_name, "Found MicroSD Card mount label");
+
+		if !has_libraryfolder(&Some(mount_name.clone())) {
+			warn!(
+				mount = mount_name,
+				"Mount point does not resolve library folder"
+			);
+			return Ok(None);
+		}
+
+		return Ok(Some(mount_name));
 	}
 
 	Ok(None)

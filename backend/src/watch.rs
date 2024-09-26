@@ -122,7 +122,7 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 
 		info!(mount = mount_name, "Found MicroSD Card mount label");
 
-		if !has_libraryfolder(&Some(mount_name)) {
+		if !has_libraryfolder(&Some(mount_name.clone())) {
 			warn!(
 				mount = mount_name,
 				"Mount point does not resolve library folder"

@@ -1,5 +1,6 @@
 {
 	"host": "steamdeck",
 	"user": "deck",
-	"keyfile": "~/.ssh/id_rsa"
+	"keyfile": "~/.ssh/id_rsa",
+	"sudo_password": "..."
 }

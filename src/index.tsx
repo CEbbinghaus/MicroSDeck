@@ -1,6 +1,7 @@
 import {
 	definePlugin,
 	DialogButton,
+	DialogCheckbox,
 	Focusable,
 	Navigation,
 	PanelSection,
@@ -11,16 +12,18 @@ import {
 } from "@decky/ui";
 import { routerHook } from '@decky/api';
 import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
+import { GiHamburgerMenu } from "react-icons/gi";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
-import React from "react";
+import React, { useState } from "react";
 import Docs from "./pages/Docs";
 import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 import { backend } from "../lib/src";
 import { version as libVersion } from "../lib/src";
 import { version } from "../package.json";
+import { fetchSetSetting } from "../lib/src/backend";
 
 if (!IsMatchingSemver(libVersion, version)) {
 	throw new Error("How the hell did we get here???");
@@ -52,7 +55,9 @@ function EditCardButton(props: EditCardButtonProps) {
 }
 
 function Content() {
-	const { currentCardAndGames, cardsAndGames, microSDeck } = useMicroSDeckContext();
+	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings, refresh } = useMicroSDeckContext();
+
+	const [dismiss_docs, setDismissDocs] = useState(frontendSettings?.dismissed_docs || false);
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
@@ -83,12 +88,41 @@ function Content() {
 		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeck: microSDeck }} />);
 	}
 
-	return (
-		<>
-			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
-				<div style={{ margin: "5px", marginTop: "0px" }}>
-					Edit MicroSD Cards
+	let docs_card = (<></>);
+
+	if (frontendSettings && frontendSettings.dismissed_docs === false) {
+		docs_card = (
+			<div style={{backgroundColor: "#577ca8", width: "100%", paddingBottom: "8px"}}>
+				<div style={{padding: "5px", width: "80%", margin: "auto"}}>
+					<div>
+						<h3 style={{margin: "0px"}}>Check out the new Docs!</h3>
+						Open them using 
+						<div style={{display: "inline-block", marginLeft: ".2em"}}>
+							<div style={{backgroundColor: "black", borderRadius: "100px", display: "flex", justifyContent: "center", width: "40px"}}>
+								<GiHamburgerMenu />
+							</div>
+						</div>
+					</div>
+					<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
+					<DialogButton
+						style={{ width: "100%" }}
+						onOKButton={() => { 
+							if (dismiss_docs) {
+								refresh();
+								fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: dismiss_docs });
+							}
+							Navigation.Navigate(DOCUMENTATION_PATH);
+						}}
+						onOKActionDescription="Dismiss Docs Reminder">Open Docs</DialogButton>
 				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div style={{scrollPadding: "48px 0px" }}>
+			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
+				{docs_card}
 				<PanelSection title="Cards">
 					{isLoaded ? (
 						<ReorderableList<MicroSDCard>
@@ -112,7 +146,7 @@ function Content() {
 					)}
 				</PanelSection>
 			</Focusable>
-		</>
+		</div>
 	);
 };
 

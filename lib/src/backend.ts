@@ -123,6 +123,33 @@ export async function fetchVersion({ url, logger }: FetchProps): Promise<string 
 	return await wrapFetch({ url: `${url}/health`, logger });
 }
 
+export type SettingNames = 
+	"*" |
+	"backend" |
+	"backend:port" |
+	"backend:scan_interval" |
+	"backend:store_file" |
+	"backend:log_file" |
+	"backend:log_level" |
+	"backend:startup" |
+	"backend:startup:skip_validate" |
+	"backend:startup:skip_clean" |
+	"frontend" |
+	"frontend:dismissed_docs";
+
+export async function fetchGetSetting({ url, logger, setting_name }: FetchProps & { setting_name: SettingNames }): Promise<any | undefined> {
+	const result = await wrapFetch({ url: `${url}/setting/${setting_name}`, logger });
+	return result && JSON.parse(result) || result;
+}
+
+export async function fetchSetSetting({ url, logger, value, setting_name }: FetchProps & { setting_name: SettingNames, value: any }) {
+	await wrapFetch({ url: `${url}/setting/${setting_name}`, logger }, {
+		method: "POST",
+		...ApplicationJsonHeaders,
+		body: JSON.stringify(value),
+	});
+}
+
 export async function fetchDeleteCard({ url, logger, card }: FetchProps & { card: MicroSDCard }) {
 	await wrapFetch({ url: `${url}/card/${card.uid}`, logger }, { method: "DELETE" });
 }

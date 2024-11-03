@@ -137,7 +137,12 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 }
 
 pub async fn start_watch(datastore: Arc<Store>, sender: Sender<CardEvent>) -> Result<(), Error> {
-	let mut interval = interval(Duration::from_millis(CONFIG.scan_interval));
+	let scan_interval = {
+		let config = CONFIG.read().await;
+		config.backend.scan_interval
+	};
+
+	let mut interval = interval(Duration::from_millis(scan_interval));
 
 	let mut card_inserted = false;
 

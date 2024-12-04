@@ -12,7 +12,7 @@ import {
 import { routerHook } from '@decky/api';
 import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
 import PatchAppScreen from "./patch/PatchAppScreen";
-import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
+import { API_URL, DOCUMENTATION_PATH, TROUBLESHOOTING_PATH, UNNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
 import React from "react";
 import Docs from "./pages/Docs";
@@ -21,6 +21,7 @@ import { CardActionsContextMenu } from "./components/CardActions";
 import { backend } from "../lib/src";
 import { version as libVersion } from "../lib/src";
 import { version } from "../package.json";
+import Help from "./pages/Troubleshooting";
 
 if (!IsMatchingSemver(libVersion, version)) {
 	throw new Error("How the hell did we get here???");
@@ -130,6 +131,11 @@ export default definePlugin(() => {
 	routerHook.addRoute(DOCUMENTATION_PATH, () => (
 		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>
 			<Docs />
+		</MicroSDeckContextProvider>));
+
+	routerHook.addRoute(TROUBLESHOOTING_PATH, () => (
+		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>
+			<Help />
 		</MicroSDeckContextProvider>));
 
 	return {

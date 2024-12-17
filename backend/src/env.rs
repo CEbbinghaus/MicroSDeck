@@ -24,6 +24,11 @@ lazy_static! {
 			TEMPDIR.to_string() + "/log"
 		}
 	});
+
+	pub static ref CONFIG_PATH: PathBuf = match std::env::var("DECKY_CONFIG_PATH") {
+		Ok(loc) => PathBuf::from(loc),
+		Err(_) => DATA_DIR.join("config.toml")
+	};
 }
 
 pub fn get_file_path_and_create_directory(

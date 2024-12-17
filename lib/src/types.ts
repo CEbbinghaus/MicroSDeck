@@ -10,7 +10,6 @@ export type MicroSDCard = {
 	hidden: boolean,
 }
 
-
 export type Game = {
 	uid: string,
 	name: string,
@@ -21,3 +20,7 @@ export type Game = {
 export type CardAndGames = [MicroSDCard, Game[]];
 
 export type CardsAndGames = CardAndGames[];
+
+export type FrontendSettings = {
+	dismissed_docs: boolean	
+}

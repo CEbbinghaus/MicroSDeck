@@ -74,7 +74,7 @@ pub struct StoreData {
 	hashes: HashMap<String, u64>,
 }
 
-impl StoreData {
+impl StoreData {	
 	#[instrument(skip(self))]
 	pub fn add_card(&mut self, id: String, card: MicroSDCard) {
 		self.node_ids
@@ -389,10 +389,11 @@ impl Store {
 		result
 	}
 
-	/// Removes any whitespace from the card uid
+	/// cleans up any data to make it consistent with what we expect.
 	pub fn clean_up(&self) {
 		let mut data = self.data.write().unwrap();
-
+		
+		// Removes any whitespace from the card uid
 		let cleaned_node_ids: HashMap<String, DefaultKey> = data
 			.node_ids
 			.iter()

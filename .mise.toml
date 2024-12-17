@@ -2,7 +2,7 @@
 # specify single or multiple versions
 pnpm = '9.5.0'
 node = '22.4.0'
-rust = '1.79.0'
+rust = "1.80.1"
 
 
 [tasks."build"]
@@ -18,7 +18,7 @@ outputs = ['build/bin/backend']
 [tasks."build:frontend"]
 description = 'Build the Frontend'
 run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o frontend"
-sources = ['package.json', 'lib/package.json', '{src,lib}/**/*.{ts,tsx,codegen}']
+sources = ['package.json', 'lib/package.json', '{src,lib}/**/*.*']
 outputs = ['dist/index.js']
 
 [tasks."build:collect"]

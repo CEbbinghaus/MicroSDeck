@@ -1,6 +1,6 @@
-import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame, fetchCreateGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchHealth, fetchLinkCardAndGame, fetchLinkCardAndManyGames, fetchUnlinkCardAndGame, fetchUnlinkCardAndManyGames, fetchUpdateCard, fetchVersion } from "./backend.js";
+import { Event as BackendEvent, EventType, fetchCardsAndGames, fetchCardsForGame, fetchCreateGame, fetchCurrentCardAndGames, fetchDeleteCard, fetchEventTarget, fetchGetSetting, fetchHealth, fetchLinkCardAndGame, fetchLinkCardAndManyGames, fetchUnlinkCardAndGame, fetchUnlinkCardAndManyGames, fetchUpdateCard, fetchVersion } from "./backend.js";
 import Logger from "lipe";
-import { CardAndGames, CardsAndGames, Game, MicroSDCard } from "./types.js"
+import { CardAndGames, CardsAndGames, FrontendSettings, Game, MicroSDCard } from "./types.js"
 
 import semverParse from "semver/functions/parse"
 import semverEq from "semver/functions/eq.js"
@@ -91,6 +91,11 @@ export class MicroSDeck {
 		return this.cardsAndGames;
 	}
 
+	private frontendSettings: FrontendSettings | undefined;
+	public get FrontendSettings() {
+		return this.frontendSettings;
+	}
+
 	private pollLock: any | undefined;
 
 	private isDestructed = false;
@@ -124,8 +129,12 @@ export class MicroSDeck {
 		}
 		this.backendVersion = await fetchVersion(this.fetchProps);
 
-		await this.fetchCurrent();
-		await this.fetchCardsAndGames();
+		await Promise.all([
+			this.fetchCurrent(),
+			this.fetchCardsAndGames(),
+			this.fetchFrontendSettings(),
+		]);
+		
 		this.eventBus.dispatchEvent(new Event("update"));
 		this.enabled = true;
 	}
@@ -136,13 +145,17 @@ export class MicroSDeck {
 	async fetchCardsAndGames() {
 		this.cardsAndGames = await fetchCardsAndGames(this.fetchProps) || this.cardsAndGames || [];
 	}
+	async fetchFrontendSettings() {
+		this.frontendSettings = await fetchGetSetting({ ...this.fetchProps, setting_name: "frontend"}) || this.frontendSettings;
+	}
 
 	getProps() {
 		return {
 			enabled: this.enabled,
 			version: this.backendVersion,
 			cardsAndGames: this.cardsAndGames,
-			currentCardAndGames: this.currentCardAndGames
+			currentCardAndGames: this.currentCardAndGames,
+			frontendSettings: this.frontendSettings
 		}
 	}
 

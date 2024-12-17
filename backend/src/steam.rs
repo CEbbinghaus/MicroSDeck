@@ -10,6 +10,7 @@ pub struct LibraryFolder {
 	pub label: String,
 }
 
+#[allow(dead_code)]
 #[serde_alias(CamelCase, PascalCase, LowerCase, SnakeCase)]
 #[derive(Deserialize)]
 pub struct AppState {

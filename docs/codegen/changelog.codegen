@@ -3,10 +3,29 @@ const { execSync } = require('child_process');
 const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim();
 const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
 
-const tags = Object.fromEntries(tagLog.split('\n').map(line => {
-	const [hash, tag] = line.split(' ');
-	return [hash, tag];
-}));
+const masterCommit = execSync('git rev-parse master').toString().trim();
+const headCommit = execSync('git rev-parse HEAD').toString().trim();
+
+let additionalTags = [
+	[masterCommit, 'master']
+];
+
+if (masterCommit !== headCommit) {
+	additionalTags = [
+		[headCommit, execSync("git rev-parse --abbrev-ref HEAD").toString().trim()],
+		...additionalTags
+	];
+}
+
+const tagArray = [
+	...additionalTags,
+	...tagLog.split('\n').map(line => {
+		const [hash, tag] = line.split(' ');
+		return [hash, tag];
+	})
+]
+
+const tags = Object.fromEntries(tagArray);
 
 const commits = commitLog.split('\n').map(line => {
 	const [hash, author, email, ...message] = line.split(' ');

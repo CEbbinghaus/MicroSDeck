@@ -118,13 +118,17 @@ impl Config {
 		let parts: Vec<&str> = name.split(":").collect();
 
 		match parts[..] {
+			["*"] => Ok(serde_json::to_string(&self).unwrap()),
+			["backend"] => Ok(serde_json::to_string(&self.backend).unwrap()),
 			["backend", "port"] => Ok(self.backend.port.to_string()),
 			["backend", "scan_interval"] => Ok(self.backend.scan_interval.to_string()),
 			["backend", "store_file"] => Ok(self.backend.store_file.to_string_lossy().to_string()),
 			["backend", "log_file"] => Ok(self.backend.log_file.to_string_lossy().to_string()),
 			["backend", "log_level"] => Ok(self.backend.log_level.to_string()),
+			["backend", "startup"] => Ok(serde_json::to_string(&self.backend.startup).unwrap()),
 			["backend", "startup", "skip_validate"] => Ok(self.backend.startup.skip_validate.to_string()),
 			["backend", "startup", "skip_clean"] => Ok(self.backend.startup.skip_clean.to_string()),
+			["frontend"] => Ok(serde_json::to_string(&self.frontend).unwrap()),
 			["frontend", "dismissed_docs"] => Ok(self.frontend.dismissed_docs.to_string()),
 			_ => Err(Error::from_str("Invalid property Name")),
 		}
@@ -136,6 +140,12 @@ impl Config {
 		let wrong_value_err = Error::from_str(&format!("The value provided \"{value}\" did not match the expected type"));
 
 		match parts[..] {
+			["*"] => {
+				*self = serde_json::from_str(value).map_err(|_| wrong_value_err)?;
+			}
+			["backend"] => {
+				self.backend = serde_json::from_str(value).map_err(|_| wrong_value_err)?;
+			}
 			["backend", "port"] => {
 				self.backend.port = value.parse().map_err(|_| wrong_value_err)?;
 			}
@@ -151,11 +161,17 @@ impl Config {
 			["backend", "log_level"] => {
 				self.backend.log_level = value.parse().map_err(|_| wrong_value_err)?;
 			}
+			["backend", "startup"] => {
+				self.backend.startup = serde_json::from_str(value).map_err(|_| wrong_value_err)?;
+			}
 			["backend", "startup", "skip_validate"] => {
 				self.backend.startup.skip_validate = value.parse().map_err(|_| wrong_value_err)?;
 			}
 			["backend", "startup", "skip_clean"] => {
 				self.backend.startup.skip_clean = value.parse().map_err(|_| wrong_value_err)?;
+			}
+			["frontend"] => {
+				self.frontend = serde_json::from_str(value).map_err(|_| wrong_value_err)?;
 			}
 			["frontend", "dismissed_docs"] => {
 				self.frontend.dismissed_docs = value.parse().map_err(|_| wrong_value_err)?;

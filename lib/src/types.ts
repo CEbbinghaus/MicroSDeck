@@ -21,3 +21,8 @@ export type Game = {
 export type CardAndGames = [MicroSDCard, Game[]];
 
 export type CardsAndGames = CardAndGames[];
+
+
+export type FrontendSettings = {
+	dismissed_docs: boolean	
+}

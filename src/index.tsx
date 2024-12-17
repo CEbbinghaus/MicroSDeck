@@ -11,6 +11,7 @@ import {
 } from "@decky/ui";
 import { routerHook } from '@decky/api';
 import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
+import { GiHamburgerMenu } from "react-icons/gi";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
@@ -21,6 +22,7 @@ import { CardActionsContextMenu } from "./components/CardActions";
 import { backend } from "../lib/src";
 import { version as libVersion } from "../lib/src";
 import { version } from "../package.json";
+import { fetchSetSetting } from "../lib/src/backend";
 
 if (!IsMatchingSemver(libVersion, version)) {
 	throw new Error("How the hell did we get here???");
@@ -52,7 +54,7 @@ function EditCardButton(props: EditCardButtonProps) {
 }
 
 function Content() {
-	const { currentCardAndGames, cardsAndGames, microSDeck } = useMicroSDeckContext();
+	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings } = useMicroSDeckContext();
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
@@ -83,9 +85,27 @@ function Content() {
 		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeck: microSDeck }} />);
 	}
 
+	let docs_card = (<></>);
+
+	if (frontendSettings && frontendSettings.dismissed_docs === false) {
+		docs_card = (
+			<PanelSection title="Docs">
+				<div style={{ margin: "5px", marginTop: "0px" }}>
+					Open the documentation to learn how to use this plugin, For this use the context button <GiHamburgerMenu />
+				</div>
+				<DialogButton
+					style={{ width: "100%" }}
+					onOKButton={() => { fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: true }); }}
+					onOKActionDescription="Dismiss Docs Reminder">Dismiss</DialogButton>
+			</PanelSection>
+		);
+	}
+
 	return (
 		<>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
+				<div style={{marginTop: "25px"}} ></div>
+				{docs_card}
 				<div style={{ margin: "5px", marginTop: "0px" }}>
 					Edit MicroSD Cards
 				</div>

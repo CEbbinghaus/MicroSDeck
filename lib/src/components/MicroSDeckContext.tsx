@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { MicroSDeck } from "../MicoSDeck.js";
-import { CardAndGames, CardsAndGames } from "../types.js";
+import { CardAndGames, CardsAndGames, FrontendSettings } from "../types.js";
 
 const MicroSDeckContext = createContext<MicroSDeckContext>(null as any);
 export const useMicroSDeckContext = () => useContext(MicroSDeckContext) || {};
@@ -12,6 +12,7 @@ interface ProviderProps {
 interface PublicMicroSDeck {
 	currentCardAndGames: CardAndGames | undefined;
 	cardsAndGames: CardsAndGames;
+	frontendSettings: FrontendSettings | undefined;
 }
 
 interface MicroSDeckContext extends PublicMicroSDeck {

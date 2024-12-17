@@ -11,29 +11,29 @@ description = 'Build the CLI'
 
 [tasks."build:backend"]
 description = 'Build the Backend'
-run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o backend"
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o backend"
 sources = ['backend/Cargo.toml', 'backend/src/**/*.rs']
 outputs = ['build/bin/backend']
 
 [tasks."build:frontend"]
 description = 'Build the Frontend'
-run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o frontend"
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o frontend"
 sources = ['package.json', 'lib/package.json', '{src,lib}/**/*.{ts,tsx,codegen}']
 outputs = ['dist/index.js']
 
 [tasks."build:collect"]
 depends = ["build:backend", "build:frontend"]
 description = 'Collect the build artifacts'
-run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o collect"
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o collect"
 sources = ['backend/target/release/backend', 'dist/index.js', 'main.py', 'package.json', 'plugin.json', 'README.md']
 outputs = ['build/**/*.*']
 
 [tasks."copy"]
 depends = ["build"]
 description = 'Copy MicroSDeck to the SteamDeck Plugins'
-run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o copy"
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o copy"
 
 [tasks."upload"]
 depends = ["build"]
 description = 'Upload MicroSDeck to the SteamDeck'
-run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -o upload"
+run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o upload"

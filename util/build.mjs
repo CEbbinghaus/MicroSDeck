@@ -9,8 +9,6 @@ import { exit } from 'process';
 import plugin from "../plugin.json" with { type: "json" };
 const { name: PluginName } = plugin;
 
-import deploy from "../deploy.json" with { type: "json" };
-
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
 	console.log(
 `  __  __ _            ___ ___         _     ___      _ _    _ 
@@ -25,6 +23,7 @@ if (process.argv.includes('-h') || process.argv.includes('--help')) {
 Basic Usage: ./build [flags]
 
      -h, --help: Prints this help dialogue
+    -q, --quiet: Prints only required output
 	 -o, --only: Only run the specified part (backend, frontend, collect, copy, upload)
  --skip-backend: Skips building the backend
 --skip-frontend: Skips building the frontend
@@ -34,6 +33,8 @@ Basic Usage: ./build [flags]
 	`)
 	process.exit(0);
 }
+
+const quiet = process.argv.includes('-q') || process.argv.includes('--quiet');
 
 const tasks = [];
 if (process.argv.includes('-o') || process.argv.includes('--only')) {
@@ -91,7 +92,13 @@ function runCommand(command, directory = "") {
 	return output;
 }
 
-Logger.Log(`Building plugin ${PluginName}@${Version}`);
+async function importJson(file) {
+	return (await import(file, { with: { type: "json" } })).default;
+}
+
+
+if (!quiet)
+	Logger.Log(`Building plugin ${PluginName}@${Version}`);
 
 if (!existsSync('plugin.json')) {
 	console.error('Build script must be run from the root of the repository.');
@@ -138,9 +145,9 @@ if (is_local && tasks.includes('copy')) {
 	execSync(`sudo cp -r build/ /home/${current_user}/homebrew/plugins/${PluginName}`);
 	execSync(`sudo chmod 555 /home/${current_user}/homebrew/plugins/${PluginName}`);
 } else {
-	if (!tasks.includes('copy')) {	
+	if (!tasks.includes('copy') && !quiet) {	
 		Logger.Log('Skipping copying build folder to local plugin directory');
-	} else if (!is_local) {
+	} else if (!is_local && !quiet) {
 		Logger.Info('Not running on steamdeck');
 	}
 }
@@ -155,7 +162,15 @@ if (tasks.includes('upload')) {
 		exit(1);
 	}
 
-	const { host, user, keyfile } = deploy;
+	const { host, user, keyfile } = importJson('deploy.json');
+
+	// ping host to make sure its avaliable
+	try {
+		execSync(`ping -c 1 ${host}`);
+	} catch (e) {
+		Logger.Error(`Could not connect to ${host}`);
+		exit(1);
+	}
 
 	const deployPath = `/home/${user}/homebrew/plugins/${PluginName}`;
 

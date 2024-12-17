@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, openSync, fstatSync, utimesSync, closeSync, ftruncateSync, stat, statSync } from "fs";
+import { readFileSync, writeFileSync, utimesSync, statSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 

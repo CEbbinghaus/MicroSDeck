@@ -1,10 +1,5 @@
-import Lipe, { LoggerPipe } from "lipe"
-import { PrefixWithColor, Splat, Timestamped, Console } from "lipe/defaults"
-
-const Pipe = new LoggerPipe()
-	.Pipe(PrefixWithColor)
-	.Pipe(Splat("{prefix} {Message}"))
-	.Pipe(Console())
-
-
-export const Logger = new Lipe().AddPipe(Pipe);
+export const Logger = {
+	Log: console.log,
+	Info: console.info,
+	Error: console.error,
+}

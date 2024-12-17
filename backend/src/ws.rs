@@ -7,7 +7,7 @@ use tokio::{select, sync::broadcast::*, time::interval};
 use tracing::{debug, error, info, warn};
 
 
-use crate::{dto::CardEvent, event::Event};
+use crate::{dto::CardEvent, event::{Event, ParsedEvent}};
 
 /// How often heartbeat pings are sent.
 ///
@@ -97,7 +97,9 @@ pub async fn handle_ws(
                 debug!("msg: {msg:?}");
 
                 match msg {
-                    Message::Text(_) => {
+                    Message::Text(data) => {
+                        let event = ParsedEvent::parse(&data);
+                        info!(event = ?event, "Recieved Event");
                         let _ = channel.send(CardEvent::Updated);
                         // drop client's text messages
                     }

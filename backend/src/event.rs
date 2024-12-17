@@ -18,39 +18,8 @@ pub(crate) trait EventTrait<'a> {
 }
 
 impl<'a, T: EventTrait<'a>> Event<'a, T> {
-	pub fn new(val: T) -> Self  {
+	pub fn new(val: T) -> Self {
 		Event(val, PhantomData)
-	}
-
-	pub fn parse(str: &'a str) -> impl EventTrait + 'a {
-		let mut event = EventBuilder::new();
-
-		for line in str.split("\n") {
-			let (key, value) = match line.split_once(":") {
-				None => {
-					warn!(line = line, "Malformed Event detected");
-					continue;
-				}
-				Some(key) => key,
-			};
-
-			if value.is_empty() {
-				warn!(key = key, "Event had empty data");
-				continue;
-			}
-
-			match key {
-				"id" => event.set_id(value),
-				"event" => event.set_event(value),
-				"data" => event.set_data(value),
-				_ => {
-					warn!(key=key, "Invalid key provided");
-					continue
-				}
-			};
-		}
-
-		event
 	}
 }
 
@@ -93,7 +62,7 @@ impl<'a, T: EventTrait<'a>> From<T> for Event<'a, T> {
 		Event(value, PhantomData)
 	}
 }
-
+#[derive(Debug)]
 pub(crate) struct EventBuilder<'a> {
 	id: Option<&'a str>,
 	event: Option<&'a str>,
@@ -101,7 +70,7 @@ pub(crate) struct EventBuilder<'a> {
 }
 
 #[allow(dead_code)]
-impl <'a>EventBuilder<'a> {
+impl<'a> EventBuilder<'a> {
 	pub fn new() -> Self {
 		EventBuilder {
 			id: None,
@@ -132,7 +101,7 @@ impl <'a>EventBuilder<'a> {
 	}
 }
 
-impl <'a> EventTrait<'a> for EventBuilder<'a> {
+impl<'a> EventTrait<'a> for EventBuilder<'a> {
 	fn get_data(&self) -> Option<&'a str> {
 		self.data
 	}
@@ -141,5 +110,57 @@ impl <'a> EventTrait<'a> for EventBuilder<'a> {
 	}
 	fn get_id(&self) -> Option<&'a str> {
 		self.id
+	}
+}
+
+#[derive(Debug)]
+pub struct ParsedEvent<'a>(EventBuilder<'a>);
+
+impl<'a> ParsedEvent<'a> {
+	pub fn parse(str: &'a str) -> ParsedEvent<'a> {
+		let mut event = EventBuilder::new();
+
+		for line in str.split("\n") {
+			let (key, mut value) = match line.split_once(":") {
+				None => {
+					warn!(line = line, "Malformed Event detected");
+					continue;
+				}
+				Some(key) => key,
+			};
+
+			if value.is_empty() {
+				warn!(key = key, "Event had empty data");
+				continue;
+			}
+
+			value = value.trim();
+
+			match key {
+				"id" => event.set_id(value),
+				"event" => event.set_event(value),
+				"data" => event.set_data(value),
+				_ => {
+					warn!(key = key, "Invalid key provided");
+					continue;
+				}
+			};
+		}
+
+		ParsedEvent(event)
+	}
+}
+
+impl<'a> EventTrait<'a> for ParsedEvent<'a> {
+	fn get_id(&self) -> Option<&'a str> {
+		self.0.get_id()
+	}
+
+	fn get_event(&self) -> Option<&'a str> {
+		self.0.get_event()
+	}
+
+	fn get_data(&self) -> Option<&'a str> {
+		self.0.get_data()
 	}
 }

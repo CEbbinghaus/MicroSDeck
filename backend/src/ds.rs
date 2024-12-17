@@ -389,7 +389,7 @@ impl Store {
 		result
 	}
 
-	/// cleans up any data to make it compliant
+	/// cleans up any data to make it consistent with what we expect.
 	pub fn clean_up(&self) {
 		let mut data = self.data.write().unwrap();
 		

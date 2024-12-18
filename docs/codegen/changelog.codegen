@@ -4,15 +4,18 @@ const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim()
 const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
 
 const masterCommit = execSync('git rev-parse master').toString().trim();
+const masterVersion = execSync('git show master:backend/version').toString().trim();
 const headCommit = execSync('git rev-parse HEAD').toString().trim();
 
 let additionalTags = [
-	[masterCommit, 'master']
+	[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
 ];
 
+// This is not built on latest master so we are gonna display info on this branch
 if (masterCommit !== headCommit) {
+	const branchName = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
 	additionalTags = [
-		[headCommit, execSync("git rev-parse --abbrev-ref HEAD").toString().trim()],
+		[headCommit, `${branchName} @ ${headCommit.substring(0, 7)} (Pre-Release)`],
 		...additionalTags
 	];
 }

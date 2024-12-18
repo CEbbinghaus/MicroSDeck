@@ -10,16 +10,15 @@ type CheckListItem = {
 export function CheckListItem({ title, children, check }: React.PropsWithChildren<{ title: string, check: (cardsAndGames: CardsAndGames) => boolean }>): ReactElement {
 	const { cardsAndGames } = useMicroSDeckContext();
 
-	const is_completed = false && check(cardsAndGames);
+	const is_completed = /* Math.random() < 0.5 && */ check(cardsAndGames);
 
 	return (
 		<>
-			<div style={{display: "inline-block"}}>
-				{is_completed ? <FaCheckCircle style={{ color: "#0f0" }} size={32} /> : <FaQuestionCircle style={{ color: "#00f	" }} size={32} />}
-				<h2>{title}</h2>
+			<div style={{display: "flex", flexDirection: "row"}}>
+				<div style={{ marginTop: "1.6em", marginRight: "12px" }}>{is_completed ? <FaCheckCircle style={{ color: "#7df47d" }} size={26} /> : <FaQuestionCircle style={{ color: "#7dbcf4" }} size={26} />}</div>
+				<h2 style={{marginBottom: "0px"}}>{title}</h2>
 			</div>
 			{is_completed ? <></> : children}
-			<br/>
 		</>
 	);
 }

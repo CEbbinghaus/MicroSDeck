@@ -48,6 +48,12 @@ impl<T: EventTrait> From<Event<T>> for Bytes {
 	}
 }
 
+impl<T: EventTrait> From<Event<T>> for String {
+	fn from(val: Event<T>) -> Self {
+		val.to_string()
+	}
+}
+
 impl<T: EventTrait> From<T> for Event<T> {
 	fn from(value: T) -> Self {
 		Event(value)

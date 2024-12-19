@@ -11,7 +11,7 @@ import docs from './docs.codegen';
 // This is more efficient since it precalculates the markdown and doesn't have to do it at every render
 const docPages = docs.sort((a, b) => a.name == "index" ? -1 : (b.name == "index" ? 1 : a.name.localeCompare(b.name))).map(({ name, content }) => {
 	return {
-		title: (name == "index" ? "Main" : name).trim(),
+		title: (name == "index" ? "Home" : name).trim(),
 		//@ts-expect-error MDX & React don't play amazingly together... sadly
 		content: <DocPage content={window.SP_REACT.createElement(content, null)} />,
 		route: `${DOCUMENTATION_PATH}/${name.toLowerCase().replace(/ /g, "-")}`,

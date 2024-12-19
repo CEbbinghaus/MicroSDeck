@@ -18,7 +18,7 @@ import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
 import { Logger } from "./Logging";
 import React, { useState } from "react";
 import Docs from "./pages/Docs";
-import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver } from "../lib/src";
+import { MicroSDeck, MicroSDeckContextProvider, useMicroSDeckContext, CardAndGames, MicroSDCard, IsMatchingSemver, FrontendSettings } from "../lib/src";
 import { CardActionsContextMenu } from "./components/CardActions";
 import { backend } from "../lib/src";
 import { version as libVersion } from "../lib/src";
@@ -54,16 +54,18 @@ function EditCardButton(props: EditCardButtonProps) {
 	)
 }
 
-function Content() {
-	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings, refresh } = useMicroSDeckContext();
-
-	const [dismiss_docs, setDismissDocs] = useState(frontendSettings?.dismissed_docs || false);
+function CardsList({ cardsAndGames, currentCardAndGames, microSDeck }: { cardsAndGames: CardAndGames[], currentCardAndGames: CardAndGames | undefined, microSDeck: MicroSDeck }) {
 
 	const [currentCard] = currentCardAndGames || [undefined];
 
-	const isLoaded = !!cardsAndGames;
+	function CardInteractables({ entry }: {
+		entry: ReorderableEntry<MicroSDCard>
+	}) {
+		const cardAndGames = cardsAndGames.find(([card]) => card.uid == entry.data!.uid)!;
+		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeck: microSDeck }} />);
+	}
 
-	const entries = cardsAndGames?.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
+	const entries = cardsAndGames.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
 		const currentCardMark = card.uid === currentCard?.uid ? (<small style={{ marginLeft: "0.5em" }}><FaStar size={12} /></small>) : "";
 
 		return {
@@ -81,64 +83,84 @@ function Content() {
 		};
 	});
 
-	function CardInteractables({ entry }: {
-		entry: ReorderableEntry<MicroSDCard>
-	}) {
-		const cardAndGames = cardsAndGames!.find(([card]) => card.uid == entry.data!.uid)!;
-		return (<EditCardButton {...{ cardAndGames, currentCard, microSDeck: microSDeck }} />);
-	}
-
-	let docs_card = (<></>);
-
-	if (frontendSettings && frontendSettings.dismissed_docs === false) {
-		docs_card = (
-			<div style={{backgroundColor: "#577ca8", width: "100%", paddingBottom: "8px"}}>
-				<div style={{padding: "5px", width: "80%", margin: "auto"}}>
-					<div>
-						<h3 style={{margin: "0px"}}>Check out the new Docs!</h3>
-						Open them using 
-						<div style={{display: "inline-block", marginLeft: ".2em"}}>
-							<div style={{backgroundColor: "black", borderRadius: "100px", display: "flex", justifyContent: "center", width: "40px"}}>
-								<GiHamburgerMenu />
-							</div>
-						</div>
-					</div>
-					<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
-					<DialogButton
-						style={{ width: "100%" }}
-						onOKButton={() => { 
-							if (dismiss_docs) {
-								refresh();
-								fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: dismiss_docs });
-							}
-							Navigation.Navigate(DOCUMENTATION_PATH);
-						}}
-						onOKActionDescription="Dismiss Docs Reminder">Open Docs</DialogButton>
-				</div>
+	if (entries.length == 0) {
+		return (
+			<div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "5px" }}>
+				No Cards (yet)
 			</div>
 		);
 	}
 
 	return (
-		<div style={{scrollPadding: "48px 0px" }}>
+		<ReorderableList<MicroSDCard>
+			entries={entries!}
+			interactables={CardInteractables}
+			onSave={async (entries: ReorderableEntry<MicroSDCard>[]) => {
+				await backend.fetchUpdateCards({
+					url: API_URL, logger: Logger, cards: entries.map(v => {
+						v.data!.position = v.position;
+						return v.data!;
+					})
+				});
+
+				Logger.Log(`Reordered Tabs`)
+			}}
+		/>
+	);
+}
+
+function DocsCard({ frontendSettings, refresh }: { frontendSettings: FrontendSettings | undefined, refresh: () => void }) {
+	const [set_dismiss, setDismissDocs] = useState(false);
+
+	if (!frontendSettings || frontendSettings.dismissed_docs === true) {
+		return (<></>);
+	}
+
+	return (
+		<div style={{ color: "black", backgroundColor: "#577ca8", width: "100%", paddingBottom: "8px" }}>
+			<div style={{ padding: "5px", width: "80%", margin: "auto" }}>
+				<div>
+					<h3 style={{ margin: "0px" }}>Check out the new Docs!</h3>
+					Open them using
+					<div style={{ display: "inline-block", marginLeft: ".2em" }}>
+						<div style={{ backgroundColor: "black", color: "white", borderRadius: "100px", display: "flex", justifyContent: "center", width: "40px" }}>
+							<GiHamburgerMenu />
+						</div>
+					</div>
+				</div>
+				<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
+				<DialogButton
+
+					style={{ width: "100%" }}
+					onClick={() => {
+						if (set_dismiss) {
+							fetchSetSetting({ url: API_URL, logger: Logger, setting_name: "frontend:dismissed_docs", value: set_dismiss }).then(() => {
+								refresh();
+							});
+						}
+						Navigation.Navigate(DOCUMENTATION_PATH);
+					}}
+					onOKActionDescription="Dismiss Docs Reminder">Open Docs</DialogButton>
+			</div>
+		</div>
+	);
+}
+
+function Content() {
+	const { currentCardAndGames, cardsAndGames, microSDeck, frontendSettings, refresh } = useMicroSDeckContext();
+
+	const isLoaded = !!cardsAndGames;
+
+	return (
+		<div style={{ scrollPadding: "48px 0px" }}>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
-				{docs_card}
+				<div style={{ margin: "5px", marginTop: "0px" }}>
+					Edit MicroSD Cards
+				</div>
+				{<DocsCard frontendSettings={frontendSettings} refresh={refresh} />}
 				<PanelSection title="Cards">
 					{isLoaded ? (
-						<ReorderableList<MicroSDCard>
-							entries={entries!}
-							interactables={CardInteractables}
-							onSave={async (entries: ReorderableEntry<MicroSDCard>[]) => {
-								await backend.fetchUpdateCards({
-									url: API_URL, logger: Logger, cards: entries.map(v => {
-										v.data!.position = v.position;
-										return v.data!;
-									})
-								});
-
-								Logger.Log(`Reordered Tabs`)
-							}}
-						/>
+						<CardsList cardsAndGames={cardsAndGames} currentCardAndGames={currentCardAndGames} microSDeck={microSDeck} />
 					) : (
 						<div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "5px" }}>
 							Loading...
@@ -162,7 +184,7 @@ export default definePlugin(() => {
 	const patch = PatchAppScreen(window.MicroSDeck);
 
 	routerHook.addRoute(DOCUMENTATION_PATH, () => (
-		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => {throw "MicroSDeck not initialized";})()}>
+		<MicroSDeckContextProvider microSDeck={window.MicroSDeck || (() => { throw "MicroSDeck not initialized"; })()}>
 			<Docs />
 		</MicroSDeckContextProvider>));
 

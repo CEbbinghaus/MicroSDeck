@@ -4,12 +4,13 @@ import { Logger } from "./log.mjs";
 import { env } from "process";
 import { statSync } from "fs";
 
-console.log(JSON.stringify(process.env))
-console.log(JSON.stringify(env))
-
 // Because decky builds in docker which has no environment varibles set... 😒
 export function IsCI() {
-	return statSync("/plugin/.git").isDirectory();
+	try {
+		return statSync("/plugin/.git").isDirectory();
+	} catch {
+		return false;
+	}
 }
 
 export function SetEnvironment() {

@@ -1,9 +1,13 @@
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { Logger } from "./log.mjs";
+import { env } from "process";
+
+console.log(JSON.stringify(process.env))
+console.log(JSON.stringify(env))
 
 export function IsCI() {
-	return process.env.CI === "true";
+	return !!process.env.CI;
 }
 
 export function SetEnvironment() {

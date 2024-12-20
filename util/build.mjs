@@ -96,8 +96,10 @@ async function importJson(file) {
 	return (await import(file, { with: { type: "json" } })).default;
 }
 
-runCommand("git config --global --add safe.directory .");
-
+if (env["CI"]) {
+	Logger.Log("Running CI related setup");
+	runCommand("git config --global --add safe.directory /plugin");
+}
 if (!quiet)
 	Logger.Log(`Building plugin ${PluginName}@${Version}`);
 

@@ -7,6 +7,7 @@ import { Logger } from './log.mjs';
 import { exit } from 'process';
 
 import plugin from "../plugin.json" with { type: "json" };
+import { IsCI, SetEnvironment } from './ci.mjs';
 const { name: PluginName } = plugin;
 
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
@@ -96,9 +97,9 @@ async function importJson(file) {
 	return (await import(file, { with: { type: "json" } })).default;
 }
 
-if (env["CI"]) {
+if (IsCI()) {
 	Logger.Log("Running CI related setup");
-	runCommand("git config --global --add safe.directory /plugin");
+	SetEnvironment();
 }
 if (!quiet)
 	Logger.Log(`Building plugin ${PluginName}@${Version}`);

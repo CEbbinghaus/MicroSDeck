@@ -96,6 +96,7 @@ async function importJson(file) {
 	return (await import(file, { with: { type: "json" } })).default;
 }
 
+runCommand("git config --global --add safe.directory .");
 
 if (!quiet)
 	Logger.Log(`Building plugin ${PluginName}@${Version}`);

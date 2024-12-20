@@ -2,12 +2,14 @@ import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { Logger } from "./log.mjs";
 import { env } from "process";
+import { statSync } from "fs";
 
 console.log(JSON.stringify(process.env))
 console.log(JSON.stringify(env))
 
+// Because decky builds in docker which has no environment varibles set... 😒
 export function IsCI() {
-	return !!process.env.CI;
+	return statSync("/plugin/.git").isDirectory();
 }
 
 export function SetEnvironment() {

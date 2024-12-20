@@ -18,7 +18,7 @@ outputs = ['build/bin/backend']
 [tasks."build:frontend"]
 description = 'Build the Frontend'
 run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o frontend"
-sources = ['package.json', 'lib/package.json', '{src,lib}/**/*.*']
+sources = ['package.json', 'lib/package.json', '{src,lib,docs}/**/*.*']
 outputs = ['dist/index.js']
 
 [tasks."build:collect"]

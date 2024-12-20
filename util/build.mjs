@@ -7,6 +7,7 @@ import { Logger } from './log.mjs';
 import { exit } from 'process';
 
 import plugin from "../plugin.json" with { type: "json" };
+import { IsCI, SetEnvironment } from './ci.mjs';
 const { name: PluginName } = plugin;
 
 if (process.argv.includes('-h') || process.argv.includes('--help')) {
@@ -96,7 +97,10 @@ async function importJson(file) {
 	return (await import(file, { with: { type: "json" } })).default;
 }
 
-
+if (IsCI()) {
+	Logger.Log("Running CI related setup");
+	SetEnvironment();
+}
 if (!quiet)
 	Logger.Log(`Building plugin ${PluginName}@${Version}`);
 
@@ -155,14 +159,20 @@ if (is_local && tasks.includes('copy')) {
 if (tasks.includes('upload')) {
 	Logger.Log("Uploading plugin to SteamDeck");
 
+	var deployJsonPath = join(basePath, 'deploy.json');
 	try {
-		statfsSync(join(basePath, 'deploy.json'))
+		statfsSync(deployJsonPath)
 	} catch (e) {
-		Logger.Error("deploy.json not found. Cannot deploy without it");
+		Logger.Error(`deploy.json not found under \"${basePath}\" Cannot deploy without it`);
 		exit(1);
 	}
 
-	const { host, user, keyfile } = importJson('deploy.json');
+	const { host, user, keyfile } = await importJson(deployJsonPath);
+
+	if (!host || !user) {
+		Logger.Error('malformed deploy.json. missing host and user fields');
+		exit(1);
+	}
 
 	// ping host to make sure its avaliable
 	try {

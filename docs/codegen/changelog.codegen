@@ -1,0 +1,66 @@
+
+const { execSync } = require('child_process');
+const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim();
+const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
+
+const headCommit = execSync('git rev-parse HEAD').toString().trim();
+
+let additionalTags = [];
+
+let masterCommit = null;
+try {
+	masterCommit = execSync('git rev-parse master').toString().trim();
+} catch (_) { }
+
+if (masterCommit) {
+	const masterVersion = execSync('git show master:backend/version').toString().trim();
+	additionalTags = [
+		[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
+		...additionalTags
+	];
+}
+
+// This is not built on latest master so we are gonna display info on this branch
+if (additionalTags.length == 0 || masterCommit !== headCommit) {
+	const branchName = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+	additionalTags = [
+		[headCommit, `${branchName} @ ${headCommit.substring(0, 7)} (Pre-Release)`],
+		...additionalTags
+	];
+}
+
+const tagArray = [
+	...additionalTags,
+	...tagLog.split('\n').map(line => {
+		const [hash, tag] = line.split(' ');
+		return [hash, tag];
+	})
+]
+
+const tags = Object.fromEntries(tagArray);
+
+const commits = commitLog.split('\n').map(line => {
+	const [hash, author, email, ...message] = line.split(' ');
+	return { hash, author, email, message: message.join(' ') };
+});
+
+const taggedCommits = [];
+
+for (let i = 0; i < commits.length;) {
+	let taggedCommit = { tag: tags[commits[i].hash], commits: [] };
+
+	do {
+		taggedCommit.commits.push(commits[i]);
+	}
+	while (++i < commits.length && !tags[commits[i].hash]);
+
+	taggedCommits.push(taggedCommit);
+}
+
+
+module.exports = function () {
+	return `
+//@ts-nocheck
+export default ${JSON.stringify(taggedCommits)};
+	`;
+};

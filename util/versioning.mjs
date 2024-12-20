@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, utimesSync, statSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
+import { Logger } from "./log.mjs";
 
 export const Version = ReadPackageVersion();
 function ReadPackageVersion() {
@@ -52,15 +53,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 	switch (process.argv[2]) {
 		case "reset":
-			console.log(`Resetting ${files.join(", ")}`);
+			Logger.Info(`Resetting ${files.join(", ")}`);
 			ResetVersion(...files);
 			break;
 		case "update":
-			console.log(`Updating ${files.join(", ")} to version ${Version}`);
+			Logger.Info(`Updating ${files.join(", ")} to version ${Version}`);
 			UpdateVersion(...files);
 			break;
 		default:
-			console.log("Invalid argument provided. Must be one of 'reset' | 'update'");
+			Logger.Info("Invalid argument provided. Must be one of 'reset' | 'update'");
 			process.exit(1);
 	}
 }

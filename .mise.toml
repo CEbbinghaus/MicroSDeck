@@ -1,8 +1,8 @@
 [tools]
 # specify single or multiple versions
-pnpm = '9.5.0'
-node = '22.4.0'
-rust = "1.80.1"
+pnpm = '10.22.0'
+node = '24.11.1'
+rust = "1.91.0"
 
 
 [tasks."build"]

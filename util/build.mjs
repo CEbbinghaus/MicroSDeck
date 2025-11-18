@@ -25,6 +25,7 @@ Basic Usage: ./build [flags]
 
      -h, --help: Prints this help dialogue
     -q, --quiet: Prints only required output
+   -v --verbose: Prints all output
 	 -o, --only: Only run the specified part (backend, frontend, collect, copy, upload)
  --skip-backend: Skips building the backend
 --skip-frontend: Skips building the frontend
@@ -36,6 +37,7 @@ Basic Usage: ./build [flags]
 }
 
 const quiet = process.argv.includes('-q') || process.argv.includes('--quiet');
+const verbose = process.argv.includes('-v') || process.argv.includes('--verbose');
 
 const tasks = [];
 if (process.argv.includes('-o') || process.argv.includes('--only')) {
@@ -101,7 +103,7 @@ if (IsCI()) {
 	Logger.Log("Running CI related setup");
 	SetEnvironment();
 }
-if (!quiet)
+if (!quiet && !verbose)
 	Logger.Log(`Building plugin ${PluginName}@${Version}`);
 
 if (!existsSync('plugin.json')) {
@@ -149,9 +151,9 @@ if (is_local && tasks.includes('copy')) {
 	execSync(`sudo cp -r build/ /home/${current_user}/homebrew/plugins/${PluginName}`);
 	execSync(`sudo chmod 555 /home/${current_user}/homebrew/plugins/${PluginName}`);
 } else {
-	if (!tasks.includes('copy') && !quiet) {	
+	if (!tasks.includes('copy') && (!quiet || verbose)) {	
 		Logger.Log('Skipping copying build folder to local plugin directory');
-	} else if (!is_local && !quiet) {
+	} else if (!is_local && (!quiet || verbose)) {
 		Logger.Info('Not running on steamdeck');
 	}
 }

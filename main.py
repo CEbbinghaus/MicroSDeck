@@ -41,4 +41,5 @@ class Plugin:
          # Function used to clean up a plugin when it's told to unload by Decky-Loader
     
     async def _unload(self):
-        self.backend_proc.kill();
+        if self.backend_proc is not None:
+            self.backend_proc.kill();

@@ -12,13 +12,13 @@ description = 'Build the CLI'
 [tasks."build:backend"]
 description = 'Build the Backend'
 run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o backend"
-sources = ['backend/Cargo.toml', 'backend/src/**/*.rs']
+# sources = ['backend/Cargo.toml', 'backend/src/**/*.rs']
 outputs = ['build/bin/backend']
 
 [tasks."build:frontend"]
 description = 'Build the Frontend'
 run = "node --no-warnings=ExperimentalWarning 'util/build.mjs' -q -o frontend"
-sources = ['package.json', 'lib/package.json', '{src,lib,docs}/**/*.*']
+# sources = ['package.json', 'lib/package.json', '{src,lib,docs}/**/*.*']
 outputs = ['dist/index.js']
 
 [tasks."build:collect"]

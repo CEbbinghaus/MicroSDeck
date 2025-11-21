@@ -1,5 +1,7 @@
-FROM ghcr.io/steamdeckhomebrew/holo-toolchain-rust@sha256:d071cc098dd45b7ab3564ab91b13e809f7020bd6bf8e9166cfaef55401ccd776
+FROM ghcr.io/steamdeckhomebrew/holo-toolchain-rust:latest
 
-RUN pacman -S --noconfirm cmake make clang git
+RUN pacman -S --noconfirm cmake make clang git base-devel musl
+
+RUN rustup target add x86_64-unknown-linux-musl
 
 ENTRYPOINT [ "/backend/entrypoint.sh" ]

@@ -12,7 +12,7 @@ cargo build --profile docker
 BUILD_EXIT=$?
 mkdir -p out
 
-mv target/docker/backend out/backend
+mv target/x86_64-unknown-linux-musl/docker/backend out/backend
 
 echo " --- Cleaning up ---"
 # remove root-owned target folder

@@ -11,7 +11,7 @@ import {
 	staticClasses,
 } from "@decky/ui";
 import { routerHook } from '@decky/api';
-import { FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
+import { FaBook, FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
 import { GiHamburgerMenu } from "react-icons/gi";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
@@ -127,6 +127,15 @@ function DocsCard({ frontendSettings, refresh }: { frontendSettings: FrontendSet
 							<GiHamburgerMenu />
 						</div>
 					</div>
+					<br/>
+					Or the 
+					<DialogButton
+						onOKActionDescription="Open Docs"
+						style={{...buttonStyle, display: "inline-block" , marginLeft: ".2em" }}
+						focusable={false}
+					>
+						<FaBook size='0.9em' />
+					</DialogButton> icon in the top right
 				</div>
 				<DialogCheckbox onChange={setDismissDocs} label="Don't remind me again" />
 				<DialogButton
@@ -154,9 +163,6 @@ function Content() {
 	return (
 		<div style={{ scrollPadding: "48px 0px" }}>
 			<Focusable onMenuActionDescription='Open Docs' onMenuButton={() => { Navigation.CloseSideMenus(); Navigation.Navigate(DOCUMENTATION_PATH); }}>
-				<div style={{ margin: "5px", marginTop: "0px" }}>
-					Edit MicroSD Cards
-				</div>
 				{<DocsCard frontendSettings={frontendSettings} refresh={refresh} />}
 				<PanelSection title="Cards">
 					{isLoaded ? (
@@ -169,6 +175,35 @@ function Content() {
 				</PanelSection>
 			</Focusable>
 		</div>
+	);
+};
+
+
+const buttonStyle = { height: '28px', width: '40px', minWidth: 0, padding: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' };
+
+function QuickAccessTitleView({ title }: { title: React.ReactNode }) {
+
+	return (
+		<Focusable
+			style={{
+				display: 'flex',
+				padding: '0',
+				flex: 'auto',
+				boxShadow: 'none',
+			}}
+		>
+			<div style={{ marginRight: "auto" }}>{title}</div>
+			<DialogButton
+				onOKActionDescription="Open Docs"
+				style={buttonStyle}
+				onClick={() => {
+					Navigation.CloseSideMenus();
+					Navigation.Navigate(DOCUMENTATION_PATH);
+				}}
+			>
+				<FaBook size='0.9em' />
+			</DialogButton>
+		</Focusable>
 	);
 };
 
@@ -190,6 +225,7 @@ export default definePlugin(() => {
 
 	return {
 		title: <div className={staticClasses.Title}>MicroSDeck</div>,
+		titleView: <QuickAccessTitleView title="MicroSDeck" />,
 		content:
 			<MicroSDeckContextProvider microSDeck={window.MicroSDeck}>
 				<Content />

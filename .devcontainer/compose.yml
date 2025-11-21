@@ -1,0 +1,8 @@
+services:
+  devcontainer:
+    build: 
+      context: ../backend
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    entrypoint: ["/bin/sleep", "infinity"] # we sleep so the container keeps running

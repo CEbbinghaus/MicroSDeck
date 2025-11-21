@@ -132,7 +132,7 @@ if (tasks.includes('collect')) {
 	mkdirSync('build/dist', { recursive: true });
 	mkdirSync('build/bin', { recursive: true });
 	copyFileSync('dist/index.js', 'build/dist/index.js');
-	copyFileSync('backend/target/release/backend', 'build/bin/backend');
+	copyFileSync('backend/target/x86_64-unknown-linux-musl/release/backend', 'build/bin/backend');
 	copyFileSync('main.py', 'build/main.py');
 	copyFileSync('plugin.json', 'build/plugin.json');
 	copyFileSync('README.md', 'build/README.md');

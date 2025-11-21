@@ -20,7 +20,7 @@ const Pipe = new LoggerPipe()
 		var params: any[] = [
 			'background: #165da0; color: black;',
 			`background: ${colors[logLevel as 1 | 2 | 4 | 8 | 16 | 32]}; color: black;`,
-			'background: transparent; color: white;',
+			'background: transparent; color:#6e6e6e;',
 		]
 
 		if(Object.keys(args).length > 0) {

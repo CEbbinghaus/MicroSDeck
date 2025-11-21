@@ -8,7 +8,7 @@ To ensure a positive and inclusive environment, we kindly ask all contributors t
 
 ### Code of Conduct
 
-Please review and abide by our [Code of Conduct](link-to-code-of-conduct) in all discussions and interactions related to MicroSDeck, both within and outside of GitHub. We strive to maintain a safe and respectful space for everyone involved.
+Please review and abide by our [Code of Conduct](./CODE_OF_CONDUCT.md) in all discussions and interactions related to MicroSDeck, both within and outside of GitHub. We strive to maintain a safe and respectful space for everyone involved.
 
 ## Getting Started
 This project defines all of its tool dependencies in the `.mise.toml` file in the project root. The [Mise](https://mise.jdx.dev/) tool can be used to install them all with `mise install`. Alternatively it can be used as a reference as to which versions are required. Mise also offers tasks which take over some of the responsibility from `pnpm`, They can be run with `mise run [build|copy|upload]`, Alternatively the build script (located at `/util/build.mjs`) can be invoked with either `./build.sh` or `node --no-warnings=ExperimentalWarning util/build.mjs`, use `-h` to get a list of options.

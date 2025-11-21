@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rustup default stable
+
 echo "--- Rust version info ---"
 rustup --version
 rustc --version

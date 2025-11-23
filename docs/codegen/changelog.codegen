@@ -1,24 +1,41 @@
 const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
+const { resolve } = require('node:path');
+const rm = util.promisify(require('node:fs').rm);
 
+/*
+ * Finds the git repository path, cloning the MicroSDeck repository if necessary.
+ * 
+ * @returns {Promise<{path: string?, cleanup: async () => void}>} Path o the git repository
+* */
 async function ensureGitRepo() {
 	const { Version } = await import('../../util/versioning.mjs');
-	async function isGitRepo() {
+
+	let gitRepoPath = await (async () => {
 		try {
-			await exec('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
-			return true;
+			let { stdout } = await exec('git rev-parse --git-dir', { stdio: 'ignore' });
+
+			// want to resolve to an absolute path since it sometimes returns relative paths
+			return resolve(stdout.trim());
 		}
 		catch {
-			return false;
+			return null;
 		}
-	}
-	if (!await isGitRepo()) {
+	})();
+
+	if (!gitRepoPath) {
 		// We are not within a git repository, lets change that :P
 		console.log(`Retrieving MicroSDeck changelog (version: ${Version})...`);
 
 		try {
-			await exec(`git clone --bare --branch "${Version}" https://github.com/CEbbinghaus/MicroSDeck.git .git`, { stdio: 'pipe' });
-		}catch (e) {
+			await exec(`git clone --bare --branch "${Version}" https://github.com/CEbbinghaus/MicroSDeck.git .msdeck.git`, { stdio: 'pipe' });
+			return {
+				gitPath: resolve('.msdeck.git'),
+				cleanup: async () => {
+					await rm(resolve('.msdeck.git'), { recursive: true, force: true });
+				}
+			};
+		} catch (e) {
 			console.error(`Unable to find tag ${Version} in MicroSDeck repository.\nstderr:\n`, e.stderr.toString());
 			process.exit(1);
 		}
@@ -29,25 +46,27 @@ async function ensureGitRepo() {
 			// We are in a shallow clone, lets fix that
 			await exec('git fetch --unshallow', { stdio: 'ignore' });
 		}
+		return { gitPath: gitRepoPath, cleanup: async () => { } };
 	}
 }
 
 /*
  * Generates a mapping of commit hashes to tags.
  * 
+ * @param {string} gitDirectory - the directory of the git repository
  * @returns {Promise<Object<string, string>>} A mapping of commit hashes to tags.
 * */
-async function generateTagObject() {
-	const tagLog = (await exec('git log --tags --no-walk --pretty="%H %S"')).stdout.trim();
+async function generateTagObject(gitRepository) {
+	const tagLog = (await exec(`git --git-dir="${gitRepository}" log --tags --no-walk --pretty="%H %S"`)).stdout.trim();
 
 	let additionalTags = [];
 
 	let masterCommit = null;
 	try {
-		masterCommit = (await exec('git rev-parse master')).stdout.trim();
+		masterCommit = (await exec(`git --git-dir="${gitRepository}" rev-parse master`)).stdout.trim();
 	} catch (_) { }
 
-	const head = (await exec('git rev-list --parents -1 HEAD')).stdout.trim();
+	const head = (await exec(`git --git-dir="${gitRepository}" rev-list --parents -1 HEAD`)).stdout.trim();
 	let [headCommit, parentCommit, mergeCommit] = head.split(' ');
 
 	if (mergeCommit) {
@@ -55,9 +74,9 @@ async function generateTagObject() {
 		masterCommit = parentCommit;
 		headCommit = mergeCommit;
 	}
-	
+
 	if (masterCommit) {
-		const masterVersion = (await exec(`git show ${masterCommit}:backend/version`)).stdout.trim();
+		const masterVersion = (await exec(`git --git-dir="${gitRepository}" show ${masterCommit}:backend/version`)).stdout.trim();
 		additionalTags = [
 			[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
 			...additionalTags
@@ -66,7 +85,7 @@ async function generateTagObject() {
 
 	// This is not built on latest master so we are gonna display info on this branch
 	if (additionalTags.length == 0 || masterCommit !== headCommit) {
-		let branchName = (await exec("git rev-parse --abbrev-ref HEAD")).stdout.trim();
+		let branchName = (await exec(`git --git-dir="${gitRepository}" rev-parse --abbrev-ref HEAD`)).stdout.trim();
 
 		// The merge commit does not track the branch name so we need to retrieve it from Github Env
 		if (branchName === 'HEAD' && process.env.GITHUB_REF) {
@@ -94,27 +113,28 @@ async function generateTagObject() {
 
 /*
  * Generates an array of commits grouped by tag
-* 
+ * 
+ * @param {string} gitDirectory - the directory of the git repository
  * @param {Object<string, string>} tags - A mapping of commit hashes to tags.
  * @returns {Promise<Array<{tag: string, commits: Array<{hash: string, author: string, email: string, message: string}>}>>} An array of tagged commits.
  */
-async function generateTaggedCommits(tags) {
-	const commitLog = (await exec('git log --no-merges --pretty="%H %aN %aE %s"')).stdout.trim();
+async function generateTaggedCommits(gitRepository, tags) {
+	const commitLog = (await exec(`git --git-dir="${gitRepository}" log --no-merges --pretty="%H %aN %aE %s"`)).stdout.trim();
 	const commits = commitLog.split('\n').map(line => {
 		const [hash, author, email, ...message] = line.split(' ');
 		return { hash, author, email, message: message.join(' ') };
 	});
-	
+
 	const taggedCommits = [];
-	
+
 	for (let i = 0; i < commits.length;) {
 		let taggedCommit = { tag: tags[commits[i].hash], commits: [] };
-	
+
 		do {
 			taggedCommit.commits.push(commits[i]);
 		}
 		while (++i < commits.length && !tags[commits[i].hash]);
-	
+
 		taggedCommits.push(taggedCommit);
 	}
 	return taggedCommits;
@@ -122,9 +142,10 @@ async function generateTaggedCommits(tags) {
 
 
 module.exports = async function () {
-	await ensureGitRepo();
-	const tags = await generateTagObject();
-	const taggedCommits = await generateTaggedCommits(tags);
+	const { gitPath, cleanup } = await ensureGitRepo();
+	const tags = await generateTagObject(gitPath);
+	const taggedCommits = await generateTaggedCommits(gitPath, tags);
+	await cleanup();
 	return `
 //@ts-nocheck
 export default ${JSON.stringify(taggedCommits)};

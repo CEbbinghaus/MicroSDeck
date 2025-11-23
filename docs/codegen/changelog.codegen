@@ -40,8 +40,6 @@ async function ensureGitRepo() {
 async function generateTagObject() {
 	const tagLog = (await exec('git log --tags --no-walk --pretty="%H %S"')).stdout.trim();
 
-	const headCommit = (await exec('git rev-parse HEAD')).stdout.trim();
-
 	let additionalTags = [];
 
 	let masterCommit = null;
@@ -49,8 +47,17 @@ async function generateTagObject() {
 		masterCommit = (await exec('git rev-parse master')).stdout.trim();
 	} catch (_) { }
 
+	const head = (await exec('git rev-list --parents -1 HEAD')).stdout.trim();
+	let [headCommit, parentCommit, mergeCommit] = head.split(' ');
+
+	if (mergeCommit) {
+		// Github "helpfully" runs an action in a "merged" state. So we need to untangle the merge into its individual parts
+		masterCommit = parentCommit;
+		headCommit = mergeCommit;
+	}
+	
 	if (masterCommit) {
-		const masterVersion = (await exec('git show master:backend/version')).stdout.trim();
+		const masterVersion = (await exec(`git show ${masterCommit}:backend/version`)).stdout.trim();
 		additionalTags = [
 			[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
 			...additionalTags
@@ -59,7 +66,14 @@ async function generateTagObject() {
 
 	// This is not built on latest master so we are gonna display info on this branch
 	if (additionalTags.length == 0 || masterCommit !== headCommit) {
-		const branchName = (await exec("git rev-parse --abbrev-ref HEAD")).stdout.trim();
+		let branchName = (await exec("git rev-parse --abbrev-ref HEAD")).stdout.trim();
+
+		// The merge commit does not track the branch name so we need to retrieve it from Github Env
+		if (branchName === 'HEAD' && process.env.GITHUB_REF) {
+			// Detached HEAD, try to find branch name via github env variable
+			branchName = process.env.GITHUB_REF.replace('refs/heads/', '');
+		}
+
 		additionalTags = [
 			[headCommit, `${branchName} @ ${headCommit.substring(0, 7)} (Pre-Release)`],
 			...additionalTags

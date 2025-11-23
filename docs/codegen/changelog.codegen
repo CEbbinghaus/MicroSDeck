@@ -85,7 +85,7 @@ async function generateTagObject() {
  * @returns {Promise<Array<{tag: string, commits: Array<{hash: string, author: string, email: string, message: string}>}>>} An array of tagged commits.
  */
 async function generateTaggedCommits(tags) {
-	const commitLog = (await exec('git log --pretty="%H %aN %aE %s"')).stdout.trim();
+	const commitLog = (await exec('git log --no-merges --pretty="%H %aN %aE %s"')).stdout.trim();
 	const commits = commitLog.split('\n').map(line => {
 		const [hash, author, email, ...message] = line.split(' ');
 		return { hash, author, email, message: message.join(' ') };

@@ -1,5 +1,34 @@
-
 const { execSync } = require('child_process');
+const { Version } = require('../../util/versioning.mjs');
+
+function isGitRepo() {
+	try {
+		execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+		return true;
+	}
+	catch {
+		return false;
+	}
+}
+if (!isGitRepo()) {
+	// We are not within a git repository, lets change that :P
+	console.log(`Retrieving MicroSDeck changelog (version: ${Version})...`);
+
+	try {
+		execSync(`git clone --bare --branch "${Version}" https://github.com/CEbbinghaus/MicroSDeck.git .git`, { stdio: 'pipe' });
+	}catch (e) {
+		console.error(`Unable to find tag ${Version} in MicroSDeck repository.\nstderr:\n`, e.stderr.toString());
+		process.exit(1);
+	}
+} else {
+	const numCommits = parseInt(execSync('git rev-list --count HEAD'));
+	if (numCommits == 1) {
+		console.log('In shallow git clone, fetching full history...');
+		// We are in a shallow clone, lets fix that
+		execSync('git fetch --unshallow', { stdio: 'ignore' });
+	}
+}
+
 const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim();
 const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
 

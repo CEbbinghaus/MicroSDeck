@@ -1,64 +1,130 @@
+const util = require('node:util');
+const exec = util.promisify(require('node:child_process').exec);
 
-const { execSync } = require('child_process');
-const commitLog = execSync('git log --pretty="%H %aN %aE %s"').toString().trim();
-const tagLog = execSync('git log --tags --no-walk --pretty="%H %S"').toString().trim();
-
-const headCommit = execSync('git rev-parse HEAD').toString().trim();
-
-let additionalTags = [];
-
-let masterCommit = null;
-try {
-	masterCommit = execSync('git rev-parse master').toString().trim();
-} catch (_) { }
-
-if (masterCommit) {
-	const masterVersion = execSync('git show master:backend/version').toString().trim();
-	additionalTags = [
-		[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
-		...additionalTags
-	];
-}
-
-// This is not built on latest master so we are gonna display info on this branch
-if (additionalTags.length == 0 || masterCommit !== headCommit) {
-	const branchName = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
-	additionalTags = [
-		[headCommit, `${branchName} @ ${headCommit.substring(0, 7)} (Pre-Release)`],
-		...additionalTags
-	];
-}
-
-const tagArray = [
-	...additionalTags,
-	...tagLog.split('\n').map(line => {
-		const [hash, tag] = line.split(' ');
-		return [hash, tag];
-	})
-]
-
-const tags = Object.fromEntries(tagArray);
-
-const commits = commitLog.split('\n').map(line => {
-	const [hash, author, email, ...message] = line.split(' ');
-	return { hash, author, email, message: message.join(' ') };
-});
-
-const taggedCommits = [];
-
-for (let i = 0; i < commits.length;) {
-	let taggedCommit = { tag: tags[commits[i].hash], commits: [] };
-
-	do {
-		taggedCommit.commits.push(commits[i]);
+async function ensureGitRepo() {
+	const { Version } = await import('../../util/versioning.mjs');
+	async function isGitRepo() {
+		try {
+			await exec('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+			return true;
+		}
+		catch {
+			return false;
+		}
 	}
-	while (++i < commits.length && !tags[commits[i].hash]);
+	if (!await isGitRepo()) {
+		// We are not within a git repository, lets change that :P
+		console.log(`Retrieving MicroSDeck changelog (version: ${Version})...`);
 
-	taggedCommits.push(taggedCommit);
+		try {
+			await exec(`git clone --bare --branch "${Version}" https://github.com/CEbbinghaus/MicroSDeck.git .git`, { stdio: 'pipe' });
+		}catch (e) {
+			console.error(`Unable to find tag ${Version} in MicroSDeck repository.\nstderr:\n`, e.stderr.toString());
+			process.exit(1);
+		}
+	} else {
+		const numCommits = parseInt((await exec('git rev-list --count HEAD')).stdout.trim());
+		if (numCommits == 1) {
+			console.log('In shallow git clone, fetching full history...');
+			// We are in a shallow clone, lets fix that
+			await exec('git fetch --unshallow', { stdio: 'ignore' });
+		}
+	}
+}
+
+/*
+ * Generates a mapping of commit hashes to tags.
+ * 
+ * @returns {Promise<Object<string, string>>} A mapping of commit hashes to tags.
+* */
+async function generateTagObject() {
+	const tagLog = (await exec('git log --tags --no-walk --pretty="%H %S"')).stdout.trim();
+
+	let additionalTags = [];
+
+	let masterCommit = null;
+	try {
+		masterCommit = (await exec('git rev-parse master')).stdout.trim();
+	} catch (_) { }
+
+	const head = (await exec('git rev-list --parents -1 HEAD')).stdout.trim();
+	let [headCommit, parentCommit, mergeCommit] = head.split(' ');
+
+	if (mergeCommit) {
+		// Github "helpfully" runs an action in a "merged" state. So we need to untangle the merge into its individual parts
+		masterCommit = parentCommit;
+		headCommit = mergeCommit;
+	}
+	
+	if (masterCommit) {
+		const masterVersion = (await exec(`git show ${masterCommit}:backend/version`)).stdout.trim();
+		additionalTags = [
+			[masterCommit, `master @ ${masterCommit.substring(0, 7)} (${masterVersion})`],
+			...additionalTags
+		];
+	}
+
+	// This is not built on latest master so we are gonna display info on this branch
+	if (additionalTags.length == 0 || masterCommit !== headCommit) {
+		let branchName = (await exec("git rev-parse --abbrev-ref HEAD")).stdout.trim();
+
+		// The merge commit does not track the branch name so we need to retrieve it from Github Env
+		if (branchName === 'HEAD' && process.env.GITHUB_REF) {
+			// Detached HEAD, try to find branch name via github env variable
+			branchName = process.env.GITHUB_REF.replace('refs/heads/', '');
+		}
+
+		additionalTags = [
+			[headCommit, `${branchName} @ ${headCommit.substring(0, 7)} (Pre-Release)`],
+			...additionalTags
+		];
+	}
+
+	const tagArray = [
+		...additionalTags,
+		...tagLog.split('\n').map(line => {
+			const [hash, tag] = line.split(' ');
+			return [hash, tag];
+		})
+	]
+
+	return Object.fromEntries(tagArray);
 }
 
 
-module.exports = function () {
+/*
+ * Generates an array of commits grouped by tag
+* 
+ * @param {Object<string, string>} tags - A mapping of commit hashes to tags.
+ * @returns {Promise<Array<{tag: string, commits: Array<{hash: string, author: string, email: string, message: string}>}>>} An array of tagged commits.
+ */
+async function generateTaggedCommits(tags) {
+	const commitLog = (await exec('git log --no-merges --pretty="%H %aN %aE %s"')).stdout.trim();
+	const commits = commitLog.split('\n').map(line => {
+		const [hash, author, email, ...message] = line.split(' ');
+		return { hash, author, email, message: message.join(' ') };
+	});
+	
+	const taggedCommits = [];
+	
+	for (let i = 0; i < commits.length;) {
+		let taggedCommit = { tag: tags[commits[i].hash], commits: [] };
+	
+		do {
+			taggedCommit.commits.push(commits[i]);
+		}
+		while (++i < commits.length && !tags[commits[i].hash]);
+	
+		taggedCommits.push(taggedCommit);
+	}
+	return taggedCommits;
+}
+
+
+module.exports = async function () {
+	await ensureGitRepo();
+	const tags = await generateTagObject();
+	const taggedCommits = await generateTaggedCommits(tags);
 	return `
 //@ts-nocheck
 export default ${JSON.stringify(taggedCommits)};

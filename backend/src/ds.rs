@@ -15,7 +15,7 @@ use std::{
 	path::PathBuf,
 	sync::RwLock,
 };
-use tracing::{error, instrument};
+use tracing::{error, instrument, debug};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) enum StoreElement {
@@ -335,6 +335,7 @@ impl Store {
 	pub fn read_from_file(file: PathBuf) -> Result<Self, Error> {
 		let contents = read_to_string(&file).map_err(Error::from)?;
 		let store_data: StoreData = serde_json::from_str(&contents).map_err(Error::from)?;
+		debug!("Loaded datastore v {}", store_data.version);
 		Ok(Store {
 			data: RwLock::new(store_data),
 			file: Some(file),

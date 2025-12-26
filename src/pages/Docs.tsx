@@ -32,9 +32,10 @@ function RenderDocsIntoPages() {
 	const levels = Array.from(hirachyMap.keys()).sort((a, b) => a - b);
 	
 	for (let i = 0; i < levels.length; i++) {
-		if (i > 0) {
-			pages.push('separator');
-		}
+		// This is causing problems with the current client, investigate later
+		// if (i > 0) {
+		// 	pages.push('separator');
+		// }
 		const level = levels[i];
 		const docsAtLevel = hirachyMap.get(level)!.sort((a, b) => a.name.localeCompare(b.name));
 		for (const doc of docsAtLevel) {

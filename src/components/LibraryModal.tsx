@@ -8,7 +8,9 @@ import { findModule } from "@decky/ui"
 const logger = Logger.Child({ module: "patching" });
 
 export default function LibraryModal({ appId: gameId }: { appId: string }): ReactElement {
-	const { cards } = useCardsForGame({ url: API_URL, logger: Logger, gameId });
+	let { cards } = useCardsForGame({ url: API_URL, logger: Logger, gameId });
+	cards = cards?.filter(card => !card.hidden);
+
 	const { currentCardAndGames } = useMicroSDeckContext();
 	const [ currentCard ] = (currentCardAndGames || [undefined]);
 
@@ -54,7 +56,6 @@ export default function LibraryModal({ appId: gameId }: { appId: string }): Reac
 			logger.Debug("Couldn't calculate bounds of image or element\nimage: {imageWindowBounds}\nelement: {elementBounds}", {imageWindowBounds, elementBounds});
 			return;
 		}
-
 
 		const topOffset = imageWindowBounds.height - elementBounds.height - bottomMargin;
 		setTop(topOffset);

@@ -1,6 +1,5 @@
 import { ReactElement } from "react";
 import { useMicroSDeckContext } from "../../lib/src";
-import React from "react";
 
 export function CurrentCard(): ReactElement {
 	const { currentCardAndGames } = useMicroSDeckContext();

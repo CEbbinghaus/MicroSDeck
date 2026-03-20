@@ -3,6 +3,10 @@ services:
     build: 
       context: ../backend
       dockerfile: Dockerfile
+      args:
+        - USER
     volumes:
-      - ../..:/workspaces:cached
+      - ../..:/workspaces
+      - ../../../.ssh:/home/$USER/.ssh:ro
+      - ../../../.local/share/pnpm/store:/home/$USER/.local/share/pnpm/store
     entrypoint: ["/bin/sleep", "infinity"] # we sleep so the container keeps running

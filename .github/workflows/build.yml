@@ -25,6 +25,9 @@ jobs:
 
     - uses: jdx/mise-action@v2
 
+    - name: Install Rust components
+      run: rustup component add rustfmt clippy
+
     - name: Check formatting
       run: cargo fmt --manifest-path backend/Cargo.toml -- --check
 

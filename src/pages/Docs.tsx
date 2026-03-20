@@ -41,7 +41,6 @@ function RenderDocsIntoPages() {
 		for (const doc of docsAtLevel) {
 			pages.push({
 				title: (doc.name == "index" ? "Home" : doc.name).replace(/_/g, ' ').trim(),
-				//@ts-expect-error MDX & React don't play amazingly together... sadly
 				content: <DocPage content={window.SP_REACT.createElement(doc.content, null)} />,
 				route: `${DOCUMENTATION_PATH}/${doc.name.toLowerCase()}`,
 				icon: <FaBook />,

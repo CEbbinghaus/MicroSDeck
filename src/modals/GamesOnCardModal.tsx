@@ -1,5 +1,5 @@
 import { Focusable, ModalPosition, ScrollPanelGroup, SimpleModal, gamepadDialogClasses, quickAccessControlsClasses } from "@decky/ui";
-import { Fragment, VFC } from "react";
+import { Fragment, FC } from "react";
 import { Game, MicroSDCard } from '../../lib/src';
 
 interface GamesOnCardModalProps {
@@ -10,7 +10,7 @@ interface GamesOnCardModalProps {
 	closeModal?: () => void;
 }
 
-export const GamesOnCardModal: VFC<GamesOnCardModalProps> = ({ card, games, additions, deletions, closeModal }) => {
+export const GamesOnCardModal: FC<GamesOnCardModalProps> = ({ card, games, additions, deletions, closeModal }) => {
 	const additionIds = additions ?? {};
 	const deletionIds = deletions ?? {};
 

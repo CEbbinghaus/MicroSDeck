@@ -1,7 +1,7 @@
 import { Focusable, ModalPosition, ScrollPanelGroup, gamepadDialogClasses } from "@decky/ui";
-import React, { ReactElement } from "react";
+import { ReactElement } from "react";
 
-export function DocPage({ content }: { content: JSX.Element }): ReactElement {
+export function DocPage({ content }: { content: React.ReactNode }): ReactElement {
 	return (
 		<>
 			<style>{`

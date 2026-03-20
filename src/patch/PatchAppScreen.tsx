@@ -41,8 +41,8 @@ function PatchLibraryApp(microSDeck: MicroSDeck) {
 					const container = findInReactTree(
 						element,
 						(x: ReactElement) =>
-							Array.isArray(x?.props?.children) &&
-							x?.props?.className?.includes(
+						Array.isArray((x as any)?.props?.children) &&
+						(x as any)?.props?.className?.includes(
 								appDetailsClasses.InnerContainer
 							)
 					)

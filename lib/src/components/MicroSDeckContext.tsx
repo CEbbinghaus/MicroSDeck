@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { MicroSDeck } from "../MicoSDeck.js";
 import { CardAndGames, CardsAndGames, FrontendSettings } from "../types.js";
 
@@ -20,7 +20,7 @@ interface MicroSDeckContext extends PublicMicroSDeck {
 	microSDeck: MicroSDeck
 }
 
-export function MicroSDeckContextProvider({ children, microSDeck }:  React.PropsWithChildren<ProviderProps>) {
+export function MicroSDeckContextProvider({ children, microSDeck }: PropsWithChildren<ProviderProps>) {
 	var refresh = microSDeck.fetch.bind(microSDeck);
 	const [publicState, setPublicState] = useState<PublicMicroSDeck>({
 		...microSDeck.getProps(),

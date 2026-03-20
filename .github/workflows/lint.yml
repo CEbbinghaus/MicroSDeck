@@ -1,0 +1,67 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'backend/**'
+      - 'src/**'
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+          frontend:
+            - 'lib/**'
+            - 'src/**'
+
+  lint-backend:
+    name: Lint backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: jdx/mise-action@v2
+
+    - name: Install Rust components
+      run: rustup component add rustfmt clippy
+
+    - name: Check formatting
+      run: cargo fmt --manifest-path backend/Cargo.toml -- --check
+
+    - name: Clippy
+      run: cargo clippy --manifest-path backend/Cargo.toml -- -D warnings
+
+  lint-frontend:
+    name: Lint frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: jdx/mise-action@v2
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Typecheck lib
+      run: pnpm --filter @cebbinghaus/microsdeck run build --noEmit --emitDeclarationOnly false
+
+    - name: Typecheck frontend
+      run: pnpm exec tsc --noEmit --emitDeclarationOnly false

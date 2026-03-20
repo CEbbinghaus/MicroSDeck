@@ -93,7 +93,6 @@ async fn main() {
 		store.clean_up();
 	}
 
-
 	if !skip_validate && !store.validate() {
 		error!("Validity of the data is not guaranteed. Cannot run backend...");
 		exit(1);

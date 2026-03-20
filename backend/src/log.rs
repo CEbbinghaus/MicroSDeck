@@ -4,7 +4,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{filter, Layer};
 
-const IGNORED_MODULES: [&'static str; 6] = [
+const IGNORED_MODULES: [&str; 6] = [
 	"actix_http::h1::decoder",
 	"actix_http::h1::dispatcher",
 	"actix_http::h1::timer",

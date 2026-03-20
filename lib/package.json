@@ -19,10 +19,10 @@
 		"directory": "src/lib"
 	},
 	"devDependencies": {
-		"@types/react": "16.14.0",
+		"@types/react": "19.1.1",
 		"@types/semver": "^7.5.8",
 		"lipe": "^0.3.4",
-		"typescript": "^4.9.5"
+		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"semver": "^7.6.3"

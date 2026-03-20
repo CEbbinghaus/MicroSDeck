@@ -1,7 +1,7 @@
 use crate::cfg::CONFIG;
 use crate::{ds::Store, dto::*, err::Error, sdcard::*, steam::*};
 use std::borrow::Borrow;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::{fs, sync::Arc, time::Duration};
 use tokio::sync::broadcast::Sender;
 use tokio::time::interval;
@@ -99,7 +99,7 @@ fn find_mount_name() -> Result<Option<String>, Error> {
 		.filter_map(|dir| dir.ok())
 	{
 		trace!(path = ?entry.path().canonicalize()?, "testing label for mount point of MicroSD Card");
-		if entry.path().canonicalize()? != PathBuf::from("/dev/mmcblk0p1") {
+		if *entry.path().canonicalize()? != *"/dev/mmcblk0p1" {
 			continue;
 		}
 

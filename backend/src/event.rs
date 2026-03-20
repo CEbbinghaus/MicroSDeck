@@ -20,6 +20,7 @@ impl<T: EventTrait> Event<T> {
 	}
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl<T: EventTrait> ToString for Event<T> {
 	fn to_string(&self) -> String {
 		let mut output = "".to_string();

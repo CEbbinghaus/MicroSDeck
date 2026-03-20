@@ -61,7 +61,7 @@ jobs:
       run: pnpm install
 
     - name: Typecheck lib
-      run: pnpm --filter @cebbinghaus/microsdeck run build --noEmit --emitDeclarationOnly false
+      run: pnpm --filter @cebbinghaus/microsdeck run build --noEmit
 
     - name: Typecheck frontend
-      run: pnpm exec tsc --noEmit --emitDeclarationOnly false
+      run: pnpm exec tsc --noEmit

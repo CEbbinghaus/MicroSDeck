@@ -9,8 +9,8 @@ import {
 	quickAccessControlsClasses,
 	showModal
 } from "@decky/ui";
-import React, { CSSProperties, Fragment, useMemo } from "react";
-import { useState, VFC, useEffect, } from "react";
+import { CSSProperties, Fragment, useMemo } from "react";
+import { useState, FC, useEffect, } from "react";
 import { BiSolidDownArrow } from "react-icons/bi";
 import { DeckyAPI } from "../lib/DeckyApi";
 import { Game, MicroSDCard } from "../../lib/src";
@@ -30,7 +30,7 @@ type EditCardProps = {
 /**
  * The modal for editing and creating custom tabs.
  */
-export const EditCardModal: VFC<EditCardProps> = ({ card, games, onConfirm, closeModal }) => {
+export const EditCardModal: FC<EditCardProps> = ({ card, games, onConfirm, closeModal }) => {
 
 	const [name, setName] = useState<string>(card.name ?? '');
 	const [hidden, setHidden] = useState<boolean>(card.hidden);
@@ -126,7 +126,7 @@ interface NonSteamPanelProps {
 /**
  * Section for managing non steam games associated with a card
  */
-const NonSteamPanel: VFC<NonSteamPanelProps> = ({ checkedIds, idsOnCard, numAdditions, numDeletions, style, onChange }) => {
+const NonSteamPanel: FC<NonSteamPanelProps> = ({ checkedIds, idsOnCard, numAdditions, numDeletions, style, onChange }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [query, setQuery] = useState("");
 	const idNamePairs: [number, string][] = useMemo(() => collectionStore.deckDesktopApps ? collectionStore.deckDesktopApps.allApps.map(appOverview => [appOverview.appid, appOverview.display_name]) : [], [...(collectionStore.deckDesktopApps?.allApps.map(v => v.appid) ?? [])]);
@@ -178,8 +178,7 @@ const NonSteamPanel: VFC<NonSteamPanelProps> = ({ checkedIds, idsOnCard, numAddi
 					<Fragment>
 						<div style={{ padding: "10px 18px" }}>
 							<div style={{ width: "100%", marginBottom: '10px' }}>
-								<TextField
-									placeholder='Filter'
+								<TextField								label='Filter'
 									value={query}
 									onChange={(e) => { setQuery(e.target.value); }}
 									style={{ height: "100%" }}

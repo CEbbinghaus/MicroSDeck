@@ -4,7 +4,7 @@
 		"target": "ES2020",
 		"jsx": "react-jsx",
 		"declaration": false,
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"resolveJsonModule": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
@@ -13,7 +13,6 @@
 		"noImplicitThis": true,
 		"noImplicitAny": true,
 		"strict": true,
-		"suppressImplicitAnyIndexErrors": true,
 		"allowSyntheticDefaultImports": true,
 		"skipLibCheck": true
 	},

@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import { FaSdCard } from 'react-icons/fa';
 import { Logger } from '../Logging';
 import { API_URL, UNNAMED_CARD_NAME } from '../const';
@@ -14,7 +14,7 @@ export default function LibraryModal({ appId: gameId }: { appId: string }): Reac
 	const { currentCardAndGames } = useMicroSDeckContext();
 	const [ currentCard ] = (currentCardAndGames || [undefined]);
 
-	var ref = useRef();
+	var ref = useRef<HTMLDivElement>(null);
 
 	const bottomMargin = 4;
 	const [top, setTop] = useState<number>(210);

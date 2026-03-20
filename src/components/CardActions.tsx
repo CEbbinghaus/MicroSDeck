@@ -56,8 +56,8 @@ export function CardActionsContextMenu({ cardAndGames, currentCard, microSDeck }
 			}}>
 				Edit
 			</MenuItem>
-			<MenuItem onSelected={() => microSDeck.hideCard(card)}>
-				Hide
+			<MenuItem onSelected={() => microSDeck.toggleCardVisibility(card)}>
+				{card.hidden ? "Show" : "Hide"}
 			</MenuItem>
 			<MenuItem tone="destructive" disabled={card.uid == currentCard?.uid} onSelected={() => {
 				showModal(<ConfirmModal

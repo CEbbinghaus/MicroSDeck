@@ -194,9 +194,16 @@ if (tasks.includes('upload')) {
 		keyfileArg = `-i ${keyfile}`;
 	}
 
-	execSync(`ssh ${keyfileArg} ${user}@${host} "[ -d ${deployPath} ] && sudo rm -rf ${deployPath} || exit 0"`);
-	execSync(`scp ${keyfileArg} -r build/ ${user}@${host}:"${tmpPath}"`);
-	execSync(`ssh ${keyfileArg} ${user}@${host} "sudo mv "${tmpPath}" "${deployPath}" && sudo chmod 555 ${deployPath}"`);
+	Logger.Log(`Uploading output to ${user}@${host}:${deployPath}`);
+
+	const options = {
+		stdio: verbose ? 'inherit' : 'ignore',
+		encoding: 'utf-8'
+	};
+
+	execSync(`ssh ${keyfileArg} ${user}@${host} "[ -d ${deployPath} ] && sudo rm -rf ${deployPath} || exit 0"`, options);
+	execSync(`scp ${keyfileArg} -r build/ ${user}@${host}:"${tmpPath}"`, options);
+	execSync(`ssh ${keyfileArg} ${user}@${host} "sudo mv "${tmpPath}" "${deployPath}" && sudo chmod 555 ${deployPath}"`, options);
 }
 
 ResetVersion("package.json", "lib/package.json");

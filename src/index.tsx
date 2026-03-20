@@ -11,7 +11,7 @@ import {
 	staticClasses,
 } from "@decky/ui";
 import { routerHook } from '@decky/api';
-import { FaBook, FaEllipsisH, FaSdCard, FaStar } from "react-icons/fa";
+import { FaBook, FaEllipsisH, FaEyeSlash, FaSdCard, FaStar } from "react-icons/fa";
 import { GiHamburgerMenu } from "react-icons/gi";
 import PatchAppScreen from "./patch/PatchAppScreen";
 import { API_URL, DOCUMENTATION_PATH, UNNAMED_CARD_NAME } from "./const";
@@ -67,6 +67,7 @@ function CardsList({ cardsAndGames, currentCardAndGames, microSDeck }: { cardsAn
 
 	const entries = cardsAndGames.sort(([a], [b]) => a.position - b.position).map(([card], index) => {
 		const currentCardMark = card.uid === currentCard?.uid ? (<small style={{ marginLeft: "0.5em" }}><FaStar size={12} /></small>) : "";
+		const hiddenCardMark = card.hidden ? (<small style={{ marginLeft: "0.5em" }}><FaEyeSlash size={12} /></small>) : "";
 
 		return {
 			label:
@@ -74,7 +75,7 @@ function CardsList({ cardsAndGames, currentCardAndGames, microSDeck }: { cardsAn
 					<div style={{ float: "left" }}>
 						<FaSdCard size={14} />
 					</div>
-					<div style={{ marginLeft: "1.2rem", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name || UNNAMED_CARD_NAME}{currentCardMark}</div>
+					<div style={{ marginLeft: "1.2rem", fontSize: 18, fontWeight: "bold" }} className="tab-label">{card.name || UNNAMED_CARD_NAME}{currentCardMark}{hiddenCardMark}</div>
 					<div style={{ position: "absolute", bottom: 0, left: 0, fontSize: 8, color: "#aaa", whiteSpace: "nowrap" }}>{card.uid}</div>
 				</div>
 			,

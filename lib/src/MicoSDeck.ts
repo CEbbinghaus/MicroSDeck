@@ -215,10 +215,10 @@ export class MicroSDeck {
 		await this.fetch();
 	}
 
-	async hideCard(card: MicroSDCard) {
-		card.hidden = true;
-		this.updateCard(card);
-		this.logger?.Log("Card {uid} was supposed to be hidden", card);
+	async toggleCardVisibility(card: MicroSDCard) {
+		card.hidden = !card.hidden;
+		await this.updateCard(card);
+		this.logger?.Log("Card {uid} visibility toggled", card);
 	}
 
 	async fetchCardsForGame(gameId: string) {

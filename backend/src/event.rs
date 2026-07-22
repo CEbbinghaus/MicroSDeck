@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use actix_web::web::Bytes;
 use tracing::warn;
 
-pub(crate) struct Event<'a, T: EventTrait<'a>>(T, PhantomData<&'a T>);
+pub(crate) struct Event<'a, T: EventTrait<'a>>(dyn T, PhantomData<&'a T>);
 
 pub(crate) trait EventTrait<'a> {
 	fn get_id(&self) -> Option<&'a str> {
@@ -62,6 +62,7 @@ impl<'a, T: EventTrait<'a>> From<T> for Event<'a, T> {
 		Event(value, PhantomData)
 	}
 }
+
 #[derive(Debug)]
 pub(crate) struct EventBuilder<'a> {
 	id: Option<&'a str>,

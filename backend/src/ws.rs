@@ -1,13 +1,16 @@
-use std::{sync::Arc, time::{Duration, Instant}};
-
+use crate::{
+	dto::CardEvent,
+	event::{Event, ParsedEvent},
+};
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 use actix_ws::Message;
 use futures::StreamExt;
+use std::{
+	sync::Arc,
+	time::{Duration, Instant},
+};
 use tokio::{select, sync::broadcast::*, time::interval};
 use tracing::{debug, error, info, warn};
-
-
-use crate::{dto::CardEvent, event::{Event, ParsedEvent}};
 
 /// How often heartbeat pings are sent.
 ///
@@ -15,11 +18,14 @@ use crate::{dto::CardEvent, event::{Event, ParsedEvent}};
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 
 /// How long before lack of client response causes a timeout.
-const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
+const CLIENT_TIMEOUT: Duration = Duration::from_secs(30);
 
-
-#[get("/ws-test")]
-async fn ws(req: HttpRequest, body: web::Payload, sender: web::Data<Sender<CardEvent>>) -> Result<HttpResponse, Error> {
+#[get("/ws")]
+async fn ws(
+	req: HttpRequest,
+	body: web::Payload,
+	sender: web::Data<Sender<CardEvent>>,
+) -> Result<HttpResponse, Error> {
 	let (response, session, msg_stream) = actix_ws::handle(&req, body)?;
 
 	actix_rt::spawn(async move {
@@ -28,7 +34,6 @@ async fn ws(req: HttpRequest, body: web::Payload, sender: web::Data<Sender<CardE
 
 	Ok(response)
 }
-
 
 /// Broadcast text & binary messages received from a client, respond to ping messages, and monitor
 /// connection health to detect network issues and free up resources.
@@ -96,17 +101,16 @@ pub async fn handle_ws(
 
 				debug!("msg: {msg:?}");
 
+				last_heartbeat = Instant::now();
 				match msg {
 					Message::Text(data) => {
-						last_heartbeat = Instant::now();
 						let event = ParsedEvent::parse(&data);
 						info!(event = ?event, "received Event");
-						let _ = channel.send(CardEvent::Updated);
+						// let _ = channel.send(CardEvent::Updated);
 						// drop client's text messages
 					}
 
 					Message::Binary(_) => {
-						last_heartbeat = Instant::now();
 						// drop client's binary messages
 						warn!("received binary message; dropping");
 					}
@@ -116,12 +120,7 @@ pub async fn handle_ws(
 					}
 
 					Message::Ping(bytes) => {
-						last_heartbeat = Instant::now();
 						let _ = session.pong(&bytes).await;
-					}
-
-					Message::Pong(_) => {
-						last_heartbeat = Instant::now();
 					}
 
 					Message::Continuation(_) => {
@@ -129,6 +128,7 @@ pub async fn handle_ws(
 					}
 
 					// no-op; ignore
+					Message::Pong(_) => {}
 					Message::Nop => {}
 				};
 			}
@@ -139,4 +139,7 @@ pub async fn handle_ws(
 	let _ = session.close(reason).await;
 
 	info!("disconnected");
+}
+
+fn handle_event(event: &'_ EventTrait) {
 }

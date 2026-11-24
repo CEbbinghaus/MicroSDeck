@@ -1,0 +1,13 @@
+blockExoticSubdeps: false
+packages:
+  - 'src'
+  - 'lib'
+
+peerDependencyRules:
+  ignoreMissing:
+    - react
+    - react-dom
+enablePrePostScripts: true
+allowBuilds:
+  lipe: true
+  timer@https://codeload.github.com/CEbbinghaus/timer/tar.gz/38d27cc5157b5e44d06eae8fd0ffb8f778821d51: true

@@ -17,8 +17,7 @@
 		"prebuild": "(node --no-warnings=ExperimentalWarning util/ci.mjs) && (node --no-warnings=ExperimentalWarning util/versioning.mjs update package.json lib/package.json)",
 		"build": "shx rm -rf dist && rollup -c",
 		"bundle": "shx rm -rf dist && rollup -c",
-		"watch": "rollup -c -w",
-		"preinstall": "cd lib && pnpm i"
+		"watch": "rollup -c -w"
 	},
 	"bugs": {
 		"url": "https://github.com/CEbbinghaus/MicroSDeck/issues"
@@ -47,24 +46,12 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"@cebbinghaus/microsdeck": "link:lib",
+		"@cebbinghaus/microsdeck": "workspace:*",
 		"@decky/api": "^1.1.2",
 		"@mdx-js/react": "^3.1.1",
 		"@mdx-js/rollup": "^3.1.1",
 		"lipe": "^0.3.4",
 		"react": "^19.1.1",
 		"react-icons": "^5.6.0"
-	},
-	"pnpm": {
-		"peerDependencyRules": {
-			"ignoreMissing": [
-				"react",
-				"react-dom"
-			]
-		},
-		"onlyBuiltDependencies": [
-			"lipe",
-			"timer"
-		]
 	}
 }

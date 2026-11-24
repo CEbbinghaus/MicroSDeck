@@ -61,6 +61,10 @@
 				"react",
 				"react-dom"
 			]
-		}
+		},
+		"onlyBuiltDependencies": [
+			"lipe",
+			"timer"
+		]
 	}
 }

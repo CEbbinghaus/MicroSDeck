@@ -1,4 +1,4 @@
-import { Module, findModuleChild } from "@decky/ui";
+import { findModuleExport } from "@decky/ui";
 
 export type SoundEffect =
   "bumper_end.wav" |
@@ -45,11 +45,6 @@ export interface AudioPlaybackManager {
   PlayAudioURL: (path: SFXPath) => void;
 }
 
-export const GamepadUIAudio: GamepadUIAudio = findModuleChild((m: Module) => {
-  if (typeof m !== "object") return undefined;
-  for (let prop in m) {
-    if (m[prop]?.GamepadUIAudio) {
-      return m[prop].GamepadUIAudio;
-    }
-  }
-});
+const mod = findModuleExport((m) => typeof m === "object" && m.GamepadUIAudio);
+
+export const GamepadUIAudio: GamepadUIAudio = mod.GamepadUIAudio;
